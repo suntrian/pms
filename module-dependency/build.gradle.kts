@@ -9,6 +9,7 @@ javaPlatform {
 
 dependencies {
     api(platform("org.springframework.boot:spring-boot-dependencies:2.3.3.RELEASE"))
+    api(platform("org.springframework.cloud:spring-cloud-dependencies:Hoxton.SR8"))
 
     constraints {
         api("org.junit.platform:junit-platform-engine:1.7.0-RC1")

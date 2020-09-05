@@ -28,4 +28,8 @@ subprojects {
 
     }
 
+    configurations.all {
+        exclude(group = "ch.qos.logback")
+    }
+
 }
