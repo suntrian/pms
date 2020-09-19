@@ -18,18 +18,25 @@ subprojects {
     version = "1.0-SNAPSHOT"
 
     if (project.name != "module-dependency") {
-        apply(plugin = "java" )
-
+        apply(plugin = "java")
         dependencies {
             implementation(platform(project(":module-dependency")))
-            implementation("org.springframework.boot:spring-boot-starter-log4j2")
             testImplementation("org.junit.jupiter:junit-jupiter")
         }
-
+    }
+    if (!project.name.startsWith("module")) {
+        dependencies {
+            implementation("org.springframework.boot:spring-boot-starter-log4j2")
+        }
     }
 
     configurations.all {
         exclude(group = "ch.qos.logback")
+    }
+
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
+        jvmArgs("--enable-preview")
     }
 
 }

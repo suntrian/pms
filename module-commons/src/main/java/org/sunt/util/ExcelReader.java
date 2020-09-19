@@ -47,29 +47,29 @@ public class ExcelReader {
   private List<Integer> skipRows;
   //限制输出多少行的内容
   private List<Integer> limitRows;
-  //当有多行标题时，指定匹配的标题行
-  private List<Integer> titleRows;
-  //输出的sheet, 1 based
-  private Set<Integer> sheetRead = new HashSet<>();
-  //输出的列，KEY:EXCEL中的列序号0based, VALUE：输入的列序号0based
-  private List<Map<Integer, Integer>> columnMap;
-  private Map<String, Map<String, Object>> sheetNameMap = new HashMap<>();
-  private List<String> sheetNames;
+    //当有多行标题时，指定匹配的标题行
+    private List<Integer> titleRows;
+    //输出的sheet, 1 based
+    private Set<Integer> sheetRead = new HashSet<>();
+    //输出的列，KEY:EXCEL中的列序号0based, VALUE：输入的列序号0based
+    private List<Map<Integer, Integer>> columnMap;
+    private Map<String, Map<String, Object>> sheetNameMap = new HashMap<>();
+    private List<String> sheetNames;
 
-  //此时间日期判断的正则表达式比较简单，没有判断更复杂的情况如2019-14-29 等也能匹配
-  private Pattern datetimePattern = Pattern.compile("(?:(?<year>(?:[1-9]\\d)?\\d{2})[/-])?(?<mon>[0-1]?\\d)[/-](?<day>[0-3]?\\d)\\s+(?<hour>[0-2]?\\d):(?<min>[0-5]?\\d)(?::(?<sec>[0-5]?\\d))?");
-  private Pattern datePattern = Pattern.compile("((?<year>(?:[1-9]\\d)?\\d{2})[/-])?(?<mon>[0-1]?\\d)[/-](?<day>[0-3]?\\d)");
-  private Pattern timePattern = Pattern.compile("(?<hour>[0-2]?\\d):(?<min>[0-5]?\\d)(?::(?<sec>[0-5]?\\d))?");
+    //此时间日期判断的正则表达式比较简单，没有判断更复杂的情况如2019-14-29 等也能匹配
+    private final Pattern datetimePattern = Pattern.compile("(?:(?<year>(?:[1-9]\\d)?\\d{2})[/-])?(?<mon>[0-1]?\\d)[/-](?<day>[0-3]?\\d)\\s+(?<hour>[0-2]?\\d):(?<min>[0-5]?\\d)(?::(?<sec>[0-5]?\\d))?");
+    private final Pattern datePattern = Pattern.compile("((?<year>(?:[1-9]\\d)?\\d{2})[/-])?(?<mon>[0-1]?\\d)[/-](?<day>[0-3]?\\d)");
+    private final Pattern timePattern = Pattern.compile("(?<hour>[0-2]?\\d):(?<min>[0-5]?\\d)(?::(?<sec>[0-5]?\\d))?");
 
-  public ExcelReader() {
-  }
+    public ExcelReader() {
+    }
 
-  public ExcelReader(File excel) throws IOException, InvalidFormatException {
-    init(excel);
-  }
+    public ExcelReader(File excel) throws IOException, InvalidFormatException {
+        init(excel);
+    }
 
-  public ExcelReader setClass(Class<?> clazz) {
-    this.columnClass = setListValue(this.columnClass, -1, clazz, null, sheetCount);
+    public ExcelReader setClass(Class<?> clazz) {
+        this.columnClass = setListValue(this.columnClass, -1, clazz, null, sheetCount);
     return this;
   }
 
@@ -921,7 +921,7 @@ public class ExcelReader {
     }
 
     public <T> List<List<T>> values() {
-      return resultMapBySheetIndex.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).map(Map.Entry::getValue).map(l -> (List<T>) l).collect(Collectors.toList());
+        return resultMapBySheetIndex.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).map(l -> (List<T>) l).collect(Collectors.toList());
     }
 
     public int size() {
