@@ -5,6 +5,7 @@ import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.usermanager.impl.BaseUser;
 import org.apache.ftpserver.usermanager.impl.WritePermission;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.sunt.storage.FTPStorage;
@@ -50,6 +51,7 @@ public class TestFTPStorage {
             String abc = new String(ftpStorage.readBytes("/abc"));
             System.out.println(abc);
             ftpStorage.delete("/abc");
+            Assertions.assertFalse(ftpStorage.exists("/abc"));
         }
     }
 

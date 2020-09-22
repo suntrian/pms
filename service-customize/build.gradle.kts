@@ -4,14 +4,6 @@ plugins {
     kotlin("jvm") version "1.4.10"
 }
 
-repositories {
-    mavenLocal()
-    maven {
-        setUrl("http://maven.aliyun.com/nexus/content/groups/public/")
-    }
-    mavenCentral()
-}
-
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
