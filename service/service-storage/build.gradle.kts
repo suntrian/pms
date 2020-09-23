@@ -4,5 +4,5 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation(project(":module-storage"))
+    implementation(project(":module:module-storage"))
 }
