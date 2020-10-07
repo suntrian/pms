@@ -12,6 +12,12 @@ import java.net.URL;
 public class FTPStorage implements IStorage {
 
     private final FTPClient client;
+    private static final String PROTOCOL_PREFIX = "ftp:";
+
+    @Override
+    public boolean acceptURL(URL url) {
+        return url.getProtocol() != null && url.getProtocol().toLowerCase().startsWith(PROTOCOL_PREFIX);
+    }
 
     public FTPStorage(String ftpServer, String username, String password) throws IOException {
         this(ftpServer, 0, username, password);

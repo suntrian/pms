@@ -5,6 +5,13 @@ import java.net.URL;
 
 public class LocalStorage implements IStorage {
 
+    private static final String PROTOCOL_PREFIX = "file:";
+
+    @Override
+    public boolean acceptURL(URL url) {
+        return url.getProtocol() != null && url.getProtocol().toLowerCase().startsWith(PROTOCOL_PREFIX);
+    }
+
     @Override
     public int write(String path, byte[] bytes) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(path)) {

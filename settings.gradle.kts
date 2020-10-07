@@ -22,3 +22,5 @@ include("service:service-git")
 include("service:service-intelliquery")
 include("service:service-metadata")
 include("api")
+include("api:api-storage")
+

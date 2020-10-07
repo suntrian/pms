@@ -11,4 +11,11 @@ dependencies {
     implementation("com.github.junrar:junrar:7.3.0")
 
     implementation("org.projectlombok:lombok:1.18.12")
+
+    implementation("com.github.albfernandez:juniversalchardet:2.3.2")
+    implementation("io.github.wnjustdoit:pinyin4j:2.6.0")
+
+    compileOnly("org.springframework:spring-context")
+    compileOnly("org.springframework:spring-web")
+
 }

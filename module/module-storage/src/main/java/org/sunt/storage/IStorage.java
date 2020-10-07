@@ -6,6 +6,8 @@ import java.net.URL;
 
 public interface IStorage {
 
+    boolean acceptURL(URL url);
+
     int write(String path, byte[] bytes) throws IOException;
 
     int write(String path, InputStream inputStream) throws IOException;
