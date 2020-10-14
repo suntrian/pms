@@ -1,0 +1,140 @@
+[文本函数]
+/**
+TO_STRING
+
+    1. 用法： TO_STRING(field)
+    2. 说明： 返回字段转为字符串
+    3. 示例： TO_STRING(a.b.c)
+    4. 参数： 任意类型字段
+*/
+TO_STRING(field:Any):String              -> CAST(#1 AS STRING)
+
+[日期函数]
+
+/**
+QUARTER
+    1. 用法： QUARTER(date)
+    2. 说明： 获取时间的季度
+    3. 示例： QUARTER('2019-10-20') = 4
+    4. 参数类型： Date日期类型，
+                DateTime时间类型,
+                String 字符串类型, 要求配置时间格式
+                Integer 数字类型, 要求配置时间格式
+*/
+QUARTER(date: Any): Integer                                                                   -> CEILING(MONTH(#1)/3)
+
+
+/**
+DATEADD
+
+   1. 用法：DATEADD (date,delta,datepart)
+   2. 说明：返回间隔delta个日期单位的日期
+   3. 示例：DATEADD(交易日期,7,'day')，交易日期往后推7天
+   4. 参数类型：date: 日期类型字段
+      ​				  delta: 整数常量
+      ​				  datepart: 日期粒度常量, 年 - ‘year', 月-‘month', 日 - ‘day'
+*/
+DATEADD(date:Date, delta: Integer, datepart:String :['year'|'month'|'day']): Date               -> TO_DATE( DATE_ADD(cast(#1 as timestamp), interval #2 {"#3".substring(1, "#3".length()-1)}))
+
+/**
+DATEADD
+
+   1. 用法：DATEADD (datetime,delta,datepart)
+   2. 说明：返回间隔delta个日期单位的日期
+   3. 示例：DATEADD(交易日期,7,'day')，交易日期往后推7天
+   4. 参数类型：date: 日期时间类型字段
+      ​				  delta: 整数常量
+      ​				  datepart: 日期粒度常量, 年 - ‘year', 月-‘month', 日 - ‘day'
+*/
+DATEADD(date:DateTime, delta: Integer, datepart: String :['year'|'month'|'day']): DateTime      -> TO_DATE( DATE_ADD(cast(#1 as timestamp), interval #2 {"#3".substring(1, "#3".length()-1)}))
+
+/**
+to_date
+
+   1. 用法：TO_DATE(string, format)
+   2. 说明：把文本转化成为给定格式的时间格式
+   3. 示例：TO_DATE (销售日期, 'yyyy')
+   4. 参数类型：string: 文本类型字段
+      ​				 format:  日期格式，例如'yyyy-MM-dd'
+*/
+TO_DATE(text:String, format:String): DATE                             -> TO_TIMESTAMP(#1, #2)
+
+/**
+current_date
+
+    1. 用法：CURRENT_DATE( )
+    2. 说明：返回当前日期
+    3. 示例：CURRENT_DATE( )
+    4. 参数：无
+*/
+CURRENT_DATE(): DATE                                                    -> TO_DATE(CURRENT_TIMESTAMP())
+
+/**
+current_datetime
+
+    1. 用法：CURRENT_DATETIME( )
+    2. 说明：返回当前时间
+    3. 示例：CURRENT_DATETIME( )
+    4. 参数：无
+*/
+CURRENT_DATETIME(): DATETIME                                            -> FROM_TIMESTAMP(CURRENT_TIMESTAMP(), 'yyyy-MM-dd HH:mm:ss')
+
+/**
+DATEDIFF
+
+    1. 用法：DATEDIFF(String unit, TIMESTAMP / DATE enddate, TIMESTAMP / DATE startdate)
+    2. 说明：计算两个时间相隔unit的数量, enddate - startdate
+            unit：'day', 'month', 'quarter', 'year'
+    3. 示例：DATEDIFF('2010-11-30 23:59:59','2010-12-31') = -31
+    4. 参数：enddate, startdate
+*/
+DATEDIFF(unit:String:['day'|'month'|'quarter'|'year'],  enddate: Date, startdate: Date): Integer  ->
+# SQL映射方法，多行时以'''  '''包裹
+''' {
+    if ("'day'".equalsIgnoreCase("#1")) {
+        //天差
+        return "DATEDIFF(#2, #3)";
+    } else if ("'week'".equalsIgnoreCase("#1")) {
+        //周差
+        return "FLOOR(DATEDIFF(#2, #3)/7)";
+    } else if ("'month'".equalsIgnoreCase("#1")) {
+        //月差
+        return "INT_MONTHS_BETWEEN(#2, #3)";
+    } else if ("'quarter'".equalsIgnoreCase("#1")) {
+        //季差
+        return "FLOOR(INT_MONTHS_BETWEEN(#2, #3)/3)";
+    } else if("'year'".equalsIgnoreCase("#1")){
+        //年差
+        return "YEAR(#2)-YEAR(#3)";
+    } else {
+        return "DATEDIFF(#2, #3)";
+    }
+} '''
+
+/**
+DATEDIFF
+
+    1. 用法：DATEDIFF(String unit, TIMESTAMP / DATE enddate, TIMESTAMP / DATE startdate)
+    2. 说明：计算两个时间相隔unit的数量, enddate - startdate
+
+    3. 示例：DATEDIFF('2010-11-30 23:59:59','2010-12-31') = -31
+    4. 参数：unit：'day', 'month', 'quarter', 'year'
+            enddate: 结束时间
+            startdate: 开始时间
+*/
+DATEDIFF(unit:String:['day'|'month'|'quarter'|'year'], enddate: DATETIME, startdate: DATETIME): Integer  ->
+''' {
+    if ("'day'".equalsIgnoreCase("#1")) {
+        return "DATEDIFF(#2, #3)";
+    } else if ("'week'".equalsIgnoreCase("#1")) {
+        return "FLOOR(DATEDIFF(#2, #3)/7)";
+    } else if ("'month'".equalsIgnoreCase("#1")) {
+        return "INT_MONTHS_BETWEEN(#2, #3)";
+    } else if ("'quarter'".equalsIgnoreCase("#1")) {
+        return "FLOOR(INT_MONTHS_BETWEEN(#2, #3)/3)";
+    } else if("'year'".equalsIgnoreCase("#1")){
+        return "YEAR(#2)-YEAR(#3)";
+    } else {
+        return "DATEDIFF(#2, #3)";
+    }
+} '''
