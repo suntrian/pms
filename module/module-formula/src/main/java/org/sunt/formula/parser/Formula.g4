@@ -4,23 +4,26 @@ formula
     : statement EOF
     ;
 
+// reference {https://dev.mysql.com/doc/refman/8.0/en/operator-precedence.html}
 statement
-    : ifSpecial                                                                         #ifExpression
-    | functionStatement                                                                 #functionExpression
-    | caseStatement                                                                     #caseExpression
-    | constant                                                                          #constantExpression
-    | column                                                                            #columnExpression
+    : ifSpecial                                                                                 #ifExpression
+    | functionStatement                                                                         #functionExpression
+    | caseStatement                                                                             #caseExpression
+    | constant                                                                                  #constantExpression
+    | column                                                                                    #columnExpression
     //指数运算右结合，即2^3^4的意义为2^(3^4)
-    | <assoc=right> statement op=POWER statement                                        #mathExpression
-    | statement op=MOD statement                                                        #mathExpression
-    | statement op=(MUL | DIV) statement                                                #mathExpression
-    | statement op=(PLUS | MINUS) statement                                             #mathExpression
-    | statement comparisonOperator statement                                            #comparePredicate
-    | statement NOT? op=IN L_PARENTHESES statement (COMMA statement)* R_PARENTHESES     #inPredicate
-    | statement NOT? op=LIKE STRING                                                     #likePredicate
-    | statement logicalOperator statement                                               #logicalPredicate
-    | NOT statement                                                                     #notPredicate
-    | L_PARENTHESES statement R_PARENTHESES                                             #parenthesesExpression
+    | <assoc=right> statement op=POWER statement                                                #mathExpression
+    | statement op=MOD statement                                                                #mathExpression
+    | statement op=(MUL | DIV) statement                                                        #mathExpression
+    | statement op=(PLUS | MINUS) statement                                                     #mathExpression
+    | statement op=(GREATER | GREATER_EQUAL | LESS | LESS_EQUAL | EQUAL | NOT_EQUAL) statement  #comparePredicate
+    | statement NOT? op=IN L_PARENTHESES statement (COMMA statement)* R_PARENTHESES             #inPredicate
+    | statement NOT? op=LIKE STRING                                                             #likePredicate
+    | NOT statement                                                                             #notPredicate
+    | statement op= AND statement                                                               #logicalPredicate
+    | statement op= XOR statement                                                               #logicalPredicate
+    | statement op= OR statement                                                                #logicalPredicate
+    | L_PARENTHESES statement R_PARENTHESES                                                     #parenthesesExpression
     ;
 
 functionStatement
@@ -68,7 +71,7 @@ elseStatement
 
 predictStatement
     : statement
-    | predictStatement logicalOperator predictStatement
+    | predictStatement op=(AND | OR | XOR) predictStatement
    ;
 
 constant
@@ -82,14 +85,6 @@ column
     : COLUMN_ID         # columnId
     | COLUMN_NAME       # columnName
     | IDENTITY          # identity
-    ;
-
-comparisonOperator
-    : GREATER | GREATER_EQUAL | LESS | LESS_EQUAL | EQUAL | NOT_EQUAL
-    ;
-
-logicalOperator
-    : AND | OR | XOR
     ;
 
 L_PARENTHESES: '(';

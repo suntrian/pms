@@ -1,5 +1,6 @@
 package org.sunt.formula;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.sunt.formula.define.DataType;
 import org.sunt.formula.define.IColumn;
 import org.sunt.formula.define.SqlProduct;
@@ -47,6 +48,47 @@ public abstract class AbstractFormulaVisitor extends FormulaBaseVisitor<Statemen
         stmt.setScope(SuggestionScope.CONSTANT(stmt.getExpression()));
         stmt.setStatus(TokenStatus.NORMAL);
         return stmt;
+    }
+
+    @Override
+    public StatementInfo visitColumnId(FormulaParser.ColumnIdContext ctx) {
+        return getColumn(ctx, ctx.getText());
+    }
+
+    @Override
+    public StatementInfo visitColumnName(FormulaParser.ColumnNameContext ctx) {
+        return getColumn(ctx, ctx.getText());
+    }
+
+    @Override
+    public StatementInfo visitIdentity(FormulaParser.IdentityContext ctx) {
+        return getColumn(ctx, ctx.getText());
+    }
+
+
+    private StatementInfo getColumn(ParserRuleContext ctx, String columnIdOrName) {
+        IColumn column;
+        if (columnIdOrName.startsWith("#")) {
+            column = getColumnById.apply(columnIdOrName.substring(1));
+        } else if (columnIdOrName.startsWith("`") && columnIdOrName.endsWith("`")) {
+            column = getColumnByName.apply(columnIdOrName.substring(1, columnIdOrName.length() - 1));
+        } else {
+            column = getColumnByName.apply(columnIdOrName);
+        }
+
+        StatementInfo colStmt = new StatementInfo(ctx);
+        colStmt.setScope(SuggestionScope.COLUMN(columnIdOrName));
+        if (column == null) {
+            colStmt.setStatus(TokenStatus.UNKNOWN);
+            colStmt.setExpression(columnIdOrName);
+            colStmt.setDataType(DataType.NONE);
+        } else {
+            colStmt.setStatus(TokenStatus.NORMAL);
+            colStmt.setDataType(column.getDataType());
+            colStmt.setExpression(column.getExpression());
+        }
+
+        return colStmt;
     }
 
 }

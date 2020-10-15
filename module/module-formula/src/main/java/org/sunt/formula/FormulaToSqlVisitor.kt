@@ -31,19 +31,71 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
     }
 
     override fun visitParenthesesExpression(ctx: ParenthesesExpressionContext): StatementInfo {
-        return visitStatement(ctx.statement())
-    }
-
-    override fun visitConstantExpression(ctx: ConstantExpressionContext): StatementInfo {
-        return super.visitConstantExpression(ctx)!!
+        val stmt = visitStatement(ctx.statement())
+        val parenthesesStmt = StatementInfo(ctx);
+        parenthesesStmt.expression = "(" + stmt.expression + ")"
+        parenthesesStmt.dataType = stmt.dataType
+        parenthesesStmt.status = stmt.status;
+        return parenthesesStmt
     }
 
     override fun visitComparePredicate(ctx: ComparePredicateContext): StatementInfo {
-        return super.visitComparePredicate(ctx)!!
+        val left = visitStatement(ctx.statement(0))
+        val right = visitStatement(ctx.statement(1))
+        val predStmt = StatementInfo(ctx)
+        predStmt.dataType = DataType.BOOLEAN
+        if (ctx.op.type == EQUAL || ctx.op.type == NOT_EQUAL) {
+            //相等判断时，数据类型可不一致
+            if (VOCABULARY.getSymbolicName(NULL).equals(right.expression, true)) {
+                predStmt.expression = left.expression + when (ctx.op.type) {
+                    EQUAL -> " IS NULL";
+                    NOT_EQUAL -> " IS NOT NULL"
+                    else -> ""
+                }
+                predStmt.status = left.status
+                return predStmt
+            }
+        } else {
+            checkDataType(right, left.dataType)
+        }
+
+        when (ctx.op.type) {
+            GREATER, GREATER_EQUAL, LESS, LESS_EQUAL -> predStmt.expression = left.expression + ctx.op.text + right.expression
+            EQUAL -> predStmt.expression = left.expression + "=" + right.expression
+            NOT_EQUAL -> predStmt.expression = left.expression + "!=" + right.expression
+        }
+
+        predStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+        return predStmt
     }
 
     override fun visitInPredicate(ctx: InPredicateContext): StatementInfo {
-        return super.visitInPredicate(ctx)!!
+        if (ctx.statement() == null || ctx.statement().size <= 1) {
+            throw IllegalStateException("操作数个数不符")
+        }
+        val left = visitStatement(ctx.statement(0))
+        var status = left.status
+        val exprBuilder = StringBuilder(left.expression)
+        if (ctx.NOT() != null) {
+            exprBuilder.append(" NOT")
+        }
+        exprBuilder.append(" IN (")
+        for (i in 1..ctx.statement().size) {
+            val stmt = visitStatement(ctx.statement(i))
+            if (stmt.status.privilege > status.privilege) {
+                status = stmt.status
+            }
+            exprBuilder.append(stmt.expression)
+            if (i != ctx.statement().size - 1) {
+                exprBuilder.append(",")
+            }
+        }
+        exprBuilder.append(")")
+        val inStmt = StatementInfo(ctx)
+        inStmt.expression = exprBuilder.toString()
+        inStmt.dataType = DataType.BOOLEAN
+        inStmt.status = status
+        return inStmt
     }
 
     override fun visitCaseExpression(ctx: CaseExpressionContext): StatementInfo {
@@ -51,11 +103,56 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
     }
 
     override fun visitMathExpression(ctx: MathExpressionContext): StatementInfo {
-        return super.visitMathExpression(ctx)!!
-    }
+        if (ctx.statement() == null || ctx.statement().size != 2) {
+            throw java.lang.IllegalStateException("操作数个数不符")
+        }
+        val left = visitStatement(ctx.statement(0))
+        val right = visitStatement(ctx.statement(1))
+        val mathStmt = StatementInfo(ctx)
+        if (left.dataType == DataType.STRING && right.dataType == DataType.STRING) {
+            if (ctx.op.type == PLUS) {
+                //todo String concat and type convert if not string
+                return mathStmt
+            } else {
+                throw IllegalStateException("数据类型错误")
+            }
+        } else {
+            if (!left.dataType.isNumeric() || !right.dataType.isNumeric()) {
+                throw IllegalStateException("数据类型错误")
+            }
+        }
 
-    override fun visitColumnExpression(ctx: ColumnExpressionContext): StatementInfo {
-        return super.visitColumnExpression(ctx)!!
+        mathStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+        when (ctx.op.type) {
+            POWER -> {
+                mathStmt.expression = left.expression + "^" + right.expression
+                mathStmt.dataType = if (left.dataType == DataType.DECIMAL || right.dataType == DataType.DECIMAL) {
+                    DataType.DECIMAL
+                } else {
+                    DataType.INTEGER
+                }
+            }
+            MOD -> {
+                mathStmt.expression = left.expression + " % " + right.expression
+                mathStmt.dataType = DataType.INTEGER
+            }
+            MUL -> {
+                mathStmt.expression = left.expression + " * " + right.expression
+                mathStmt.dataType = if (left.dataType == DataType.DECIMAL || right.dataType == DataType.DECIMAL) {
+                    DataType.DECIMAL
+                } else {
+                    DataType.INTEGER
+                }
+            }
+            DIV -> {
+                mathStmt.expression = left.expression + " / " + right.expression
+                mathStmt.dataType = DataType.DECIMAL
+            }
+            PLUS -> mathStmt.expression = left.expression + " + " + right.expression
+            MINUS -> mathStmt.expression = left.expression + " - " + right.expression
+        }
+
+        return mathStmt
     }
 
     override fun visitNotPredicate(ctx: NotPredicateContext): StatementInfo {
@@ -64,6 +161,7 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
         val stmt = StatementInfo(ctx)
         stmt.expression = " NOT " + pred.expression
         stmt.dataType = DataType.BOOLEAN
+        stmt.status = pred.status
         return stmt
     }
 
@@ -78,7 +176,7 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
         val stmt = StatementInfo(ctx)
         stmt.dataType = DataType.BOOLEAN
         stmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
-        stmt.expression = left.expression + ctx.logicalOperator().text + right.expression
+        stmt.expression = left.expression + ctx.op.text + right.expression
         return stmt
     }
 
@@ -155,26 +253,20 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
     }
 
     override fun visitPredictStatement(ctx: PredictStatementContext): StatementInfo {
+        if (ctx.statement() != null) {
+            val stmt = visitStatement(ctx.statement())
+            checkDataType(stmt, DataType.BOOLEAN)
+            return stmt
+        } else if (ctx.op != null) {
+            val left = visitPredictStatement(ctx.predictStatement(0))
+            val right = visitPredictStatement(ctx.predictStatement(1))
+            val predStmt = StatementInfo(ctx)
+            predStmt.expression = left.expression + ctx.op.text + right.expression
+            predStmt.dataType = DataType.BOOLEAN
+            predStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+            return predStmt
+        }
         return super.visitPredictStatement(ctx)!!
     }
 
-    override fun visitColumnId(ctx: ColumnIdContext): StatementInfo {
-        return super.visitColumnId(ctx)!!
-    }
-
-    override fun visitColumnName(ctx: ColumnNameContext): StatementInfo {
-        return super.visitColumnName(ctx)!!
-    }
-
-    override fun visitIdentity(ctx: IdentityContext): StatementInfo {
-        return super.visitIdentity(ctx)!!
-    }
-
-    override fun visitComparisonOperator(ctx: ComparisonOperatorContext): StatementInfo {
-        return super.visitComparisonOperator(ctx)!!
-    }
-
-    override fun visitLogicalOperator(ctx: LogicalOperatorContext): StatementInfo {
-        return super.visitLogicalOperator(ctx)!!
-    }
 }
