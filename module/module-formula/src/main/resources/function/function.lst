@@ -1,6 +1,3 @@
-[文本函数]
-#TEXT 文本函数
-
 /**
 LOWER
 
@@ -9,7 +6,7 @@ LOWER
    3. 示例：LOWER(user_name)
    4. 参数：string: 文本类型字段
 */
-LOWER(text:String):String               -> LOWER(#1)
+文本函数::LOWER(text:String):String               -> LOWER($1)
 
 /**
 UPPER
@@ -19,7 +16,7 @@ UPPER
    3. 示例：UPPER(last name)
    4. 参数：string：文本类型字段
 */
-UPPER(text:String):String               -> UPPER(#1)
+[文本函数]::UPPER(text:String):String               -> UPPER($1)
 
 /**
 CONCAT
@@ -29,7 +26,7 @@ CONCAT
    3. 示例：CONCAT(first name, last name)
    4. 参数：string: 文本类型
 */
-CONCAT(vararg text:String):String     -> CONCAT(#0)
+[文本函数]::CONCAT(vararg text:String):String     -> CONCAT($0)
 
 /**
 TO_STRING
@@ -39,7 +36,7 @@ TO_STRING
     3. 示例： TO_STRING(a.b.c)
     4. 参数： 任意类型字段
 */
-TO_STRING(field:Any):String              -> CAST(#1 AS CHAR)
+[文本函数]::TO_STRING(field:Any):String              -> CAST($1 AS CHAR)
 
 /**
 SUBSTRING
@@ -49,9 +46,17 @@ SUBSTRING
     3. 示例： SUBSTRING("abcdef", 2, 3) = "bcd"
     4. 参数： String类型参数
 */
-SUBSTRING(field:String, start:Integer, len: Integer):String              -> SUBSTRING(#1, #2, #3)
+[文本函数]::SUBSTRING(field:String, start:Integer, len: Integer):String              -> SUBSTRING($1, $2, $3)
 
-[数值函数]
+TO_DOUBLE
+/**
+    1. 用法： TO_DOUBLE(field, precision)
+    2. 说明： 强制转换字段field为Double,保留precision位小数
+    3. 示例： TO_DOUBLE("134.343", 2) = 134.34
+             TO_DOUBLE(1234, 2) = 1234.00
+    4. 参数： String, Integer 类型字段
+*/
+[数值函数]::TO_DOUBLE(field:String, precision: Integer):Double              -> CAST($1 AS DECIMAL(38, $2))
 
 TO_DOUBLE
 
@@ -61,17 +66,7 @@ TO_DOUBLE
              TO_DOUBLE(1234, 2) = 1234.00
     4. 参数： String, Integer 类型字段
 */
-TO_DOUBLE(field:String, precision: Integer):Double              -> CAST(#1 AS DECIMAL(38, #2))
-
-TO_DOUBLE
-
-    1. 用法： TO_DOUBLE(field, precision)
-    2. 说明： 强制转换字段field为Double,保留precision位小数
-    3. 示例： TO_DOUBLE("134.343", 2) = 134.34
-             TO_DOUBLE(1234, 2) = 1234.00
-    4. 参数： String, Integer 类型字段
-*/
-TO_DOUBLE(field:Integer, precision: Integer):Double              -> CAST(#1 AS DECIMAL(38, #2))
+[数值函数]::TO_DOUBLE(field:Integer, precision: Integer):Double              -> CAST($1 AS DECIMAL(38, $2))
 
 TO_DOUBLE
 
@@ -81,7 +76,7 @@ TO_DOUBLE
              TO_DOUBLE(1234) = 1234.00
     4. 参数： String, Integer 类型字段
 */
-TO_DOUBLE(field:String):Double              -> CAST(#1 AS DECIMAL(38, 2))
+[数值函数]::TO_DOUBLE(field:String):Double              -> CAST($1 AS DECIMAL(38, 2))
 
 TO_DOUBLE
 
@@ -91,7 +86,7 @@ TO_DOUBLE
              TO_DOUBLE(1234) = 1234.00
     4. 参数： String, Integer 类型字段
 */
-TO_DOUBLE(field:Integer):Double              -> CAST(#1 AS DECIMAL(38, 2))
+[数值函数]::TO_DOUBLE(field:Integer):Double              -> CAST($1 AS DECIMAL(38, 2))
 
 TO_INTEGER
 
@@ -100,7 +95,7 @@ TO_INTEGER
     3. 示例： TO_INTEGER("134.235") = 134
     4. 参数： String, Double 类型字段
 */
-TO_INTEGER(field:String):Integer                                -> CAST(#1 AS DECIMAL)
+[数值函数]::TO_INTEGER(field:String):Integer                                -> CAST($1 AS DECIMAL)
 
 TO_INTEGER
 
@@ -109,14 +104,14 @@ TO_INTEGER
     3. 示例： TO_INTEGER("134.235") = 134
     4. 参数： String, Double 类型字段
 */
-TO_INTEGER(field:Double):Integer                                -> CAST(#1 AS DECIMAL)
+[数值函数]::TO_INTEGER(field:Double):Integer                                -> CAST($1 AS DECIMAL)
 
 /**
     返回整数类型数字的绝对值
     @param
     @return
 */
-ABS(num:Integer): Integer               -> ABS(#1)
+[数值函数]::ABS(num:Integer): Integer               -> ABS($1)
 
 /**
 ABS
@@ -126,7 +121,7 @@ ABS
    3. 示例：ABS(利润)
    4. 参数类型：number : 数值类型字段
 */
-ABS(num:Double): Double                 -> ABS(#1)
+[数值函数]::ABS(num:Double): Double                 -> ABS($1)
 
 /**
 CEILING
@@ -136,7 +131,7 @@ CEILING
    3. 示例：CEILING(体重)
    4. 参数：number：数值类型字段
 */
-CEILING(num:Double): Integer             -> CEIL(#1)
+[数值函数]::CEILING(num:Double): Integer             -> CEIL($1)
 
 /**
 FLOOR
@@ -146,7 +141,7 @@ FLOOR
    3. 示例：FLOOR(体重)
    4. 参数：number：数值类型字段
 */
-FLOOR(num:Double): Integer               -> FLOOR(#1)
+[数值函数]::FLOOR(num:Double): Integer               -> FLOOR($1)
 
 /**
 ROUND
@@ -157,9 +152,8 @@ ROUND
    4. 参数类型：num1: 数值类型字段
       ​				  num2: 正整数常量
 */
-ROUND(val:Double, prec:Integer): Double-> ROUND(#1, #2)
+[数值函数]::ROUND(val:Double, prec:Integer): Double-> ROUND($1, $2)
 
-[日期函数]
 
 /**
 YEAR
@@ -171,7 +165,7 @@ YEAR
                 String 字符串类型, 要求配置时间格式
                 Integer 数字类型, 要求配置时间格式
 */
-YEAR(date: Any): Integer                                                                   -> YEAR(#1)
+[日期函数]::YEAR(date: Any): Integer                                                                   -> YEAR($1)
 
 /**
 QUARTER
@@ -183,7 +177,7 @@ QUARTER
                 String 字符串类型, 要求配置时间格式
                 Integer 数字类型, 要求配置时间格式
 */
-QUARTER(date: Any): Integer                                                                   -> QUARTER(#1)
+[日期函数]::QUARTER(date: Any): Integer                                                                   -> QUARTER($1)
 
 /**
 MONTH
@@ -195,7 +189,7 @@ MONTH
                 String 字符串类型, 要求配置时间格式
                 Integer 数字类型, 要求配置时间格式
 */
-MONTH(date: Any): Integer                                                                   -> MONTH(#1)
+[日期函数]::MONTH(date: Any): Integer                                                                   -> MONTH($1)
 
 /**
 WEEK
@@ -207,7 +201,7 @@ WEEK
                 String 字符串类型, 要求配置时间格式，且至少包含天
                 Integer 数字类型, 要求配置时间格式，且至少包含天
 */
-WEEK(date: Any): Integer                                                                   -> WEEKOFYEAR(#1)
+[日期函数]::WEEK(date: Any): Integer                                                                   -> WEEKOFYEAR($1)
 
 /**
 DAY
@@ -219,7 +213,7 @@ DAY
                 String 字符串类型, 要求配置时间格式
                 Integer 数字类型, 要求配置时间格式
 */
-DAY(date: Any): Integer                                                                   -> DAY(#1)
+[日期函数]::DAY(date: Any): Integer                                                                   -> DAY($1)
 
 
 /**
@@ -232,7 +226,7 @@ DATEADD
       ​				  delta: 整数常量
       ​				  datepart: 日期粒度常量, 年 - ‘year', 月-‘month', 日 - ‘day'
 */
-DATEADD(date:Date, delta: Integer, datepart:String :['year'|'month'|'day']): Date               -> DATE_ADD(#1, interval #2 {"#3".substring(1, "#3".length()-1)})
+[日期函数]::DATEADD(date:Date, delta: Integer, datepart:String :['year','month','day']): Date               -> DATE_ADD($1, interval $2 {"$3".substring(1, "$3".length()-1)})
 
 /**
 DATEADD
@@ -244,7 +238,7 @@ DATEADD
       ​				  delta: 整数常量
       ​				  datepart: 日期粒度常量, 年 - ‘year', 月-‘month', 日 - ‘day'
 */
-DATEADD(date:DateTime, delta: Integer, datepart: String :['year'|'month'|'day']): DateTime      -> DATE_ADD(#1, interval #2 {"#3".substring(1, "#3".length()-1)})
+[日期函数]::DATEADD(date:DateTime, delta: Integer, datepart: String :['year','month','day']): DateTime      -> DATE_ADD($1, interval $2 {"$3".substring(1, "$3".length()-1)})
 
 /**
 TO_DATE
@@ -255,7 +249,7 @@ TO_DATE
    4. 参数类型：string: 文本类型字段
       ​				 format:  日期格式，例如'yyyy-MM-dd'
 */
-TO_DATE(text:String, format:String): DATE                             -> FROM_TIMESTAMP(CAST(#1 as timestamp), #2)
+[日期函数]::TO_DATE(text:String, format:String): DATE                             -> FROM_TIMESTAMP(CAST($1 as timestamp), $2)
 
 /**
 CURRENT_DATE
@@ -265,7 +259,7 @@ CURRENT_DATE
     3. 示例：CURRENT_DATE( )
     4. 参数：无
 */
-CURRENT_DATE(): DATE                                                    -> CURRENT_DATE()
+[日期函数]::CURRENT_DATE(): DATE                                                    -> CURRENT_DATE()
 
 /**
 CURRENT_DATETIME
@@ -275,7 +269,7 @@ CURRENT_DATETIME
     3. 示例：CURRENT_DATETIME( )
     4. 参数：无
 */
-CURRENT_DATETIME(): DATETIME                                            -> CURRENT_TIMESTAMP()
+[日期函数]::CURRENT_DATETIME(): DATETIME                                            -> CURRENT_TIMESTAMP()
 
 
 /**
@@ -287,7 +281,7 @@ DATEDIFF
     3. 示例：DATEDIFF('2010-11-30 23:59:59','2010-12-31') = -31
     4. 参数：enddate, startdate
 */
-DATEDIFF(unit:String:['day'|'week'|'month'|'quarter'|'year'],  enddate: Date, startdate: Date): Integer                       -> DATEDIFF(#1, #2)
+[日期函数]::DATEDIFF(unit:String:['day','week','month','quarter','year'],  enddate: Date, startdate: Date): Integer                       -> DATEDIFF($1, $2)
 
 /**
 DATEDIFF
@@ -300,10 +294,10 @@ DATEDIFF
             enddate: 结束时间
             startdate: 开始时间
 */
-DATEDIFF(unit:String:['day'|'week'|'month'|'quarter'|'year'], enddate: DATETIME, startdate: DATETIME): Integer                       -> DATEDIFF(#1, #2)
+[日期函数]::DATEDIFF(unit:String:['day','week','month','quarter','year'], enddate: DATETIME, startdate: DATETIME): Integer                       -> DATEDIFF($1, $2)
 
 [条件函数]
-#控制条件跳转函数
+$控制条件跳转函数
 
 /**
 IFNULL
@@ -313,7 +307,7 @@ IFNULL
        4. 参数类型：var1: 任意类型字段或常量
           ​		  var2:  任意类型字段或常量
 */
-IFNULL(val:Any, ifNullValue: Any): #1.type      -> IFNULL(#1, #2)
+[日期函数]::IFNULL(val:Any, ifNullValue: Any): $1.type      -> IFNULL($1, $2)
 
 /**
 IF
@@ -324,4 +318,4 @@ IF
                    var2:  任意类型字段或常量
                    var3:  任意类型字段或常量
 */
-IF(condition: Bool, ifTrue: Any, ifFalseOrNull: Any): #3.type     ->  IF(#1, #2, #3)
+[日期函数]::IF(condition: Bool, ifTrue: Any, ifFalseOrNull: Any): $3.type     ->  IF($1, $2, $3)
