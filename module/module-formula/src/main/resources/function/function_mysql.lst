@@ -1,5 +1,3 @@
-[日期函数]
-
 /**
 to_date
 
@@ -20,7 +18,7 @@ to_date
    %i	Minutes, numeric (00..59)
    %s	Seconds (00..59)
 */
-TO_DATE(text:String, format:String): DATE       -> STR_TO_DATE(#1,#2)
+[日期函数]::TO_DATE(text:String, format:String): DATE       -> STR_TO_DATE($1,$2)
 
 
 /**
@@ -32,7 +30,7 @@ DATEDIFF
     3. 示例：DATEDIFF('2010-11-30 23:59:59','2010-12-31') = -31
     4. 参数：enddate, startdate
 */
-DATEDIFF(unit:String:['day'|'week'|'month'|'quarter'|'year'],  enddate: Date, startdate: Date): Integer     -> TIMESTAMPDIFF({"#1".substring(1, "#1".length()-1)},  #3, #2)
+[日期函数]::DATEDIFF(unit:String:['day','week','month','quarter','year'],  enddate: Date, startdate: Date): Integer     -> TIMESTAMPDIFF({"$1".substring(1, "$1".length()-1)},  $3, $2)
 
 /**
 DATEDIFF
@@ -45,4 +43,4 @@ DATEDIFF
             enddate: 结束时间
             startdate: 开始时间
 */
-DATEDIFF(unit:String:['day'|'week'|'month'|'quarter'|'year'], enddate: DATETIME, startdate: DATETIME): Integer  -> TIMESTAMPDIFF({"#1".substring(1, "#1".length()-1)},  #3, #2)
+[日期函数]::DATEDIFF(unit:String:['day','week','month','quarter','year'], enddate: DATETIME, startdate: DATETIME): Integer  -> TIMESTAMPDIFF({"$1".substring(1, "$1".length()-1)},  $3, $2)

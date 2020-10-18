@@ -11,13 +11,11 @@ data class StatementInfo(val origin: String,
                          val startToken: Int,
                          val stopToken: Int) {
 
-    public constructor(context: ParserRuleContext?) {
-        if (context == null) {
-            StatementInfo("", -1, -1, -1, -1)
-        } else {
-            StatementInfo(context.text, context.start.startIndex, context.stop.stopIndex, context.start.tokenIndex, context.stop.tokenIndex)
-        }
-    }
+    constructor(context: ParserRuleContext?) : this(context?.text ?: "",
+            context?.start?.startIndex ?: -1,
+            context?.stop?.stopIndex ?: -1,
+            context?.start?.tokenIndex ?: -1,
+            context?.stop?.tokenIndex ?: -1)
 
     var expression: String = ""
 
@@ -26,5 +24,6 @@ data class StatementInfo(val origin: String,
     var status: TokenStatus = TokenStatus.NONE
 
     var scope: SuggestionScope = SuggestionScope.NONE()
+
 
 }

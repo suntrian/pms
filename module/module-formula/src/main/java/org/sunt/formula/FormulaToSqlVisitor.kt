@@ -6,7 +6,7 @@ import org.sunt.formula.define.SqlProduct
 import org.sunt.formula.parser.FormulaParser.*
 import java.util.function.Function
 
-class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, IColumn?>, getColumnByName: Function<String?, IColumn?>) : AbstractFormulaVisitor(product, getColumnById, getColumnByName) {
+class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, IColumn?>, getColumnByName: Function<String, IColumn?>) : AbstractFormulaVisitor(product, getColumnById, getColumnByName) {
 
     override fun visitFormula(ctx: FormulaContext): StatementInfo {
         return visitStatement(ctx.statement())
@@ -99,7 +99,7 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
     }
 
     override fun visitCaseExpression(ctx: CaseExpressionContext): StatementInfo {
-        return super.visitCaseExpression(ctx)!!
+        return visitCaseStatement(ctx.caseStatement())
     }
 
     override fun visitMathExpression(ctx: MathExpressionContext): StatementInfo {
@@ -181,7 +181,7 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
     }
 
     override fun visitIfExpression(ctx: IfExpressionContext): StatementInfo {
-        return super.visitIfExpression(ctx)!!
+        return visitIfSpecial(ctx.ifSpecial())
     }
 
     override fun visitLikePredicate(ctx: LikePredicateContext): StatementInfo {
@@ -206,26 +206,101 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
     override fun visitFunctionStatement(ctx: FunctionStatementContext): StatementInfo {
         val funcName = ctx.IDENTITY().text
         val params = visitFunctionParams(ctx.functionParams())
+        val functionDefines = this.functionMap[funcName] ?: this.functionMap[this.aliasFunctionNameMap[funcName]] ?: throw IllegalStateException("函数${funcName}不存在")
+
+        for (funcDefine in functionDefines) {
+            if (funcDefine.args.size != params.size) {
+                if (funcDefine.args[funcDefine.args.size - 1].vararg && params.size >= funcDefine.alias.size - 1) {
+                    //可变参数，且实参数大于形参数-1，合法参数
+
+                } else {
+
+                }
+            }
+        }
+
         val funcStmt = StatementInfo(ctx)
-        funcStmt.status = params.status
+        funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege }!!
         funcStmt.dataType = DataType.NONE
         funcStmt.expression = ""
         return funcStmt
     }
 
-    override fun visitFunctionParams(ctx: FunctionParamsContext): StatementInfo {
+    override fun visitFunctionParams(ctx: FunctionParamsContext): List<StatementInfo> {
         val stmts: ArrayList<StatementInfo> = ArrayList(ctx.statement().size)
         for (statementContext in ctx.statement()) {
             stmts.add(visitStatement(statementContext))
         }
-        val stmt = StatementInfo(ctx)
-        stmt.expression = stmts.joinToString(",") { it.expression }
-        stmt.status = stmts.map { it.status }.maxByOrNull { it.privilege }!!
-        return stmt
+        return stmts
     }
 
     override fun visitCaseStatement(ctx: CaseStatementContext): StatementInfo {
-        return super.visitCaseStatement(ctx)!!
+        val stmts = mutableListOf<StatementInfo>()
+        val exprBuilder = StringBuilder("CASE ")
+        val whenSize = ctx.WHEN().size
+        if (ctx.caseStmt == null) {
+            exprBuilder.append("\n")
+            for (i in 0..whenSize) {
+                val stmt = visitStatement(ctx.statement(i))
+                stmts.add(stmt)
+                exprBuilder.append("\t WHEN ").append(visitPredictStatement(ctx.predictStatement(i)).expression)
+                        .append(" THEN ").append(stmt.expression).append("\n")
+            }
+
+        } else {
+            exprBuilder.append(visitStatement(ctx.caseStmt).expression).append("\n")
+            for (i in 0..whenSize) {
+                val stmt = visitStatement(ctx.statement(i + 1))
+                stmts.add(stmt)
+                exprBuilder.append("\t WHEN ").append(visitConstant(ctx.constant(i)).expression)
+                        .append(" THEN ").append(stmt.expression).append("\n")
+            }
+        }
+        if (ctx.elseStmt != null) {
+            val stmt = visitStatement(ctx.elseStmt)
+            stmts.add(stmt)
+            exprBuilder.append("\t ELSE ").append(stmt.expression).append("\n")
+        }
+        exprBuilder.append(" END ")
+        if (stmts.map { it.dataType }.distinct().count() > 1) {
+            logger.warn("CASE表达式多个条件返回的数据类型不一致")
+        }
+        val caseStmt = StatementInfo(ctx)
+        caseStmt.expression = exprBuilder.toString()
+        caseStmt.dataType = stmts[0].dataType
+        caseStmt.status = stmts.map { it.status }.maxByOrNull { it.privilege }!!
+        return caseStmt
+    }
+
+    override fun visitIfStatement(ctx: IfStatementContext): StatementInfo {
+        val stmts = mutableListOf<StatementInfo>()
+        val exprBuilder = StringBuilder("CASE ")
+        var predStmt = visitPredictStatement(ctx.predict)
+        var stmt = visitStatement(ctx.statement())
+        stmts.add(stmt)
+        exprBuilder.append("\n").append("\t WHEN ").append(predStmt.expression)
+                .append(" THEN ").append(stmt.expression).append("\n")
+        for (elseIfStmt in ctx.elseIfStatement()) {
+            predStmt = visitPredictStatement(elseIfStmt.ifStatement().predict)
+            stmt = visitStatement(elseIfStmt.ifStatement().statement())
+            stmts.add(stmt)
+            exprBuilder.append("\n").append("\t WHEN ").append(predStmt.expression)
+                    .append(" THEN ").append(stmt.expression).append("\n")
+        }
+        if (ctx.elseStatement() != null) {
+            stmt = visitStatement(ctx.elseStatement().statement())
+            stmts.add(stmt)
+            exprBuilder.append("\t ELSE ").append(stmt.expression).append("\n")
+        }
+        exprBuilder.append(" END ")
+        if (stmts.map { it.dataType }.distinct().count() > 1) {
+            logger.warn("CASE表达式多个条件返回的数据类型不一致")
+        }
+        val ifStmt = StatementInfo(ctx)
+        ifStmt.dataType = stmts[0].dataType
+        ifStmt.expression = exprBuilder.toString()
+        ifStmt.status = stmts.map { it.status }.maxByOrNull { it.privilege }!!
+        return ifStmt
     }
 
     override fun visitIfSpecial(ctx: IfSpecialContext): StatementInfo {
@@ -237,19 +312,16 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
     }
 
     override fun visitIfFunction(ctx: IfFunctionContext): StatementInfo {
-        return super.visitIfFunction(ctx)!!
-    }
-
-    override fun visitIfStatement(ctx: IfStatementContext): StatementInfo {
-        return super.visitIfStatement(ctx)!!
-    }
-
-    override fun visitElseIfStatement(ctx: ElseIfStatementContext): StatementInfo {
-        return super.visitElseIfStatement(ctx)!!
-    }
-
-    override fun visitElseStatement(ctx: ElseStatementContext): StatementInfo {
-        return super.visitElseStatement(ctx)!!
+        val predStmt = visitPredictStatement(ctx.predict)
+        checkDataType(predStmt, DataType.BOOLEAN)
+        checkArgSize(ctx.statement(), 2)
+        val trueStmt = visitStatement(ctx.statement(0))
+        val falseStmt = visitStatement(ctx.statement(1))
+        val ifStmt = StatementInfo(ctx)
+        ifStmt.expression = "IF(${predStmt.expression}, ${trueStmt.expression}, ${falseStmt.expression})"
+        ifStmt.dataType = trueStmt.dataType
+        ifStmt.status = maxOf(trueStmt.status, falseStmt.status, Comparator.comparingInt { it.privilege })
+        return ifStmt
     }
 
     override fun visitPredictStatement(ctx: PredictStatementContext): StatementInfo {
@@ -266,7 +338,7 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String?, 
             predStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
             return predStmt
         }
-        return super.visitPredictStatement(ctx)!!
+        throw java.lang.IllegalStateException("Not Expected Here")
     }
 
 }

@@ -1,6 +1,5 @@
-// Generated from D:/projects/pms/module/module-formula/src/main/java/org/sunt/formula/function\Function.g4 by ANTLR 4.8
+// Generated from C:/Users/suntr/Project/pms/module/module-formula/src/main/java/org/sunt/formula/function/parser\Function.g4 by ANTLR 4.8
 package org.sunt.formula.function.parser;
-
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -119,6 +118,34 @@ public interface FunctionListener extends ParseTreeListener {
      * @param ctx the parse tree
      */
     void exitFuncArg(FunctionParser.FuncArgContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#argName}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterArgName(FunctionParser.ArgNameContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#argName}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitArgName(FunctionParser.ArgNameContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#argRef}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterArgRef(FunctionParser.ArgRefContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#argRef}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitArgRef(FunctionParser.ArgRefContext ctx);
 
     /**
      * Enter a parse tree produced by {@link FunctionParser#enumerations}.

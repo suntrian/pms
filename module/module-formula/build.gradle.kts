@@ -12,4 +12,5 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.antlr:antlr4:4.8-1")
     implementation("org.antlr:antlr4-runtime:4.8-1")
+    implementation("org.apache-extras.beanshell:bsh:2.0b6")
 }

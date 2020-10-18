@@ -8,6 +8,8 @@ LOWER
 */
 文本函数::LOWER(text:String):String               -> LOWER($1)
 
+ALIAS LOWER = LOW, TO_LOWER_CASE
+
 /**
 UPPER
 
@@ -48,16 +50,18 @@ SUBSTRING
 */
 [文本函数]::SUBSTRING(field:String, start:Integer, len: Integer):String              -> SUBSTRING($1, $2, $3)
 
-TO_DOUBLE
 /**
+TO_DOUBLE
+
     1. 用法： TO_DOUBLE(field, precision)
     2. 说明： 强制转换字段field为Double,保留precision位小数
     3. 示例： TO_DOUBLE("134.343", 2) = 134.34
              TO_DOUBLE(1234, 2) = 1234.00
     4. 参数： String, Integer 类型字段
 */
-[数值函数]::TO_DOUBLE(field:String, precision: Integer):Double              -> CAST($1 AS DECIMAL(38, $2))
+[数值函数]::TO_DOUBLE(field:String, precision: Integer):DECIMAL              -> CAST($1 AS DECIMAL(38, $2))
 
+/**
 TO_DOUBLE
 
     1. 用法： TO_DOUBLE(field, precision)
@@ -68,6 +72,7 @@ TO_DOUBLE
 */
 [数值函数]::TO_DOUBLE(field:Integer, precision: Integer):Double              -> CAST($1 AS DECIMAL(38, $2))
 
+/**
 TO_DOUBLE
 
     1. 用法： TO_DOUBLE(field)
@@ -78,6 +83,8 @@ TO_DOUBLE
 */
 [数值函数]::TO_DOUBLE(field:String):Double              -> CAST($1 AS DECIMAL(38, 2))
 
+
+/**
 TO_DOUBLE
 
     1. 用法： TO_DOUBLE(field)
@@ -88,6 +95,7 @@ TO_DOUBLE
 */
 [数值函数]::TO_DOUBLE(field:Integer):Double              -> CAST($1 AS DECIMAL(38, 2))
 
+/**
 TO_INTEGER
 
     1. 用法： TO_INTEGER(field)
@@ -96,7 +104,7 @@ TO_INTEGER
     4. 参数： String, Double 类型字段
 */
 [数值函数]::TO_INTEGER(field:String):Integer                                -> CAST($1 AS DECIMAL)
-
+/**
 TO_INTEGER
 
     1. 用法： TO_INTEGER(field)
@@ -107,9 +115,12 @@ TO_INTEGER
 [数值函数]::TO_INTEGER(field:Double):Integer                                -> CAST($1 AS DECIMAL)
 
 /**
-    返回整数类型数字的绝对值
-    @param
-    @return
+ABS
+
+   1. 用法：ABS(number)
+   2. 说明：返回number的绝对值
+   3. 示例：ABS(利润)
+   4. 参数类型：number : 数值类型字段
 */
 [数值函数]::ABS(num:Integer): Integer               -> ABS($1)
 
@@ -296,9 +307,6 @@ DATEDIFF
 */
 [日期函数]::DATEDIFF(unit:String:['day','week','month','quarter','year'], enddate: DATETIME, startdate: DATETIME): Integer                       -> DATEDIFF($1, $2)
 
-[条件函数]
-$控制条件跳转函数
-
 /**
 IFNULL
        1. 用法：IFNULL(var1, var2)
@@ -307,7 +315,7 @@ IFNULL
        4. 参数类型：var1: 任意类型字段或常量
           ​		  var2:  任意类型字段或常量
 */
-[日期函数]::IFNULL(val:Any, ifNullValue: Any): $1.type      -> IFNULL($1, $2)
+[条件函数]::IFNULL(val:Any, ifNullValue: Any): $1.type      -> IFNULL($1, $2)
 
 /**
 IF
@@ -318,4 +326,4 @@ IF
                    var2:  任意类型字段或常量
                    var3:  任意类型字段或常量
 */
-[日期函数]::IF(condition: Bool, ifTrue: Any, ifFalseOrNull: Any): $3.type     ->  IF($1, $2, $3)
+[条件函数]::IF(condition: Bool, ifTrue: Any, ifFalseOrNull: Any): $3.type     ->  IF($1, $2, $3)
