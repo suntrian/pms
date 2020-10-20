@@ -1,6 +1,6 @@
 package org.sunt.sqlanalysis.lineage.model.table
 
-class SelectTable() : LogicalTable() {
+class SelectTable(related: List<ITable>) : LogicalTable(related) {
 
     private var alias: String = ""
 

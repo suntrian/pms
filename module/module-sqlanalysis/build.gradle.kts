@@ -4,6 +4,6 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.antlr:antlr4:4.8-1")
+    compileOnly("org.antlr:antlr4:4.8-1")
     implementation("org.antlr:antlr4-runtime:4.8-1")
 }

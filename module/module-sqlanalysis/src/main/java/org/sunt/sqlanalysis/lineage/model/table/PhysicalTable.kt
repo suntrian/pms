@@ -1,6 +1,7 @@
 package org.sunt.sqlanalysis.lineage.model.table
 
 import org.sunt.sqlanalysis.lineage.model.field.PhysicalField
+import java.util.*
 
 open class PhysicalTable(val catalog: String?, val schema: String?, val table: String) : ITable {
 
@@ -8,15 +9,15 @@ open class PhysicalTable(val catalog: String?, val schema: String?, val table: S
 
     constructor(table: String): this(null, null, table)
 
-    private var alias = this.table;
+    private var alias = this.table
 
-    private var fields: List<PhysicalField> = mutableListOf()
+    private val fields: MutableList<PhysicalField> = LinkedList()
 
     override fun getAlias(): String {
         return alias;
     }
 
-    override fun getFields(): List<PhysicalField> {
+    override fun getFields(): MutableList<PhysicalField> {
         return fields
     }
 

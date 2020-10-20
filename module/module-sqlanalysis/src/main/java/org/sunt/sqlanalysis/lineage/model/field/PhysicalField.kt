@@ -1,9 +1,12 @@
 package org.sunt.sqlanalysis.lineage.model.field
 
 import org.sunt.sqlanalysis.lineage.model.table.PhysicalTable
-import java.util.*
 
 open class PhysicalField(val name: String, private val table: PhysicalTable) : IPhysicalField {
+
+    init {
+        table.getFields().add(this)
+    }
 
     private var alias = name;
 
