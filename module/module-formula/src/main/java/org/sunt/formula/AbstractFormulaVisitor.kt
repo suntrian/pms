@@ -129,6 +129,21 @@ abstract class AbstractFormulaVisitor(protected val dialect: SqlProduct, protect
             throw ParamsSizeMismatchException("", expectedSize, stmts.size)
         }
 
+        public val operatorMap = mapOf(
+                AND to " AND ",
+                XOR to " XOR ",
+                OR to " OR ",
+                MUL to " * ",
+                DIV to " / ",
+                MOD to " % ",
+                PLUS to " + ",
+                MINUS to " - ",
+                GREATER to " > ",
+                GREATER_EQUAL to " >= ",
+                LESS to " < ",
+                LESS_EQUAL to " <= ",
+                EQUAL to " = "
+        )
     }
 
     init {

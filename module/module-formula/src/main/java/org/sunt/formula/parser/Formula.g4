@@ -71,7 +71,10 @@ elseStatement
 
 predictStatement
     : statement
-    | predictStatement op=(AND | OR | XOR) predictStatement
+    | L_PARENTHESES predictStatement R_PARENTHESES
+    | predictStatement op=AND predictStatement
+    | predictStatement op=XOR predictStatement
+    | predictStatement op=OR predictStatement
    ;
 
 constant

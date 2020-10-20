@@ -1,4 +1,4 @@
-// Generated from C:/Users/suntr/Project/pms/module/module-formula/src/main/java/org/sunt/formula/parser\Formula.g4 by ANTLR 4.8
+// Generated from D:/projects/pms/module/module-formula/src/main/java/org/sunt/formula/parser\Formula.g4 by ANTLR 4.8
 package org.sunt.formula.parser;
 
 import org.antlr.v4.runtime.*;
@@ -10,6 +10,13 @@ import org.antlr.v4.runtime.dfa.DFA;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class FormulaLexer extends Lexer {
+	static {
+		RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION);
+	}
+
+	protected static final DFA[] _decisionToDFA;
+	protected static final PredictionContextCache _sharedContextCache =
+			new PredictionContextCache();
 	public static final int
 			L_PARENTHESES = 1, R_PARENTHESES = 2, L_BRACE = 3, R_BRACE = 4, COMMA = 5, COLON = 6,
 			MUL = 7, DIV = 8, PLUS = 9, MINUS = 10, POWER = 11, MOD = 12, GREATER = 13, GREATER_EQUAL = 14,
@@ -17,12 +24,122 @@ public class FormulaLexer extends Lexer {
 			NOT = 22, AND = 23, OR = 24, XOR = 25, CASE = 26, WHEN = 27, THEN = 28, ELSE = 29, END = 30,
 			BOOL = 31, NULL = 32, STRING = 33, INTEGER = 34, FLOAT = 35, COLUMN_ID = 36, IDENTITY = 37,
 			COLUMN_NAME = 38, WS = 39, LINE_COMMENT = 40, BLOCK_COMMENT = 41;
+	public static String[] channelNames = {
+			"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
+	};
+
+	public static String[] modeNames = {
+			"DEFAULT_MODE"
+	};
+
+	private static String[] makeRuleNames() {
+		return new String[]{
+				"L_PARENTHESES", "R_PARENTHESES", "L_BRACE", "R_BRACE", "COMMA", "COLON",
+				"MUL", "DIV", "PLUS", "MINUS", "POWER", "MOD", "GREATER", "GREATER_EQUAL",
+				"EQUAL", "LESS", "LESS_EQUAL", "NOT_EQUAL", "IF", "LIKE", "IN", "NOT",
+				"AND", "OR", "XOR", "CASE", "WHEN", "THEN", "ELSE", "END", "BOOL", "NULL",
+				"STRING", "INTEGER", "FLOAT", "COLUMN_ID", "IDENTITY", "COLUMN_NAME",
+				"WS", "LINE_COMMENT", "BLOCK_COMMENT", "DOT", "BACK_QUOTE", "SHARP",
+				"SIGN", "ESC_DQUOTE", "ESC_SQUOTE", "ALPHA", "DIGIT", "CHINESE", "NL",
+				"BLANK", "ANY", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K",
+				"L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y",
+				"Z"
+		};
+	}
+
 	public static final String[] ruleNames = makeRuleNames();
+
+	private static String[] makeLiteralNames() {
+		return new String[]{
+				null, "'('", "')'", "'{'", "'}'", "','", "':'", "'*'", "'/'", "'+'",
+				"'-'", "'^'", null, "'>'", "'>='", null, "'<'", "'<='"
+		};
+	}
+
+	private static final String[] _LITERAL_NAMES = makeLiteralNames();
+
+	private static String[] makeSymbolicNames() {
+		return new String[]{
+				null, "L_PARENTHESES", "R_PARENTHESES", "L_BRACE", "R_BRACE", "COMMA",
+				"COLON", "MUL", "DIV", "PLUS", "MINUS", "POWER", "MOD", "GREATER", "GREATER_EQUAL",
+				"EQUAL", "LESS", "LESS_EQUAL", "NOT_EQUAL", "IF", "LIKE", "IN", "NOT",
+				"AND", "OR", "XOR", "CASE", "WHEN", "THEN", "ELSE", "END", "BOOL", "NULL",
+				"STRING", "INTEGER", "FLOAT", "COLUMN_ID", "IDENTITY", "COLUMN_NAME",
+				"WS", "LINE_COMMENT", "BLOCK_COMMENT"
+		};
+	}
+
+	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
+	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
+
 	/**
 	 * @deprecated Use {@link #VOCABULARY} instead.
 	 */
 	@Deprecated
 	public static final String[] tokenNames;
+
+	static {
+		tokenNames = new String[_SYMBOLIC_NAMES.length];
+		for (int i = 0; i < tokenNames.length; i++) {
+			tokenNames[i] = VOCABULARY.getLiteralName(i);
+			if (tokenNames[i] == null) {
+				tokenNames[i] = VOCABULARY.getSymbolicName(i);
+			}
+
+			if (tokenNames[i] == null) {
+				tokenNames[i] = "<INVALID>";
+			}
+		}
+	}
+
+	@Override
+	@Deprecated
+	public String[] getTokenNames() {
+		return tokenNames;
+	}
+
+	@Override
+
+	public Vocabulary getVocabulary() {
+		return VOCABULARY;
+	}
+
+
+	public FormulaLexer(CharStream input) {
+		super(input);
+		_interp = new LexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
+	}
+
+	@Override
+	public String getGrammarFileName() {
+		return "Formula.g4";
+	}
+
+	@Override
+	public String[] getRuleNames() {
+		return ruleNames;
+	}
+
+	@Override
+	public String getSerializedATN() {
+		return _serializedATN;
+	}
+
+	@Override
+	public String[] getChannelNames() {
+		return channelNames;
+	}
+
+	@Override
+	public String[] getModeNames() {
+		return modeNames;
+	}
+
+	@Override
+	public ATN getATN() {
+		return _ATN;
+	}
+
 	public static final String _serializedATN =
 			"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\2+\u01cf\b\1\4\2\t" +
 					"\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13" +
@@ -183,121 +300,10 @@ public class FormulaLexer extends Lexer {
 					"\u0184\u018a\u0199\4\b\2\2\2\3\2";
 	public static final ATN _ATN =
 			new ATNDeserializer().deserialize(_serializedATN.toCharArray());
-	protected static final DFA[] _decisionToDFA;
-	protected static final PredictionContextCache _sharedContextCache =
-			new PredictionContextCache();
-	private static final String[] _LITERAL_NAMES = makeLiteralNames();
-	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
-	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
-	public static String[] channelNames = {
-			"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
-	};
-	public static String[] modeNames = {
-			"DEFAULT_MODE"
-	};
-
-	static {
-		RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION);
-	}
-
-	static {
-		tokenNames = new String[_SYMBOLIC_NAMES.length];
-		for (int i = 0; i < tokenNames.length; i++) {
-			tokenNames[i] = VOCABULARY.getLiteralName(i);
-			if (tokenNames[i] == null) {
-				tokenNames[i] = VOCABULARY.getSymbolicName(i);
-			}
-
-			if (tokenNames[i] == null) {
-				tokenNames[i] = "<INVALID>";
-			}
-		}
-	}
-
 	static {
 		_decisionToDFA = new DFA[_ATN.getNumberOfDecisions()];
 		for (int i = 0; i < _ATN.getNumberOfDecisions(); i++) {
 			_decisionToDFA[i] = new DFA(_ATN.getDecisionState(i), i);
 		}
-	}
-
-	public FormulaLexer(CharStream input) {
-		super(input);
-		_interp = new LexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
-	}
-
-	private static String[] makeRuleNames() {
-		return new String[]{
-				"L_PARENTHESES", "R_PARENTHESES", "L_BRACE", "R_BRACE", "COMMA", "COLON",
-				"MUL", "DIV", "PLUS", "MINUS", "POWER", "MOD", "GREATER", "GREATER_EQUAL",
-				"EQUAL", "LESS", "LESS_EQUAL", "NOT_EQUAL", "IF", "LIKE", "IN", "NOT",
-				"AND", "OR", "XOR", "CASE", "WHEN", "THEN", "ELSE", "END", "BOOL", "NULL",
-				"STRING", "INTEGER", "FLOAT", "COLUMN_ID", "IDENTITY", "COLUMN_NAME",
-				"WS", "LINE_COMMENT", "BLOCK_COMMENT", "DOT", "BACK_QUOTE", "SHARP",
-				"SIGN", "ESC_DQUOTE", "ESC_SQUOTE", "ALPHA", "DIGIT", "CHINESE", "NL",
-				"BLANK", "ANY", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K",
-				"L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y",
-				"Z"
-		};
-	}
-
-	private static String[] makeLiteralNames() {
-		return new String[]{
-				null, "'('", "')'", "'{'", "'}'", "','", "':'", "'*'", "'/'", "'+'",
-				"'-'", "'^'", null, "'>'", "'>='", null, "'<'", "'<='"
-		};
-	}
-
-	private static String[] makeSymbolicNames() {
-		return new String[]{
-				null, "L_PARENTHESES", "R_PARENTHESES", "L_BRACE", "R_BRACE", "COMMA",
-				"COLON", "MUL", "DIV", "PLUS", "MINUS", "POWER", "MOD", "GREATER", "GREATER_EQUAL",
-				"EQUAL", "LESS", "LESS_EQUAL", "NOT_EQUAL", "IF", "LIKE", "IN", "NOT",
-				"AND", "OR", "XOR", "CASE", "WHEN", "THEN", "ELSE", "END", "BOOL", "NULL",
-				"STRING", "INTEGER", "FLOAT", "COLUMN_ID", "IDENTITY", "COLUMN_NAME",
-				"WS", "LINE_COMMENT", "BLOCK_COMMENT"
-		};
-	}
-
-	@Override
-	@Deprecated
-	public String[] getTokenNames() {
-		return tokenNames;
-	}
-
-	@Override
-
-	public Vocabulary getVocabulary() {
-		return VOCABULARY;
-	}
-
-	@Override
-	public String getGrammarFileName() {
-		return "Formula.g4";
-	}
-
-	@Override
-	public String[] getRuleNames() {
-		return ruleNames;
-	}
-
-	@Override
-	public String getSerializedATN() {
-		return _serializedATN;
-	}
-
-	@Override
-	public String[] getChannelNames() {
-		return channelNames;
-	}
-
-	@Override
-	public String[] getModeNames() {
-		return modeNames;
-	}
-
-	@Override
-	public ATN getATN() {
-		return _ATN;
 	}
 }

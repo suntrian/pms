@@ -133,11 +133,11 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
                 }
             }
             MOD -> {
-                mathStmt.expression = left.expression + " % " + right.expression
+                mathStmt.expression = left.expression + operatorMap[MOD] + right.expression
                 mathStmt.dataType = DataType.INTEGER
             }
             MUL -> {
-                mathStmt.expression = left.expression + " * " + right.expression
+                mathStmt.expression = left.expression + operatorMap[MUL] + right.expression
                 mathStmt.dataType = if (left.dataType == DataType.DECIMAL || right.dataType == DataType.DECIMAL) {
                     DataType.DECIMAL
                 } else {
@@ -145,11 +145,11 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
                 }
             }
             DIV -> {
-                mathStmt.expression = left.expression + " / " + right.expression
+                mathStmt.expression = left.expression + operatorMap[DIV] + right.expression
                 mathStmt.dataType = DataType.DECIMAL
             }
-            PLUS -> mathStmt.expression = left.expression + " + " + right.expression
-            MINUS -> mathStmt.expression = left.expression + " - " + right.expression
+            PLUS -> mathStmt.expression = left.expression + operatorMap[PLUS] + right.expression
+            MINUS -> mathStmt.expression = left.expression + operatorMap[MINUS] + right.expression
         }
 
         return mathStmt
@@ -176,7 +176,7 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
         val stmt = StatementInfo(ctx)
         stmt.dataType = DataType.BOOLEAN
         stmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
-        stmt.expression = left.expression + ctx.op.text + right.expression
+        stmt.expression = left.expression + operatorMap[ctx.op.type] + right.expression
         return stmt
     }
 
@@ -330,13 +330,19 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
             checkDataType(stmt, DataType.BOOLEAN)
             return stmt
         } else if (ctx.op != null) {
+            checkArgSize(ctx.predictStatement(), 2)
             val left = visitPredictStatement(ctx.predictStatement(0))
             val right = visitPredictStatement(ctx.predictStatement(1))
             val predStmt = StatementInfo(ctx)
-            predStmt.expression = left.expression + ctx.op.text + right.expression
+            predStmt.expression = left.expression + operatorMap[ctx.op.type] + right.expression
             predStmt.dataType = DataType.BOOLEAN
             predStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
             return predStmt
+        } else if (ctx.L_PARENTHESES() != null && ctx.R_PARENTHESES() != null) {
+            checkArgSize(ctx.predictStatement(), 1)
+            val stmt = visitPredictStatement(ctx.predictStatement(0))
+            stmt.expression = "(" + stmt.expression + ")"
+            return stmt;
         }
         throw java.lang.IllegalStateException("Not Expected Here")
     }
