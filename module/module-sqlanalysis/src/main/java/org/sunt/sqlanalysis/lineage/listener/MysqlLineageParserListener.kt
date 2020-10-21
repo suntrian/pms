@@ -11,11 +11,11 @@ import org.sunt.sqlanalysis.lineage.model.field.UnionField
 import org.sunt.sqlanalysis.lineage.model.table.*
 import java.util.*
 
-class MysqlLineageParserListener: MySqlParserBaseListener() {
+class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
 
     private val tables: MutableList<LogicalTable> = LinkedList()
 
-    fun getTables(): List<LogicalTable> {
+    override fun getTables(): List<LogicalTable> {
         return this.tables
     }
 
