@@ -5,7 +5,8 @@ import org.sunt.sqlanalysis.lineage.model.field.IField
 
 interface ITable {
 
-    fun getAlias(): String
+    val alias: String
 
-    fun getFields(): List<IField>
+    val fields: List<IField>
+
 }

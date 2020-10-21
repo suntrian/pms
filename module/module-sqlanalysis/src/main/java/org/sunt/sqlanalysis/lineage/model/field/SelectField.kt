@@ -5,12 +5,8 @@ import org.sunt.sqlanalysis.lineage.model.table.LogicalTable
 /**
  *  select字段
  */
-class SelectField(val expr: String, table: LogicalTable) : LogicalField(table) {
+open class SelectField(val expr: String, table: LogicalTable) : LogicalField(table) {
 
-    private var alias: String = expr
-
-    override fun getAlias(): String {
-        return alias
-    }
+    final override var alias: String = expr
 
 }

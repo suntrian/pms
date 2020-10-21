@@ -2,20 +2,12 @@ package org.sunt.sqlanalysis.lineage.model.field
 
 import org.sunt.sqlanalysis.lineage.model.table.PhysicalTable
 
-open class PhysicalField(val name: String, private val table: PhysicalTable) : IPhysicalField {
+open class PhysicalField(val name: String, override val table: PhysicalTable) : IPhysicalField {
+
+    final override var alias = name;
 
     init {
-        table.getFields().add(this)
-    }
-
-    private var alias = name;
-
-    override fun getTable(): PhysicalTable {
-        return this.table
-    }
-
-    override fun getAlias(): String {
-        return alias;
+        table.fields.add(this)
     }
 
     override fun getFullName(): String {

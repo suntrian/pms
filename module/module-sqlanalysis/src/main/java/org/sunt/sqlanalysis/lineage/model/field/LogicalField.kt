@@ -2,20 +2,17 @@ package org.sunt.sqlanalysis.lineage.model.field
 
 import org.sunt.sqlanalysis.lineage.model.Relation
 import org.sunt.sqlanalysis.lineage.model.table.LogicalTable
+import java.util.*
 
-abstract class LogicalField (private val table: LogicalTable): ILogicalField {
+abstract class LogicalField(override val table: LogicalTable) : ILogicalField {
 
     init {
-        table.getFields().add(this)
+        table.fields.toMutableList().add(this)
     }
 
-    private var relations: List<Relation> = emptyList()
+    private var relations: MutableList<Relation> = LinkedList()
 
-    override fun getTable(): LogicalTable {
-        return this.table
-    }
-
-    override fun getRelated(): List<Relation> {
+    override fun getRelated(): MutableList<Relation> {
         return this.relations
     }
 

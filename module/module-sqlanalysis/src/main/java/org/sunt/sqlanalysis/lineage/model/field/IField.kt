@@ -5,8 +5,8 @@ import org.sunt.sqlanalysis.lineage.model.table.ITable
 
 interface IField {
 
-    fun getTable(): ITable
+    val table: ITable
 
-    fun getAlias(): String
+    val alias: String
 
 }

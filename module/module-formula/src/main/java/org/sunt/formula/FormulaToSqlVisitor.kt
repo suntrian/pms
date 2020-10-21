@@ -240,7 +240,7 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
         val whenSize = ctx.WHEN().size
         if (ctx.caseStmt == null) {
             exprBuilder.append("\n")
-            for (i in 0..whenSize) {
+            for (i in 0 until whenSize) {
                 val stmt = visitStatement(ctx.statement(i))
                 stmts.add(stmt)
                 exprBuilder.append("\t WHEN ").append(visitPredictStatement(ctx.predictStatement(i)).expression)
@@ -249,7 +249,7 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
 
         } else {
             exprBuilder.append(visitStatement(ctx.caseStmt).expression).append("\n")
-            for (i in 0..whenSize) {
+            for (i in 0 until whenSize) {
                 val stmt = visitStatement(ctx.statement(i + 1))
                 stmts.add(stmt)
                 exprBuilder.append("\t WHEN ").append(visitConstant(ctx.constant(i)).expression)

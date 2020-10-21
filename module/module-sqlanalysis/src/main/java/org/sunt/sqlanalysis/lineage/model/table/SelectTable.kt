@@ -1,11 +1,11 @@
 package org.sunt.sqlanalysis.lineage.model.table
 
-class SelectTable(related: List<ITable>) : LogicalTable(related) {
+import org.sunt.sqlanalysis.lineage.model.field.LogicalField
 
-    private var alias: String = ""
+open class SelectTable(related: List<ITable>) : LogicalTable(related) {
 
-    override fun getAlias(): String {
-        return this.alias
-    }
+    final override var alias: String = ""
+
+    final override val fields: List<LogicalField> = emptyList()
 
 }
