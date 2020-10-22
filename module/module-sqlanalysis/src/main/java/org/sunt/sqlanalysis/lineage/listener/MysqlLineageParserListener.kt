@@ -4,16 +4,17 @@ import org.sunt.sqlanalysis.grammar.mysql.MySqlParser
 import org.sunt.sqlanalysis.grammar.mysql.MySqlParserBaseListener
 import org.sunt.sqlanalysis.lineage.model.Relation
 import org.sunt.sqlanalysis.lineage.model.RelationType
-import org.sunt.sqlanalysis.lineage.model.field.AsteriskField
-import org.sunt.sqlanalysis.lineage.model.field.LogicalField
-import org.sunt.sqlanalysis.lineage.model.field.SelectField
-import org.sunt.sqlanalysis.lineage.model.field.UnionField
+import org.sunt.sqlanalysis.lineage.model.field.*
 import org.sunt.sqlanalysis.lineage.model.table.*
 import java.util.*
 
 class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
 
-    private val tables: MutableList<LogicalTable> = LinkedList()
+    private val tables: MutableList<LogicalTable> = mutableListOf()
+
+    private val variables: MutableList<VariableField> = mutableListOf()
+
+    private var currentBlock: LogicalTable? = null
 
     override fun getTables(): List<LogicalTable> {
         return this.tables
@@ -90,6 +91,21 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
         }
     }
 
+
+    override fun enterCreateProcedure(ctx: MySqlParser.CreateProcedureContext) {
+        ctx.fullId()?.text?.let { procedureName -> currentBlock = EmptyTable(procedureName) }
+    }
+
+    override fun exitCreateProcedure(ctx: MySqlParser.CreateProcedureContext) {
+        this.currentBlock = null
+    }
+
+    override fun exitDeclareVariable(ctx: MySqlParser.DeclareVariableContext?) {
+        for (uidContext in ctx?.uidList()?.uid() ?: emptyList()) {
+            val variable = uidContext.text
+            this.variables.add(VariableField(variable, if (currentBlock != null && currentBlock is EmptyTable) currentBlock as EmptyTable else EmptyTable("")))
+        }
+    }
 
     private fun select(ctx: MySqlParser.SelectStatementContext): SelectTable {
         var selectTableList: MutableList<SelectTable>?
