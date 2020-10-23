@@ -1,9 +1,13 @@
 package org.sunt.sqlanalysis.lineage.listener
 
+import org.sunt.sqlanalysis.exception.SqlParseException
+import org.sunt.sqlanalysis.exception.WillNeverHappenException
 import org.sunt.sqlanalysis.grammar.mysql.MySqlParser
 import org.sunt.sqlanalysis.grammar.mysql.MySqlParserBaseListener
 import org.sunt.sqlanalysis.lineage.model.Relation
 import org.sunt.sqlanalysis.lineage.model.RelationType
+import org.sunt.sqlanalysis.lineage.model.RelationType.CONDITION
+import org.sunt.sqlanalysis.lineage.model.RelationType.DIRECTCOPY
 import org.sunt.sqlanalysis.lineage.model.field.*
 import org.sunt.sqlanalysis.lineage.model.table.*
 import java.util.*
@@ -47,7 +51,7 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
             when {
                 updateStatementContext.singleUpdateStatement() != null -> {
                     val tableName = updateStatementContext.singleUpdateStatement().tableName().text
-                    this.tables.add(UpdateTable(tableName))
+                    this.tables.add(UpdateTable(tableName).also { table -> updateStatementContext.singleUpdateStatement().uid()?.let { table.alias = it.text } })
                 }
                 updateStatementContext.multipleUpdateStatement() != null -> {
                     val tables = tableSources(updateStatementContext.multipleUpdateStatement().tableSources())
@@ -93,7 +97,7 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
 
 
     override fun enterCreateProcedure(ctx: MySqlParser.CreateProcedureContext) {
-        ctx.fullId()?.text?.let { procedureName -> currentBlock = EmptyTable(procedureName) }
+        ctx.fullId()?.text?.let { procedureName -> currentBlock = AnonymousTable(procedureName) }
     }
 
     override fun exitCreateProcedure(ctx: MySqlParser.CreateProcedureContext) {
@@ -103,7 +107,7 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
     override fun exitDeclareVariable(ctx: MySqlParser.DeclareVariableContext?) {
         for (uidContext in ctx?.uidList()?.uid() ?: emptyList()) {
             val variable = uidContext.text
-            this.variables.add(VariableField(variable, if (currentBlock != null && currentBlock is EmptyTable) currentBlock as EmptyTable else EmptyTable("")))
+            this.variables.add(VariableField(variable, if (currentBlock != null && currentBlock is AnonymousTable) currentBlock as AnonymousTable else AnonymousTable("")))
         }
     }
 
@@ -145,13 +149,13 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
                 }
             }
             else -> {
-                throw IllegalStateException("not supposed to here")
+                throw WillNeverHappenException("not supposed to here")
             }
         }
         val unionTable = UnionTable(selectTableList)
         val fieldSize = selectTableList.map { it.fields }.filter { f -> f.none { x -> x is AsteriskField } }.map { it.size }.toSet()
         if (fieldSize.size > 1) {
-            throw IllegalStateException("union查询的字段个数不一致")
+            throw SqlParseException("union查询的字段个数不一致")
         } else if (fieldSize.isEmpty()) {
             unionTable.allAsteriskField = true
             val maxFieldSize = selectTableList.map { it.fields.size }.maxOf { x -> x }
@@ -205,12 +209,41 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
     private fun generateSelectTable(from: MySqlParser.FromClauseContext, selects: MySqlParser.SelectElementsContext): SelectTable {
         val innerTables = from(from)
         val selectTable = SelectTable(innerTables)
-        selectElements(selects, selectTable)
+        val selectFields = selectElements(selects, selectTable)
+        val where = where(from)
+        val groupBy = groupBy(from)
+        val having = having(from)
+        for (selectField in selectFields) {
+
+        }
+
         return selectTable
     }
 
     private fun from(from: MySqlParser.FromClauseContext): List<ITable> {
         return tableSources(from.tableSources())
+    }
+
+    private fun where(from: MySqlParser.FromClauseContext): List<Pair<RelationType, FullFieldName>> {
+        if (from.WHERE() != null) {
+            return expression(from.whereExpr).map { Pair(CONDITION, it.second) }
+        }
+        return emptyList()
+    }
+
+    private fun groupBy(from: MySqlParser.FromClauseContext): List<Pair<RelationType, FullFieldName>> {
+        if (from.groupByItem() != null) {
+            val fields = mutableListOf<Pair<RelationType, FullFieldName>>()
+            for (groupByItemContext in from.groupByItem()) {
+                fields.addAll(expression(groupByItemContext.expression()))
+            }
+            return fields
+        }
+        return emptyList()
+    }
+
+    private fun having(from: MySqlParser.FromClauseContext): List<Pair<RelationType, FullFieldName>> {
+        return expression(from.havingExpr).map { Pair(CONDITION, it.second) }
     }
 
     private fun tableSources(tableSourcesContext: MySqlParser.TableSourcesContext): List<ITable> {
@@ -252,7 +285,7 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
         when (tableSourceItem) {
             is MySqlParser.AtomTableItemContext -> {
                 val tableFullName = tableSourceItem.tableName().text
-                val table = PhysicalTable(tableFullName)
+                val table = PhysicalTable(parseTableName(tableFullName))
                 tableSourceItem.alias?.text?.let { table.alias = it }
 
                 return Collections.singletonList(table)
@@ -266,7 +299,7 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
                 return tableSources(tableSourceItem.tableSources())
             }
             else -> {
-                throw IllegalStateException("will not come here")
+                throw WillNeverHappenException("will not come here")
             }
         }
     }
@@ -307,21 +340,21 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
                     //todo
                 }
                 else -> {
-                    throw IllegalStateException("will not come here")
+                    throw WillNeverHappenException("will not come here")
                 }
             }
         }
         return fields
     }
 
-    private fun functionCall(functionCall: MySqlParser.FunctionCallContext): List<String> {
+    private fun functionCall(functionCall: MySqlParser.FunctionCallContext): List<Pair<RelationType, FullFieldName>> {
         return when (functionCall) {
             is MySqlParser.SpecificFunctionCallContext -> {
                 when (val specificFunction = functionCall.specificFunction()) {
                     is MySqlParser.DataTypeFunctionCallContext -> expression(specificFunction.expression())
-                    is MySqlParser.ValuesFunctionCallContext -> listOf(specificFunction.fullColumnName().text)
+                    is MySqlParser.ValuesFunctionCallContext -> listOf(Pair(DIRECTCOPY, parseFieldName(specificFunction.fullColumnName().text)))
                     is MySqlParser.CaseFunctionCallContext -> {
-                        val result = mutableListOf<String>()
+                        val result = mutableListOf<Pair<RelationType, FullFieldName>>()
                         specificFunction.expression()?.let { result.addAll(expression(it)) }
                         for (caseFuncAlternativeContext in specificFunction.caseFuncAlternative()) {
                             result.addAll(functionArg(caseFuncAlternativeContext.condition))
@@ -364,7 +397,7 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
         }
     }
 
-    private fun expression(expression: MySqlParser.ExpressionContext): List<String> {
+    private fun expression(expression: MySqlParser.ExpressionContext): List<Pair<RelationType, FullFieldName>> {
         return when (expression) {
             is MySqlParser.NotExpressionContext -> expression(expression.expression())
             is MySqlParser.LogicalExpressionContext ->
@@ -373,14 +406,14 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
                         .toList()
             is MySqlParser.IsExpressionContext -> predicate(expression.predicate())
             is MySqlParser.PredicateExpressionContext -> predicate(expression.predicate())
-            else -> throw java.lang.IllegalStateException("will not come here")
+            else -> throw WillNeverHappenException("will not come here")
 
         }
     }
 
-    private fun expressionAtom(expression: MySqlParser.ExpressionAtomContext): List<String> {
+    private fun expressionAtom(expression: MySqlParser.ExpressionAtomContext): List<Pair<RelationType, FullFieldName>> {
         return when (expression) {
-            is MySqlParser.FullColumnNameExpressionAtomContext -> listOf(expression.fullColumnName().text)
+            is MySqlParser.FullColumnNameExpressionAtomContext -> listOf(Pair(DIRECTCOPY, parseFieldName(expression.fullColumnName().text)))
             is MySqlParser.FunctionCallExpressionAtomContext -> functionCall(expression.functionCall())
             is MySqlParser.CollateExpressionAtomContext -> expressionAtom(expression.expressionAtom())
             is MySqlParser.UnaryExpressionAtomContext -> expressionAtom(expression.expressionAtom())
@@ -396,7 +429,7 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
         }
     }
 
-    private fun predicate(predicate: MySqlParser.PredicateContext): List<String> {
+    private fun predicate(predicate: MySqlParser.PredicateContext): List<Pair<RelationType, FullFieldName>> {
         return when (predicate) {
             is MySqlParser.InPredicateContext -> emptyList()
             is MySqlParser.IsNullPredicateContext -> emptyList()
@@ -412,11 +445,11 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
         }
     }
 
-    private fun functionArgs(args: MySqlParser.FunctionArgsContext): List<String> {
-        val result = LinkedList<String>()
+    private fun functionArgs(args: MySqlParser.FunctionArgsContext): List<Pair<RelationType, FullFieldName>> {
+        val result = LinkedList<Pair<RelationType, FullFieldName>>()
         if (args.fullColumnName() != null) {
             for (fullColumnNameContext in args.fullColumnName()) {
-                result.add(fullColumnNameContext.text)
+                result.add(Pair(DIRECTCOPY, parseFieldName(fullColumnNameContext.text)))
             }
         }
         if (args.functionCall() != null) {
@@ -432,13 +465,64 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
         return result
     }
 
-    private fun functionArg(arg: MySqlParser.FunctionArgContext): List<String> {
+    private fun functionArg(arg: MySqlParser.FunctionArgContext): List<Pair<RelationType, FullFieldName>> {
         return when {
-            arg.fullColumnName() != null -> listOf(arg.fullColumnName().text)
+            arg.fullColumnName() != null -> listOf(Pair(DIRECTCOPY, parseFieldName(arg.fullColumnName().text)))
             arg.expression() != null -> expression(arg.expression())
             arg.functionCall() != null -> functionCall(arg.functionCall())
             else -> emptyList()
         }
+    }
+
+    companion object {
+
+        fun unwrapId(id: String): String {
+            if (id.startsWith('`') && id.endsWith('`')) {
+                return id.substring(1, id.length - 1)
+            }
+            return id
+        }
+
+        fun parseFieldName(fullId: String): FullFieldName {
+            val ids = fullId.split('.')
+            return when (ids.size) {
+                1 -> FullFieldName(null, null, null, unwrapId(ids[0]))
+                2 -> FullFieldName(null, null, unwrapId(ids[0]), unwrapId(ids[1]))
+                3 -> FullFieldName(null, unwrapId(ids[0]), unwrapId(ids[1]), unwrapId(ids[2]))
+                4 -> FullFieldName(unwrapId(ids[0]), unwrapId(ids[1]), unwrapId(ids[2]), unwrapId(ids[3]))
+                else -> throw WillNeverHappenException("")
+            }
+        }
+
+        fun parseTableName(fullId: String): FullTableName {
+            val ids = fullId.split('.')
+            return when (ids.size) {
+                1 -> FullTableName(null, null, unwrapId(ids[0]))
+                2 -> FullTableName(null, unwrapId(ids[0]), unwrapId(ids[1]))
+                3 -> FullTableName(unwrapId(ids[0]), unwrapId(ids[1]), unwrapId(ids[2]))
+                else -> throw WillNeverHappenException("")
+            }
+        }
+
+        fun qualifyTable(fullFieldName: FullFieldName, tables: Collection<ITable>): ITable {
+            if (fullFieldName.table == null) {
+                if (tables.size > 1) {
+                    return AmbiguousTable(tables)
+                } else if (tables.size == 1) {
+                    return tables.iterator().next()
+                } else {
+                    //todo 可能是变量
+                    throw SqlParseException("字段${fullFieldName}未找到对应的表")
+                }
+            }
+            for (table in tables) {
+                if (fullFieldName.table == table.alias) {
+                    return table
+                }
+            }
+            throw SqlParseException("字段${fullFieldName}未找到对应的表")
+        }
+
     }
 
 }

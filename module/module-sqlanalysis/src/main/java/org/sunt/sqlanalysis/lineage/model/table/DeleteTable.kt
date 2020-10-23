@@ -1,11 +1,10 @@
 package org.sunt.sqlanalysis.lineage.model.table
 
-class DeleteTable(catalog: String?, schema: String?, table: String) : LandTable(catalog, schema, table) {
+class DeleteTable(fullTableName: FullTableName) : LandTable(fullTableName) {
 
-    constructor(schema: String?, table: String) : this(null, schema, table)
+    constructor(schema: String?, table: String) : this(FullTableName(null, schema, table))
 
-    constructor(table: String): this( null, null, table )
-
+    constructor(table: String) : this(FullTableName(null, null, table))
 
 
 }
