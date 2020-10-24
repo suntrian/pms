@@ -25,73 +25,67 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
     }
 
     override fun exitDmlStatement(ctx: MySqlParser.DmlStatementContext) {
-        if (ctx.selectStatement() != null) {
-            this.tables.add(select(ctx.selectStatement()))
-        } else if (ctx.insertStatement() != null) {
-            val tableName = ctx.insertStatement().tableName().text
-            val insertTable = InsertTable(tableName)
-            this.tables.add(insertTable)
-        } else if (ctx.deleteStatement() != null) {
-            val deleteStatementContext = ctx.deleteStatement()
-            when {
-                deleteStatementContext.singleDeleteStatement() != null -> {
-                    val tableName = deleteStatementContext.singleDeleteStatement().tableName().text
-                    val deleteTable = DeleteTable(tableName)
-                    this.tables.add(deleteTable)
-                }
-                deleteStatementContext.multipleDeleteStatement() != null -> {
-                    val tables = tableSources(deleteStatementContext.multipleDeleteStatement().tableSources())
-                    for (table in tables) {
-                        this.tables.add(DeleteTable(table.alias))
+        when {
+            ctx.selectStatement() != null -> {
+                this.tables.add(select(ctx.selectStatement()))
+            }
+            ctx.insertStatement() != null -> {
+                val tableName = ctx.insertStatement().tableName().text
+                val insertTable = InsertTable(tableName)
+                this.tables.add(insertTable)
+            }
+            ctx.deleteStatement() != null -> {
+                val deleteStatementContext = ctx.deleteStatement()
+                when {
+                    deleteStatementContext.singleDeleteStatement() != null -> {
+                        val tableName = deleteStatementContext.singleDeleteStatement().tableName().text
+                        val deleteTable = DeleteTable(tableName)
+                        this.tables.add(deleteTable)
+                    }
+                    deleteStatementContext.multipleDeleteStatement() != null -> {
+                        val tables = tableSources(deleteStatementContext.multipleDeleteStatement().tableSources())
+                        for (table in tables) {
+                            this.tables.add(DeleteTable(table.alias))
+                        }
                     }
                 }
             }
-        } else if (ctx.updateStatement() != null) {
-            val updateStatementContext = ctx.updateStatement()
-            when {
-                updateStatementContext.singleUpdateStatement() != null -> {
-                    val tableName = updateStatementContext.singleUpdateStatement().tableName().text
-                    this.tables.add(UpdateTable(tableName).also { table -> updateStatementContext.singleUpdateStatement().uid()?.let { table.alias = it.text } })
-                }
-                updateStatementContext.multipleUpdateStatement() != null -> {
-                    val tables = tableSources(updateStatementContext.multipleUpdateStatement().tableSources())
-                    for (table in tables) {
-                        this.tables.add(UpdateTable(table.alias))
+            ctx.updateStatement() != null -> {
+                val updateStatementContext = ctx.updateStatement()
+                when {
+                    updateStatementContext.singleUpdateStatement() != null -> {
+                        val tableName = updateStatementContext.singleUpdateStatement().tableName().text
+                        this.tables.add(UpdateTable(tableName).also { table -> updateStatementContext.singleUpdateStatement().uid()?.let { table.alias = it.text } })
+                    }
+                    updateStatementContext.multipleUpdateStatement() != null -> {
+                        val tables = tableSources(updateStatementContext.multipleUpdateStatement().tableSources())
+                        for (table in tables) {
+                            this.tables.add(UpdateTable(table.alias))
+                        }
                     }
                 }
             }
-        } else if (ctx.replaceStatement() != null) {
-            val tableName = ctx.replaceStatement().tableName().text
-            this.tables.add(UpdateTable(tableName))
+            ctx.replaceStatement() != null -> {
+                val tableName = ctx.replaceStatement().tableName().text
+                this.tables.add(UpdateTable(tableName))
+            }
         }
     }
 
     override fun exitDdlStatement(ctx: MySqlParser.DdlStatementContext) {
-        if (ctx.createTable() != null) {
-            when (val createTableContext = ctx.createTable()) {
-                is MySqlParser.CopyCreateTableContext -> {
-                    val tableName = createTableContext.tableName(0).text
-                    val createTable = CreateTable(tableName)
-                    val field = AsteriskField(createTable)
-                    this.tables.add(createTable)
-                }
-                is MySqlParser.QueryCreateTableContext -> {
-                    val tableName = createTableContext.tableName().text
-                    val createTable = CreateTable(tableName)
-                    this.tables.add(createTable)
-                }
-                is MySqlParser.ColumnCreateTableContext -> {
-                    val tableName = createTableContext.tableName().text
-                    val createTable = CreateTable(tableName)
-                    this.tables.add(createTable)
-                }
+        when {
+            ctx.createTable() != null -> {
+                createTable(ctx.createTable())
             }
-        } else if (ctx.createView() != null) {
+            ctx.createView() != null -> {
 
-        } else if (ctx.createProcedure() != null) {
+            }
+            ctx.createProcedure() != null -> {
 
-        } else if (ctx.createFunction() != null) {
+            }
+            ctx.createFunction() != null -> {
 
+            }
         }
     }
 
@@ -108,6 +102,169 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
         for (uidContext in ctx?.uidList()?.uid() ?: emptyList()) {
             val variable = uidContext.text
             this.variables.add(VariableField(variable, if (currentBlock != null && currentBlock is AnonymousTable) currentBlock as AnonymousTable else AnonymousTable("")))
+        }
+    }
+
+    private fun createTable(ctx: MySqlParser.CreateTableContext): CreateTable {
+        return when (ctx) {
+            is MySqlParser.CopyCreateTableContext -> {
+                // create table like
+                val tableName = ctx.tableName(0).text
+                val createTable = CreateTable(parseTableName(tableName)).also {
+                    it.temporary = (ctx.TEMPORARY() != null)
+                }
+                val likeTable = PhysicalTable(parseTableName(ctx.tableName(1).text))
+                val createField = AsteriskField(createTable)
+                val likeField = AllPhysicalField(likeTable)
+                createField.getRelated().add(Relation(DIRECTCOPY, likeField))
+                createTable
+            }
+            is MySqlParser.QueryCreateTableContext -> {
+                // create table as select
+                val tableName = ctx.tableName().text
+                val createTable = CreateTable(parseTableName(tableName)).also {
+                    it.temporary = ctx.TEMPORARY() != null
+                    it.comment = ctx.tableOption().filterIsInstance(MySqlParser.TableOptionCommentContext::class.java)
+                            .map { i -> i.STRING_LITERAL()?.text }.firstOrNull()
+                }
+                val selectTable = select(ctx.selectStatement())
+                if (ctx.createDefinitions()?.createDefinition()?.isNotEmpty() == true) {
+                    val createFields = createDefinitions(ctx.createDefinitions(), createTable)
+                    if (createFields.size != selectTable.fields.size) {
+                        //todo check asterisk field
+                    } else {
+                        for (i in createFields.indices) {
+                            createFields[i].getRelated().add(Relation(DIRECTCOPY, selectTable.fields[i]))
+                        }
+                    }
+                } else {
+                    val createFields = AsteriskField(createTable)
+                    createFields.getRelated().addAll(selectTable.fields.map { Relation(DIRECTCOPY, it) })
+                }
+                this.tables.add(createTable)
+                createTable
+            }
+            is MySqlParser.ColumnCreateTableContext -> {
+                val tableName = ctx.tableName().text
+                val createTable = CreateTable(parseTableName(tableName)).also { it ->
+                    with(it) {
+                        isColumnCreateTable = true
+                        temporary = ctx.TEMPORARY() != null
+                        comment = ctx.tableOption().filterIsInstance(MySqlParser.TableOptionCommentContext::class.java)
+                                .map { i -> i.STRING_LITERAL()?.text }
+                                .firstOrNull()
+                        createDefinitions(ctx.createDefinitions(), it)
+                    }
+                }
+                createTable
+            }
+            else -> {
+                throw WillNeverHappenException("")
+            }
+        }
+    }
+
+    private fun createDefinitions(ctx: MySqlParser.CreateDefinitionsContext, createTable: CreateTable): List<CreateField> {
+        val createFields = mutableListOf<CreateField>()
+        val primaryKeys = mutableListOf<String>()
+        val uniqueKeys = mutableListOf<String>()
+        val foreignKeys = mutableListOf<String>()
+        val indexKeys = mutableListOf<String>()
+        for (createDefinition in ctx.createDefinition()) {
+            when (createDefinition) {
+                is MySqlParser.ColumnDeclarationContext -> {
+                    val fieldName = createDefinition.uid().text
+                    val createField = CreateField(fieldName, createTable)
+                    with(createField) {
+                        val dataTypeLengthPrecision = dataType(createDefinition.columnDefinition().dataType())
+                        dataType = dataTypeLengthPrecision.first
+                        dataLength = dataTypeLengthPrecision.second
+                        dataPrecision = dataTypeLengthPrecision.third
+                        for (columnConstraintContext in createDefinition.columnDefinition().columnConstraint()) {
+                            when (columnConstraintContext) {
+                                is MySqlParser.NullColumnConstraintContext -> nullable = columnConstraintContext.nullNotnull().NOT() == null
+                                is MySqlParser.DefaultColumnConstraintContext -> default = columnConstraintContext.defaultValue().text
+                                is MySqlParser.AutoIncrementColumnConstraintContext -> autoIncrement = columnConstraintContext.AUTO_INCREMENT() != null
+                                is MySqlParser.PrimaryKeyColumnConstraintContext -> primaryKey = true
+                                is MySqlParser.UniqueKeyColumnConstraintContext -> unique = true
+                                is MySqlParser.CommentColumnConstraintContext -> comment = columnConstraintContext.STRING_LITERAL().text
+                                is MySqlParser.ReferenceDefinitionContext -> {/* todo */
+                                }
+                            }
+                        }
+
+                    }
+                    createFields.add(createField)
+                }
+                is MySqlParser.ConstraintDeclarationContext -> {
+                    when (val tableConstraint = createDefinition.tableConstraint()) {
+                        is MySqlParser.PrimaryKeyTableConstraintContext -> {
+                            for (indexColumnNameContext in tableConstraint.indexColumnNames().indexColumnName()) {
+                                primaryKeys.add(indexColumnNameContext.text)
+                            }
+                        }
+                        is MySqlParser.UniqueKeyTableConstraintContext -> {
+                            for (indexColumnNames in tableConstraint.indexColumnNames().indexColumnName()) {
+                                primaryKeys.add(indexColumnNames.text)
+                            }
+                        }
+                        is MySqlParser.ForeignKeyTableConstraintContext -> {
+                            for (indexColumnNameContext in tableConstraint.indexColumnNames().indexColumnName()) {
+                                foreignKeys.add(indexColumnNameContext.text)
+                            }
+                        }
+                    }
+                }
+                is MySqlParser.IndexDeclarationContext -> {
+                    when (val indexColumnDefinition = createDefinition.indexColumnDefinition()) {
+                        is MySqlParser.SimpleIndexDeclarationContext -> {
+                            for (indexColumnNameContext in indexColumnDefinition.indexColumnNames().indexColumnName()) {
+                                indexKeys.add(indexColumnNameContext.text)
+                            }
+                        }
+                        is MySqlParser.SpecialIndexDeclarationContext -> {
+                            for (indexColumnNameContext in indexColumnDefinition.indexColumnNames().indexColumnName()) {
+                                indexKeys.add(indexColumnNameContext.text)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (field in createFields) {
+            if (primaryKeys.contains(field.name)) {
+                field.primaryKey = true
+            }
+            if (uniqueKeys.contains(field.name)) {
+                field.unique = true
+            }
+            if (foreignKeys.contains(field.name)) {
+                field.foreignKey = true
+            }
+            if (indexKeys.contains(field.name)) {
+                field.indexKey = true
+            }
+        }
+        return createFields
+    }
+
+    private fun dataType(ctx: MySqlParser.DataTypeContext): Triple<String, Int?, Int?> {
+        return when (ctx) {
+            is MySqlParser.StringDataTypeContext -> Triple(ctx.typeName.text, ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt(), null)
+            is MySqlParser.NationalStringDataTypeContext -> Triple(ctx.typeName.text, ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt(), null)
+            is MySqlParser.NationalVaryingStringDataTypeContext -> Triple(ctx.typeName.text, ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt(), null)
+            is MySqlParser.DimensionDataTypeContext -> {
+                val length = ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt() ?: ctx.lengthTwoDimension()?.decimalLiteral(0)?.text?.toInt()
+                ?: ctx.lengthTwoOptionalDimension()?.decimalLiteral(0)?.text?.toInt()
+                val precision = ctx.lengthTwoDimension()?.decimalLiteral(1)?.text?.toInt() ?: ctx.lengthTwoOptionalDimension()?.decimalLiteral()?.getOrNull(1)?.text?.toInt()
+                Triple(ctx.typeName.text, length, precision)
+            }
+            is MySqlParser.SimpleDataTypeContext -> Triple(ctx.typeName.text, null, null)
+            is MySqlParser.CollectionDataTypeContext -> Triple(ctx.typeName.text, null, null)
+            is MySqlParser.SpatialDataTypeContext -> Triple(ctx.typeName.text, null, null)
+            is MySqlParser.LongVarcharDataTypeContext -> Triple(ctx.typeName.text, null, null)
+            is MySqlParser.LongVarbinaryDataTypeContext -> Triple(ctx.text, null, null)
+            else -> throw WillNeverHappenException("")
         }
     }
 

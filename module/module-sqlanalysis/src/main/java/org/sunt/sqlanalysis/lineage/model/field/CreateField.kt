@@ -6,13 +6,18 @@ class CreateField(val name: String, override val table: CreateTable) : LogicalFi
 
     override val alias: String = name
 
-    private var dataType: String = ""
-    private var dataLength: Int? = null
-    private var dataPrecision: Int? = null
-    private var default: Any? = null
-    private var primaryKey: Boolean = false
-    private var autoIncrement: Boolean = false;
-    private var comment: String = ""
-
+    var dataType: String = ""
+    var dataLength: Int? = null
+    var dataPrecision: Int? = null
+    var default: Any? = null
+    var nullable = true
+    var primaryKey: Boolean = false
+    var unique: Boolean = false
+    var autoIncrement: Boolean = false;
+    var comment: String = ""
+    var partitionKey = false
+    var indexKey = false
+    var foreignKey = false
+    var referenceKeys = emptyList<String>()
 
 }
