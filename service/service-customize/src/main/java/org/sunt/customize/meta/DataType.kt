@@ -2,8 +2,8 @@ package org.sunt.customize.meta
 
 enum class DataType(val label: String) {
 
-    INTEGER("Int"),
-    DOUBLE("Double"),
+    INTEGER("Integer"),
+    DECIMAL("Decimal"),
     STRING("String"),
     BOOLEAN("Boolean"),
     DATE("Date"),

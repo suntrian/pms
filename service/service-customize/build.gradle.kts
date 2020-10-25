@@ -6,8 +6,13 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+    implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
+}
 
+configurations {
+    implementation.get().exclude(group = "org.springframework.boot", module = "spring-boot-starter-web")
 }
 
 val compileKotlin: KotlinCompile by tasks
