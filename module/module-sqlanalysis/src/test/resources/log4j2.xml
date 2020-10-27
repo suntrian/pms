@@ -11,7 +11,7 @@
             <AppenderRef ref="stdout"/>
         </Root>
 
-        <Logger name="lineage" level="debug" additivity="true">
+        <Logger name="lineage" level="debug" additivity="false">
             <AppenderRef ref="stdout"/>
         </Logger>
     </Loggers>

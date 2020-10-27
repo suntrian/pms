@@ -74,17 +74,12 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
 
     override fun exitDdlStatement(ctx: MySqlParser.DdlStatementContext) {
         when {
-            ctx.createTable() != null -> {
-                createTable(ctx.createTable())
-            }
+            ctx.createTable() != null -> this.tables.add(createTable(ctx.createTable()))
             ctx.createView() != null -> {
-
             }
             ctx.createProcedure() != null -> {
-
             }
             ctx.createFunction() != null -> {
-
             }
         }
     }
@@ -400,7 +395,10 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
     }
 
     private fun having(from: MySqlParser.FromClauseContext): List<Pair<RelationType, FullFieldName>> {
-        return expression(from.havingExpr).map { Pair(CONDITION, it.second) }
+        if (from.havingExpr != null) {
+            return expression(from.havingExpr).map { Pair(CONDITION, it.second) }
+        }
+        return emptyList()
     }
 
     private fun tableSources(tableSourcesContext: MySqlParser.TableSourcesContext): List<ITable> {
@@ -473,8 +471,8 @@ class MysqlLineageParserListener : MySqlParserBaseListener(), LineageListener {
                     fields.add(AsteriskField(selectTable))
                 }
                 is MySqlParser.SelectColumnElementContext -> {
-                    val columnFullName = selectElementContext.fullColumnName().text
-                    val selectField = SelectField(columnFullName, selectTable)
+                    val columnFullName = parseFieldName(selectElementContext.fullColumnName().text)
+                    val selectField = SelectField(columnFullName.field, selectTable)
                     selectElementContext.uid()?.text?.let { selectField.alias = it }
                     fields.add(selectField)
                 }

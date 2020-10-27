@@ -15,7 +15,24 @@ class TestMysqlLineage {
         val tables = LineageParser.parse(SqlProduct.MYSQL, sql)
         for (table in tables) {
             logger.info("alias: {}", table.alias)
+            for (field in table.fields) {
+                logger.info("field:{}", field.alias)
+            }
         }
+    }
+
+    @Test
+    fun testMysqlCreateTable() {
+        val sql = "CREATE TABLE xyz( x int(6) not null primary key auto_increment , y varchar(6) default 'aaa', z timestamp comment 'zzzzz') ";
+        val tables = LineageParser.parse(SqlProduct.MYSQL, sql)
+        for (table in tables) {
+            logger.info("table:{}", table.alias)
+            for (field in table.fields) {
+                logger.info("field:{}", field.alias)
+                logger.info("field:{}", field)
+            }
+        }
+
     }
 
 }

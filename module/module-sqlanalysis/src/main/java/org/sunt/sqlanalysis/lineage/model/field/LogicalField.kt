@@ -4,10 +4,10 @@ import org.sunt.sqlanalysis.lineage.model.Relation
 import org.sunt.sqlanalysis.lineage.model.table.LogicalTable
 import java.util.*
 
-abstract class LogicalField(override val table: LogicalTable) : ILogicalField {
+abstract class LogicalField(final override val table: LogicalTable) : ILogicalField {
 
     init {
-        table.fields.toMutableList().add(this)
+        table.fields.add(this)
     }
 
     private var relations: MutableList<Relation> = LinkedList()
