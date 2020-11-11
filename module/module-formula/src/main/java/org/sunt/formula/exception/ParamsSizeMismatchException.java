@@ -1,7 +1,8 @@
 package org.sunt.formula.exception;
 
-public class ParamsSizeMismatchException extends RuntimeException {
+public class ParamsSizeMismatchException extends AbstractFormulaException {
 
+    private static final long serialVersionUID = -5852847892527745257L;
     private Integer actually;
     private Integer expected;
 

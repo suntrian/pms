@@ -1,69 +1,5 @@
-grammar Function;
+lexer grammar FunctionLexer;
 
-root
-    : (functionItem
-    | functionAlias
-    | NEW_LINE) +
-    EOF
-    ;
-
-category
-    : IDENTIFIER
-    | LS_BRACKET IDENTIFIER (COMMA IDENTIFIER)* RS_BRACKET
-    ;
-
-functionItem
-    : DESCRIPTION NEW_LINE*? category NEW_LINE*? COLON COLON NEW_LINE*? funcDefine TRANSFER NEW_LINE*? funcImplement
-    ;
-
-functionAlias
-    : ALIAS IDENTIFIER '=' IDENTIFIER (COMMA IDENTIFIER)*
-    ;
-
-funcDefine
-    : IDENTIFIER L_BRACKET funcArgs? R_BRACKET COLON (dataType | argRef DOT TYPE)
-    ;
-
-funcImplement
-    : ( argRef | allSymbol)*? NEW_LINE?
-    | S_BLOCK ( argRef | allSymbol | NEW_LINE)+? S_BLOCK
-    | D_BLOCK ( argRef | allSymbol | NEW_LINE)+? D_BLOCK
-    ;
-
-funcArgs
-    : VARARG? funcArg
-    | funcArg COMMA (funcArg COMMA)* VARARG? funcArg?
-    ;
-
-funcArg
-    : argName COLON dataType (COLON LS_BRACKET enumerations RS_BRACKET )?
-    ;
-
-argName
-    : IDENTIFIER
-    | dataType
-    ;
-
-argRef
-    : DOLLAR (INTEGER | argName | L_BRACE argName R_BRACE)
-    ;
-
-enumerations
-    : STRING (COMMA STRING)*
-    | NUMBER (COMMA NUMBER)*
-    ;
-
-allSymbol
-    : IDENTIFIER | STRING | NUMBER | INTEGER
-    |  DOLLAR | PLUS | MINUS
-    | COLON | COMMA | DOT
-    | L_BRACKET | R_BRACKET | LS_BRACKET | RS_BRACKET | L_BRACE | R_BRACE
-    | SYMBOL | dataType
-    ;
-
-dataType
-    : DT_STRING | DT_DECIMAL | DT_INTEGER | DT_BOOLEAN | DT_DATETIME | DT_DATE | DT_TIME | DT_ANY
-    ;
 
 VARARG      : V A R A R G;
 ALIAS       : A L I A S;
@@ -82,10 +18,9 @@ MINUS : '-';
 COLON : ':';
 COMMA : ',';
 DOT   : '.';
+EQUAL : '=';
 DOLLAR: '$';
-TRANSFER : '-' '>';
-S_BLOCK : '\'\'\'';
-D_BLOCK : '"""';
+
 L_BRACKET : '(';
 R_BRACKET : ')';
 LS_BRACKET: '[';
@@ -103,6 +38,32 @@ NEW_LINE : NL+;
 WS: BLANK+                      -> skip;
 LINE_COMMENT: '//' ~[\r\n]*      -> skip;
 DESCRIPTION: '/**' .*? '*/';
+
+
+TRANSFER_D : '->' NEW_LINE*? '"""'     -> pushMode(IMPLEMENT_D);
+TRANSFER_S : '->' NEW_LINE*? '\'\'\''  -> pushMode(IMPLEMENT_S);
+TRANSFER_L : '->'           -> pushMode(IMPLEMENT_L);
+
+mode IMPLEMENT_L;
+COMMENT_L: '//' ~[\r\n]*    -> skip;
+COMMENT_BL: '/*' .*? '*/'   -> skip;
+WS_L: BLANK+;
+ANY_L: ~[ \t\r\n]+;
+NEWLINE: NL+                -> popMode;
+
+mode IMPLEMENT_S;
+COMMENT_S: '//' ~[\r\n]*    -> skip;
+COMMENT_BS: '/*' .*? '*/'   -> skip;
+WS_S: (BLANK|NL)+;
+ANY_S: ANY;
+S_BLOCK : '\'\'\''          -> popMode;
+
+mode IMPLEMENT_D;
+COMMENT_D: '//' ~[\r\n]*    -> skip;
+COMMENT_BD: '/*' .*? '*/'   -> skip;
+WS_D: (BLANK|NL)+;
+ANY_D: ANY;
+D_BLOCK : '"""'             -> popMode;
 
 //NON_NL: ~[\r\n]+;
 

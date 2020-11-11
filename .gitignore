@@ -35,3 +35,5 @@ gradle-app.setting
 
 # idea
 .idea/
+
+gen/

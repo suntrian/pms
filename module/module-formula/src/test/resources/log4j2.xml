@@ -11,7 +11,7 @@
             <AppenderRef ref="stdout"/>
         </Root>
 
-        <Logger name="org.sunt.formula" level="debug" additivity="true">
+        <Logger name="org.sunt.formula" level="debug" additivity="false">
             <AppenderRef ref="stdout"/>
         </Logger>
     </Loggers>

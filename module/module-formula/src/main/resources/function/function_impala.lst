@@ -87,8 +87,9 @@ DATEDIFF
 */
 [日期函数]::DATEDIFF(unit:String:['day','month','quarter','year'],  enddate: Date, startdate: Date): Integer  ->
 
+'''
 // SQL映射方法，多行时以'''  '''包裹
-''' {
+{
     if ("'day'".equalsIgnoreCase("$1")) {
         //天差
         return "DATEDIFF($2, $3)";

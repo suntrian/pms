@@ -27,10 +27,18 @@ class FunctionDefine(val funcName: String) {
         this.dataType = dataType
     }
 
+    fun translate(vararg params: String): String {
+        return this.functionImplement?.translate(*params) ?: ""
+    }
+
+    fun translate(params: List<String>): String {
+        return translate(* params.toTypedArray())
+    }
+
     override fun toString(): String {
-        return "[${categories.joinToString(",")}]::" +
-                "$funcName( ${args.joinToString { "${if (it.vararg) "vararg " else ""} ${it.name}:${it.dataType} ${if (it.enumValues.isEmpty()) "" else it.enumValues.joinToString(",", "[", "]")}" }} ) " +
-                ": ${dataType.name}"
+        return "${description}\n[${categories.joinToString(",")}]::" +
+                " $funcName( ${args.joinToString { "${if (it.vararg) "vararg " else ""} ${it.name}:${it.dataType} ${if (it.enumValues.isEmpty()) "" else it.enumValues.joinToString(",", "[", "]")}" }} ) " +
+                " : ${if (typeParamIndex != null) "$${typeParamIndex}.type" else dataType.name} -> $implement "
     }
 
     override fun equals(other: Any?): Boolean {

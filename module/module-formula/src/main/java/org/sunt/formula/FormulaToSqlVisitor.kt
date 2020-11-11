@@ -3,6 +3,9 @@ package org.sunt.formula
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
 import org.sunt.formula.define.SqlProduct
+import org.sunt.formula.exception.DataTypeMismatchException
+import org.sunt.formula.exception.ParamsSizeMismatchException
+import org.sunt.formula.function.FunctionDefine
 import org.sunt.formula.parser.FormulaParser.*
 import java.util.function.Function
 
@@ -109,23 +112,29 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
         val left = visitStatement(ctx.statement(0))
         val right = visitStatement(ctx.statement(1))
         val mathStmt = StatementInfo(ctx)
+        mathStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
         if (left.dataType == DataType.STRING && right.dataType == DataType.STRING) {
             if (ctx.op.type == PLUS) {
-                //todo String concat and type convert if not string
+                var expression = "${left.expression}, ${right.expression}"
+                val isTop = ctx.parent !is StatementContext || ctx.op == null
+                if (isTop) {
+                    expression = "CONCAT($expression)"
+                }
+                mathStmt.expression = expression
+                mathStmt.dataType = DataType.STRING
                 return mathStmt
             } else {
-                throw IllegalStateException("数据类型错误")
+                throw DataTypeMismatchException(ctx.text, DataType.DECIMAL, DataType.STRING)
             }
         } else {
             if (!left.dataType.isNumeric() || !right.dataType.isNumeric()) {
-                throw IllegalStateException("数据类型错误")
+                throw DataTypeMismatchException("数据类型错误")
             }
         }
 
-        mathStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
         when (ctx.op.type) {
             POWER -> {
-                mathStmt.expression = left.expression + "^" + right.expression
+                mathStmt.expression = left.expression + " ^ " + right.expression
                 mathStmt.dataType = if (left.dataType == DataType.DECIMAL || right.dataType == DataType.DECIMAL) {
                     DataType.DECIMAL
                 } else {
@@ -148,8 +157,14 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
                 mathStmt.expression = left.expression + operatorMap[DIV] + right.expression
                 mathStmt.dataType = DataType.DECIMAL
             }
-            PLUS -> mathStmt.expression = left.expression + operatorMap[PLUS] + right.expression
-            MINUS -> mathStmt.expression = left.expression + operatorMap[MINUS] + right.expression
+            PLUS -> {
+                mathStmt.expression = left.expression + operatorMap[PLUS] + right.expression
+                mathStmt.dataType = maxOf(left.dataType, right.dataType, Comparator.comparingInt { it.compatibility })
+            }
+            MINUS -> {
+                mathStmt.expression = left.expression + operatorMap[MINUS] + right.expression
+                mathStmt.dataType = maxOf(left.dataType, right.dataType, Comparator.comparingInt { it.compatibility })
+            }
         }
 
         return mathStmt
@@ -167,7 +182,7 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
 
     override fun visitLogicalPredicate(ctx: LogicalPredicateContext): StatementInfo {
         if (ctx.statement().size != 2) {
-            throw java.lang.IllegalStateException("操作数个数不符")
+            throw ParamsSizeMismatchException(ctx.text, 2, ctx.statement().size)
         }
         val left = visitStatement(ctx.statement(0))
         checkDataType(left, DataType.BOOLEAN)
@@ -207,22 +222,11 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
         val funcName = ctx.IDENTITY().text
         val params = visitFunctionParams(ctx.functionParams())
         val functionDefines = this.functionMap[funcName] ?: this.functionMap[this.aliasFunctionNameMap[funcName]] ?: throw IllegalStateException("函数${funcName}不存在")
-
-        for (funcDefine in functionDefines) {
-            if (funcDefine.args.size != params.size) {
-                if (funcDefine.args[funcDefine.args.size - 1].vararg && params.size >= funcDefine.alias.size - 1) {
-                    //可变参数，且实参数大于形参数-1，合法参数
-
-                } else {
-
-                }
-            }
-        }
-
+        val finalFunctionDefine: FunctionDefine = figureFunctionDefine(functionDefines, params)
         val funcStmt = StatementInfo(ctx)
         funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege }!!
-        funcStmt.dataType = DataType.NONE
-        funcStmt.expression = ""
+        funcStmt.dataType = if (finalFunctionDefine.typeParamIndex != null) params[finalFunctionDefine.typeParamIndex!!].dataType else finalFunctionDefine.dataType
+        funcStmt.expression = finalFunctionDefine.translate(params.map { it.expression })
         return funcStmt
     }
 

@@ -5,15 +5,19 @@ import org.slf4j.LoggerFactory
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
 import org.sunt.formula.define.SqlProduct
+import org.sunt.formula.exception.AbstractFormulaException
 import org.sunt.formula.exception.DataTypeMismatchException
 import org.sunt.formula.exception.ParamsSizeMismatchException
+import org.sunt.formula.exception.WillNeverHappenException
 import org.sunt.formula.function.FunctionDefine
 import org.sunt.formula.function.FunctionDefineParser.getFunctionMapByProduct
 import org.sunt.formula.parser.FormulaBaseVisitor
 import org.sunt.formula.parser.FormulaParser.*
 import org.sunt.formula.suggestion.SuggestionScope
 import org.sunt.formula.suggestion.TokenStatus
+import java.util.*
 import java.util.function.Function
+import kotlin.collections.ArrayList
 
 abstract class AbstractFormulaVisitor(protected val dialect: SqlProduct, protected val getColumnById: Function<String, IColumn?>, protected val getColumnByName: Function<String, IColumn?>) : FormulaBaseVisitor<Any?>() {
 
@@ -30,7 +34,7 @@ abstract class AbstractFormulaVisitor(protected val dialect: SqlProduct, protect
             is ColumnIdContext -> visitColumnId(columnCtx)
             is ColumnNameContext -> visitColumnName(columnCtx)
             is IdentityContext -> visitIdentity(columnCtx)
-            else -> throw IllegalStateException("Not Expected Here")
+            else -> throw WillNeverHappenException("Not Expected Here")
         }
     }
 
@@ -62,16 +66,21 @@ abstract class AbstractFormulaVisitor(protected val dialect: SqlProduct, protect
     }
 
     override fun visitIdentity(ctx: IdentityContext): StatementInfo {
-        var funcDefines: List<FunctionDefine> = emptyList()
+        var funcDefines: List<FunctionDefine>? = emptyList()
         var column: IColumn? = null
         val stmt = StatementInfo(ctx)
         val identity = ctx.text
-        if (functionMap[identity].also { funcDefines = it!! } != null) {
+        if (functionMap[identity]?.also { funcDefines = it } != null) {
             stmt.scope = SuggestionScope.FUNCTION(identity)
-            stmt.dataType = funcDefines[0].dataType
+            stmt.dataType = funcDefines!![0].dataType
             stmt.expression = identity
             stmt.status = TokenStatus.EXPECTED
-        } else if (getColumn(ctx.text).also { column = it } != null) {
+        } else if (aliasFunctionNameMap[identity]?.also { funcDefines = functionMap[it] } != null) {
+            stmt.scope = SuggestionScope.FUNCTION(identity)
+            stmt.dataType = funcDefines!![0].dataType
+            stmt.expression = identity
+            stmt.status = TokenStatus.EXPECTED
+        } else if (getColumn(ctx.text)?.also { column = it } != null) {
             stmt.status = TokenStatus.NORMAL
             stmt.scope = SuggestionScope.COLUMN(identity)
             stmt.expression = column!!.expression
@@ -107,6 +116,65 @@ abstract class AbstractFormulaVisitor(protected val dialect: SqlProduct, protect
             colStmt.expression = column.expression
         }
         return colStmt
+    }
+
+    protected fun figureFunctionDefine(functionDefines: List<FunctionDefine>, params: List<StatementInfo>): FunctionDefine {
+        val matched = ArrayList<FunctionDefine>(functionDefines.size)
+        val errorInfos = ArrayList<List<AbstractFormulaException>>(functionDefines.size)
+
+        outer@ for (funcDefine in functionDefines) {
+            val errors = LinkedList<AbstractFormulaException>()
+            if (funcDefine.args.isEmpty() && params.isNotEmpty()) {
+                errors.add(ParamsSizeMismatchException(funcDefine.funcName, funcDefine.args.size, params.size));
+                //"函数${funcDefine.funcName}期待${funcDefine.args.size}个参数，实际为${params.size}"
+                errorInfos.add(errors)
+                continue
+            }
+            val paramIter: Iterator<StatementInfo> = params.listIterator()
+            var i = 0
+            for (arg in funcDefine.args) {
+                i++
+                if (!paramIter.hasNext()) {
+                    errors.add(ParamsSizeMismatchException(funcDefine.funcName, funcDefine.args.size, params.size))
+                    //"函数${funcDefine.funcName}期待${funcDefine.args.size}个参数，实际为${params.size}"
+                    errorInfos.add(errors)
+                    continue@outer
+                }
+                var paramStmt = paramIter.next()
+                if (!arg.vararg) {
+                    if (paramInvalid(arg.dataType, paramStmt.dataType)) {
+                        errors.add(DataTypeMismatchException(paramStmt.expression, arg.dataType, paramStmt.dataType))
+                        //"函数${funcDefine.funcName}第${i}个参数期待${arg.dataType}类型, 实际为${paramStmt.dataType}类型"
+                        errorInfos.add(errors)
+                        continue@outer
+                    }
+                } else {
+                    while (paramIter.hasNext()) {
+                        i++
+                        paramStmt = paramIter.next()
+                        if (paramInvalid(arg.dataType, paramStmt.dataType)) {
+                            errors.add(DataTypeMismatchException(paramStmt.expression, arg.dataType, paramStmt.dataType))
+                            //"函数${funcDefine.funcName}第${i}个参数期待${arg.dataType}类型, 实际为${paramStmt.dataType}类型"
+                            errorInfos.add(errors)
+                            continue@outer
+                        }
+                    }
+                }
+            }
+            matched.add(funcDefine)
+        }
+        if (matched.isNotEmpty()) {
+            return matched[0]
+        }
+        if (errorInfos.isNotEmpty()) {
+            throw errorInfos[0][0]
+        }
+        throw WillNeverHappenException("不应该来这里")
+    }
+
+    protected fun paramInvalid(expectedType: DataType, actualType: DataType): Boolean {
+        if (DataType.ANY == expectedType || DataType.ANY == actualType || expectedType == actualType) return false
+        return true
     }
 
     companion object {

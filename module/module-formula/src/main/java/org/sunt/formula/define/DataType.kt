@@ -2,7 +2,7 @@ package org.sunt.formula.define
 
 import java.io.Serializable
 
-enum class DataType(private val compatibility: Int) : Serializable {
+enum class DataType(val compatibility: Int) : Serializable {
 
     DECIMAL(3),
     INTEGER(2),
@@ -36,7 +36,7 @@ enum class DataType(private val compatibility: Int) : Serializable {
         fun of(type: String): DataType {
             val uType = type.toUpperCase();
             return try {
-                valueOf(type);
+                valueOf(uType)
             } catch (e: IllegalArgumentException) {
                 when (uType) {
                     "CHAR", "VARCHAR", "LONG" -> STRING        // oracle LONG type FOR String

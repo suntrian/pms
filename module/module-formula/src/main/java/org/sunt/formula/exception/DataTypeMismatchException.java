@@ -2,7 +2,7 @@ package org.sunt.formula.exception;
 
 import org.sunt.formula.define.DataType;
 
-public class DataTypeMismatchException extends RuntimeException {
+public class DataTypeMismatchException extends AbstractFormulaException {
 
     private static final long serialVersionUID = 3648211597650156219L;
 
@@ -11,10 +11,6 @@ public class DataTypeMismatchException extends RuntimeException {
     private DataType actually;
 
     private String expression;
-
-    public DataTypeMismatchException() {
-
-    }
 
     public DataTypeMismatchException(String message) {
         super(message);
