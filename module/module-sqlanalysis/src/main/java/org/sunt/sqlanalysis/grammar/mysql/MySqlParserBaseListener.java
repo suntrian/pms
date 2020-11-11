@@ -1,4 +1,4 @@
-// Generated from D:/projects/pms/module/module-sqlanalysis/src/main/java/org/sunt/sqlanalysis/parser/mysql/grammar\MySqlParser.g4 by ANTLR 4.8
+// Generated from C:/Users/suntr/Project/pms/module/module-sqlanalysis/src/main/java/org/sunt/sqlanalysis/grammar/mysql\MySqlParser.g4 by ANTLR 4.8
 package org.sunt.sqlanalysis.grammar.mysql;
 
 import org.antlr.v4.runtime.ParserRuleContext;
