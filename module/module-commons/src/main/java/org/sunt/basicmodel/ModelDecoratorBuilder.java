@@ -37,7 +37,7 @@ public class ModelDecoratorBuilder {
     }
 
     @SafeVarargs
-    public final <T extends Serializable, PK extends Comparable, S extends Serializable> ModelDecoratorBuilder addData(int level, List<T> data, LevelFunction.SerializableFunction<T, PK> keyGetter, LevelFunction.SerializableFunction<T, PK> parentGetter, LevelFunction.SerializableFunction<T, S>... propertyGetter) {
+    public final <T extends Serializable, PK extends Comparable, S extends Serializable> ModelDecoratorBuilder addData(int level, List<T> data, Function<T, PK> keyGetter, Function<T, PK> parentGetter, Function<T, S>... propertyGetter) {
         LevelFunction<T, PK> levelFunction = new LevelFunction<>();
         levelFunction.setKeyGetter(keyGetter);
         levelFunction.setParentGetter(parentGetter);
@@ -132,7 +132,7 @@ public class ModelDecoratorBuilder {
                 }
             }
             if (i != levels.size() - 1) {
-                cache = elements.stream().collect(Collectors.toMap(e -> root.getFunctionMap().get(levels.get(level)).keyGetter.apply(e.getElement()),
+                cache = elements.stream().collect(Collectors.toMap(e -> root.getFunctionMap().get(levels.get(level)).getKeyGetter().apply(e.getElement()),
                         e -> e,
                         (a, b) -> {
                             System.out.println("Duplicate Key Warning A:{" + a.getElement().toString() + "} ,\n B:{" + b.getElement().toString() + "}\n A is used");

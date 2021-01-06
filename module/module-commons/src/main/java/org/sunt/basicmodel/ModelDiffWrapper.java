@@ -1,8 +1,5 @@
 package org.sunt.basicmodel;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -15,13 +12,11 @@ import java.util.Map;
 public class ModelDiffWrapper implements Serializable {
 
     private static final long serialVersionUID = -3169215895599226744L;
-    @Getter
+
     private Map<Integer, LevelFunction<Serializable, Comparable>> functionMap;
-    @Getter
-    @Setter
+
     private List<ModelDiffElement<Serializable>> elementDiff;
-    @Getter
-    @Setter
+
     private List<ModelDiffEdge> edgeDiff;
 
     public boolean isEmpty() {
@@ -30,6 +25,26 @@ public class ModelDiffWrapper implements Serializable {
 
     public void setFunctionMap(Map<Integer, LevelFunction<Serializable, Comparable>> functionMap) {
         this.functionMap = functionMap;
+    }
+
+    public Map<Integer, LevelFunction<Serializable, Comparable>> getFunctionMap() {
+        return functionMap;
+    }
+
+    public List<ModelDiffElement<Serializable>> getElementDiff() {
+        return elementDiff;
+    }
+
+    public void setElementDiff(List<ModelDiffElement<Serializable>> elementDiff) {
+        this.elementDiff = elementDiff;
+    }
+
+    public List<ModelDiffEdge> getEdgeDiff() {
+        return edgeDiff;
+    }
+
+    public void setEdgeDiff(List<ModelDiffEdge> edgeDiff) {
+        this.edgeDiff = edgeDiff;
     }
 
     public enum State implements Serializable {

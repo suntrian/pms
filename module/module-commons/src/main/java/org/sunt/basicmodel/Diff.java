@@ -1,7 +1,5 @@
 package org.sunt.basicmodel;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -10,7 +8,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
-@Slf4j
 public class Diff<T> implements Serializable {
     private static final long serialVersionUID = -8216244641262752799L;
     protected List<T> created = new LinkedList<>();

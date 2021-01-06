@@ -1,8 +1,5 @@
 package org.sunt.basicmodel;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
 /**
@@ -10,8 +7,6 @@ import java.util.List;
  * @version dmp1.6.0
  * 用于保存边的变更信息
  */
-@Data
-@NoArgsConstructor
 public class ModelDiffEdge {
 
     private int level;
@@ -24,5 +19,17 @@ public class ModelDiffEdge {
         this.level = level;
         this.created = created;
         this.deleted = deleted;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public List<ModelEdge> getCreated() {
+        return created;
+    }
+
+    public List<ModelEdge> getDeleted() {
+        return deleted;
     }
 }

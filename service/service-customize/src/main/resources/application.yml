@@ -4,4 +4,8 @@ server:
 spring:
   application:
     name: customize
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.2.112:8848
 

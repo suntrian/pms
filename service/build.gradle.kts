@@ -26,7 +26,6 @@ subprojects {
     }
 
     configurations.all {
-        exclude(group = "ch.qos.logback")
-        exclude(group = "org.apache.logging.log4j", module = "log4j-to-slf4j")
+
     }
 }

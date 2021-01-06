@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 import java.util.Collection;
+import java.util.Map;
 
 @Getter
 public class R<T> {
@@ -22,15 +23,12 @@ public class R<T> {
     }
 
     public static <S> R<S> success(S data) {
-        return new R<>(data, HttpStatus.OK.value(), null, null);
+        Long total = data instanceof Collection ? (Long) (long) ((Collection<?>) data).size() : data instanceof Map ? (Long) (long) ((Map<?, ?>) data).size() : null;
+        return new R<>(data, HttpStatus.OK.value(), total, null);
     }
 
     public static <S> R<S> success(S data, long total) {
         return new R<>(data, HttpStatus.OK.value(), total, null);
-    }
-
-    public static <S extends Collection<?>> R<S> success(S data) {
-        return new R<>(data, HttpStatus.OK.value(), (long) data.size(), null);
     }
 
     public static <S> R<S> failure(String message) {

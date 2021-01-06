@@ -2,6 +2,14 @@ plugins {
     java
 }
 
+dependencies {
+    implementation(platform(project(":dependency")))
+    implementation(project(":interface"))
+    for (subproject in project.project(":service").subprojects) {
+        implementation(project(subproject.path))
+    }
+}
+
 allprojects {
 
     repositories {
@@ -10,6 +18,11 @@ allprojects {
             setUrl("http://maven.aliyun.com/nexus/content/groups/public/")
         }
         mavenCentral()
+    }
+
+    configurations.all {
+        exclude(group = "ch.qos.logback")
+        exclude(group = "org.apache.logging.log4j", module = "log4j-to-slf4j")
     }
 }
 

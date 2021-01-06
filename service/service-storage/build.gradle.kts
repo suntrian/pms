@@ -7,4 +7,5 @@ dependencies {
     implementation(project(":module:module-commons"))
     implementation(project(":module:module-storage"))
     implementation(project(":interface"))
+    compileOnly("org.projectlombok:lombok")
 }

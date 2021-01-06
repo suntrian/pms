@@ -1,8 +1,5 @@
 package org.sunt.basicmodel;
 
-
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -513,7 +510,6 @@ public class ModelDiffVisitHelper {
   /**
    * 暂时没做边的reduce
    */
-  @Data
   public static class VisitResult {
     private int level;
 
@@ -536,16 +532,108 @@ public class ModelDiffVisitHelper {
 
     public VisitResult(int level, Object createdReduce, Object updatedReduce, Object deletedReduce, Object remainReduce,
                        int createdCompareCount, int updatedCompareCount, int deletedCompareCount, int remainCompareCount) {
-      this.level = level;
-      this.createdReduce = createdReduce;
-      this.updatedReduce = updatedReduce;
-      this.deletedReduce = deletedReduce;
-      this.remainReduce = remainReduce;
-      this.createdCompareCount = createdCompareCount;
-      this.updatedCompareCount = updatedCompareCount;
-      this.deletedCompareCount = deletedCompareCount;
-      this.remainCompareCount = remainCompareCount;
+        this.level = level;
+        this.createdReduce = createdReduce;
+        this.updatedReduce = updatedReduce;
+        this.deletedReduce = deletedReduce;
+        this.remainReduce = remainReduce;
+        this.createdCompareCount = createdCompareCount;
+        this.updatedCompareCount = updatedCompareCount;
+        this.deletedCompareCount = deletedCompareCount;
+        this.remainCompareCount = remainCompareCount;
     }
+
+      public int getLevel() {
+          return level;
+      }
+
+      public Object getCreatedReduce() {
+          return createdReduce;
+      }
+
+      public void setCreatedReduce(Object createdReduce) {
+          this.createdReduce = createdReduce;
+      }
+
+      public Object getUpdatedReduce() {
+          return updatedReduce;
+      }
+
+      public void setUpdatedReduce(Object updatedReduce) {
+          this.updatedReduce = updatedReduce;
+      }
+
+      public Object getDeletedReduce() {
+          return deletedReduce;
+      }
+
+      public void setDeletedReduce(Object deletedReduce) {
+          this.deletedReduce = deletedReduce;
+      }
+
+      public Object getRemainReduce() {
+          return remainReduce;
+      }
+
+      public void setRemainReduce(Object remainReduce) {
+          this.remainReduce = remainReduce;
+      }
+
+      public int getCreatedCompareCount() {
+          return createdCompareCount;
+      }
+
+      public void setCreatedCompareCount(int createdCompareCount) {
+          this.createdCompareCount = createdCompareCount;
+      }
+
+      public int getUpdatedCompareCount() {
+          return updatedCompareCount;
+      }
+
+      public void setUpdatedCompareCount(int updatedCompareCount) {
+          this.updatedCompareCount = updatedCompareCount;
+      }
+
+      public int getDeletedCompareCount() {
+          return deletedCompareCount;
+      }
+
+      public void setDeletedCompareCount(int deletedCompareCount) {
+          this.deletedCompareCount = deletedCompareCount;
+      }
+
+      public int getRemainCompareCount() {
+          return remainCompareCount;
+      }
+
+      public void setRemainCompareCount(int remainCompareCount) {
+          this.remainCompareCount = remainCompareCount;
+      }
+
+      public int getCreatedFailCount() {
+          return createdFailCount;
+      }
+
+      public void setCreatedFailCount(int createdFailCount) {
+          this.createdFailCount = createdFailCount;
+      }
+
+      public int getUpdatedFailCount() {
+          return updatedFailCount;
+      }
+
+      public void setUpdatedFailCount(int updatedFailCount) {
+          this.updatedFailCount = updatedFailCount;
+      }
+
+      public int getDeletedFailCount() {
+          return deletedFailCount;
+      }
+
+      public void setDeletedFailCount(int deletedFailCount) {
+          this.deletedFailCount = deletedFailCount;
+      }
   }
 
 }
