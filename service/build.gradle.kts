@@ -22,11 +22,11 @@ subprojects {
         testImplementation("com.h2database:h2:1.4.200")
         //有些是内部依赖的服务，并不需要对外开放，因此swagger放到各子项目中具体添加
         //implementation("io.springfox:springfox-swagger2:3.0.0")
-        compileOnly("org.projectlombok:lombok:1.18.12")
 
     }
 
     configurations.all {
         exclude(group = "ch.qos.logback")
+        exclude(group = "org.apache.logging.log4j", module = "log4j-to-slf4j")
     }
 }

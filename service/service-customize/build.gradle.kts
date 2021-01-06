@@ -9,7 +9,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
     implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
-    implementation(project(":interface:interface-customize"))
+    implementation(project(":interface"))
+    implementation("com.graphql-java:graphql-java-spring-boot-starter-webflux:2020-07-12T23-24-35-c6606f6")
 }
 
 configurations {

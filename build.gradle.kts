@@ -30,6 +30,7 @@ subprojects {
             testImplementation("org.junit.jupiter:junit-jupiter")
             testImplementation("org.openjdk.jmh:jmh-core:1.26")
 
+            annotationProcessor("org.projectlombok:lombok:1.18.16")
         }
 
         tasks.withType<Test>().configureEach {

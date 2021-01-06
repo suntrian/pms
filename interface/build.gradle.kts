@@ -1,8 +1,8 @@
-subprojects {
+plugins {
+    `java-library`
+}
 
-    dependencies {
-        compileOnly("org.projectlombok:lombok:1.18.12")
-    }
-
-
+dependencies {
+    compileOnly("org.projectlombok:lombok")
+    api("org.springframework.cloud:spring-cloud-starter-openfeign")
 }

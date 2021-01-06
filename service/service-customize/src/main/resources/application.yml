@@ -2,9 +2,6 @@ server:
   port: 8012
 
 spring:
-  data:
-    mongodb:
-      host:
-      username:
-      password:
+  application:
+    name: customize
 

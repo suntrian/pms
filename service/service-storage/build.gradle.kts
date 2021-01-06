@@ -6,5 +6,5 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(project(":module:module-commons"))
     implementation(project(":module:module-storage"))
-    implementation(project(":interface:interface-storage"))
+    implementation(project(":interface"))
 }
