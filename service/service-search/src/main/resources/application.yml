@@ -1,0 +1,9 @@
+server:
+  port: 8002
+
+spring:
+  application:
+    name: search
+  elasticsearch:
+    rest:
+      uris: 192.168.2.112:9200

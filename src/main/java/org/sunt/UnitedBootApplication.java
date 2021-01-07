@@ -6,6 +6,7 @@ import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPo
 import org.sunt.customize.CustomizeApplication;
 import org.sunt.project.ProjectApplication;
 import org.sunt.schedule.ScheduleApplication;
+import org.sunt.search.SearchApplication;
 import org.sunt.storage.StorageApplication;
 
 @SpringBootApplication(scanBasePackages = {"org.sunt"}, exclude = {LoadBalancerBeanPostProcessorAutoConfiguration.class})
@@ -17,7 +18,8 @@ public class UnitedBootApplication {
                         ProjectApplication.class,
                         ScheduleApplication.class,
                         CustomizeApplication.class,
-                        StorageApplication.class
+                        StorageApplication.class,
+                        SearchApplication.class
                 )
                 .run(args);
     }
