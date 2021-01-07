@@ -9,10 +9,10 @@ import org.sunt.schedule.ScheduleApplication;
 import org.sunt.storage.StorageApplication;
 
 @SpringBootApplication(scanBasePackages = {"org.sunt"}, exclude = {LoadBalancerBeanPostProcessorAutoConfiguration.class})
-public class UnitedApplication {
+public class UnitedBootApplication {
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(UnitedApplication.class)
+        new SpringApplicationBuilder(UnitedBootApplication.class)
                 .child(
                         ProjectApplication.class,
                         ScheduleApplication.class,

@@ -9,11 +9,14 @@ import java.util.Map;
 @Getter
 public class R<T> {
 
-    private final int code;
-    private final String message;
-    private final T data;
-    private final Long total;
+    private int code;
+    private String message;
+    private T data;
+    private Long total;
     private final long timestamp = System.currentTimeMillis();
+
+    public R() {
+    }
 
     public R(T data, int code, Long total, String message) {
         this.code = code;
