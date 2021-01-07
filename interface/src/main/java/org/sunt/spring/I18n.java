@@ -19,4 +19,8 @@ public class I18n {
         return this.messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
     }
 
+    public String messageOrDefault(String key, String defaultMsg, Object... args) {
+        return this.messageSource.getMessage(key, args, defaultMsg, LocaleContextHolder.getLocale());
+    }
+
 }

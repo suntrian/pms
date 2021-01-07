@@ -8,4 +8,6 @@ dependencies {
     implementation(project(":module:module-storage"))
     implementation(project(":interface"))
     compileOnly("org.projectlombok:lombok")
+    implementation("com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config")
+    implementation("com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery")
 }
