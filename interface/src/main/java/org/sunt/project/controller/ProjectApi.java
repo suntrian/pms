@@ -3,11 +3,9 @@ package org.sunt.project.controller;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.sunt.common.R;
 
-@FeignClient(name = "${spring.application.name}", url = "/project")
-@RequestMapping("/project")
+@FeignClient(name = "project", url = "/project")
 public interface ProjectApi {
 
     @GetMapping("/hello/{world}")

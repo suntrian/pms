@@ -4,14 +4,11 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 import org.sunt.common.R;
 import org.sunt.storage.entity.FileInfoDTO;
 
-
-@RequestMapping("/storage")
-@FeignClient(name = "", url = "")
+@FeignClient(name = "storage", url = "/storage")
 public interface StorageApi {
 
     @GetMapping("/hello/{world}")
