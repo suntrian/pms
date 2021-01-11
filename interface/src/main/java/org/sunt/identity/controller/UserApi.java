@@ -2,7 +2,7 @@ package org.sunt.identity.controller;
 
 import org.springframework.cloud.openfeign.FeignClient;
 
-@FeignClient(name = "", url = "")
+@FeignClient(name = "user", url = "/user")
 public interface UserApi {
 
 
