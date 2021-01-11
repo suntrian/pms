@@ -1,30 +1,30 @@
-package org.sunt.util;
+package org.sunt.common;
 
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"all", "cast", "unchecked", "rawtypes"})
-public abstract class AbstractTreeNode<T extends AbstractTreeNode, ID extends Serializable> implements Serializable {
+public abstract class TreeNode<T extends TreeNode, ID extends Serializable> implements Serializable {
 
     private static final long serialVersionUID = -980028682514888277L;
-    private static transient String split = "_";
+    private static transient String split = "/";
 
-    protected ID parent;          // parent id
+    protected ID parentId;          // parent id
     protected ID id;              // self id
     protected String path;
     protected Integer depth;        //树层级
     protected List<T> children;
     private transient T parentNode;
 
-    public AbstractTreeNode() {
+    public TreeNode() {
     }
 
-    public AbstractTreeNode(ID id) {
+    public TreeNode(ID id) {
         this.id = id;
     }
 
-    public static <T extends AbstractTreeNode, ID extends Serializable> List<T> buildTree(List<T> treeNodes) {
+    public static <T extends TreeNode, ID extends Serializable> List<T> buildTree(List<T> treeNodes) {
         List<T> roots = new ArrayList<>();
         Map<ID, T> visited = new HashMap<>();
         Set<ID> nodeIdSet = treeNodes.stream().map(i -> (ID) i.getId()).collect(Collectors.toSet());
@@ -33,20 +33,20 @@ public abstract class AbstractTreeNode<T extends AbstractTreeNode, ID extends Se
             Iterator<T> iterator = treeNodes.iterator();
             while (iterator.hasNext()) {
                 T node = iterator.next();
-                if (!node.filter() || filteredIdSet.contains(node.getParent())) {
+                if (!node.filter() || filteredIdSet.contains(node.getParentId())) {
                     filteredIdSet.add((ID) node.getId());
                     nodeIdSet.remove(node.getId());
                     iterator.remove();
                     continue;
                 }
-                if (node.isRoot() || !nodeIdSet.contains((ID) node.getParent())) {
+                if (node.isRoot() || !nodeIdSet.contains((ID) node.getParentId())) {
                     //根节点
-                    node.setParent(null);
+                    node.setParentId(null);
                     roots.add(insertPos(roots, node), node);
                     visited.put((ID) node.getId(), node);
                     iterator.remove();
-                } else if (visited.keySet().contains((ID) node.getParent())) {
-                    visited.get((ID) node.getParent()).addChild(node);
+                } else if (visited.keySet().contains((ID) node.getParentId())) {
+                    visited.get((ID) node.getParentId()).addChild(node);
                     visited.put((ID) node.getId(), node);
                     iterator.remove();
                 }
@@ -58,7 +58,7 @@ public abstract class AbstractTreeNode<T extends AbstractTreeNode, ID extends Se
         return roots;
     }
 
-    public static <T extends AbstractTreeNode, ID extends Serializable> List<T> plainTree(List<T> rootNodes) {
+    public static <T extends TreeNode, ID extends Serializable> List<T> plainTree(List<T> rootNodes) {
         if (rootNodes == null || rootNodes.size() == 0) return Collections.emptyList();
         List<T> list = new LinkedList<>(rootNodes);
         List<T> children = rootNodes.stream().filter(i -> i.getChildren() != null).map(t -> {
@@ -73,7 +73,7 @@ public abstract class AbstractTreeNode<T extends AbstractTreeNode, ID extends Se
         return list;
     }
 
-    private static <T extends AbstractTreeNode> int insertPos(List<T> nodes, T node) {
+    private static <T extends TreeNode> int insertPos(List<T> nodes, T node) {
         if (nodes == null || nodes.size() == 0) {
             return 0;
         }
@@ -92,12 +92,12 @@ public abstract class AbstractTreeNode<T extends AbstractTreeNode, ID extends Se
         this.id = id;
     }
 
-    public ID getParent() {
-        return (this.parent == null && this.parentNode == null) ? null : (this.parent != null ? this.parent : (ID) this.parentNode.getId());
+    public static void setSplit(String split) {
+        TreeNode.split = split;
     }
 
-    public void setParent(ID parent) {
-        this.parent = parent;
+    public ID getParentId() {
+        return (this.parentId == null && this.parentNode == null) ? null : (this.parentId != null ? this.parentId : (ID) this.parentNode.getId());
     }
 
     public T getParentNode() {
@@ -121,16 +121,16 @@ public abstract class AbstractTreeNode<T extends AbstractTreeNode, ID extends Se
         return split;
     }
 
-    public static void setSplit(String split) {
-        AbstractTreeNode.split = split;
+    public void setParentId(ID parentId) {
+        this.parentId = parentId;
     }
 
     public boolean isRoot() {
-        return this.parent == null;
+        return this.parentId == null;
     }
 
     public boolean isLeaf() {
-        return this.children == null || this.children.size() == 0;
+        return this.children == null || this.children.isEmpty();
     }
 
     public void addChild(T child) {
@@ -160,14 +160,14 @@ public abstract class AbstractTreeNode<T extends AbstractTreeNode, ID extends Se
     }
 
     public String getPath() {
-        T visitor = (T) this;
+        TreeNode visitor = this;
         StringBuilder pathBuilder = new StringBuilder();
         do {
             pathBuilder.insert(0, visitor.getId());
             if (visitor.getParentNode() != null) {
                 pathBuilder.insert(0, visitor.getSplit());
             }
-        } while ((visitor = (T) visitor.getParentNode()) != null);
+        } while ((visitor = visitor.getParentNode()) != null);
         return pathBuilder.toString();
     }
 

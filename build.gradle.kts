@@ -44,6 +44,7 @@ subprojects {
             testImplementation("org.openjdk.jmh:jmh-core:1.26")
 
             annotationProcessor("org.projectlombok:lombok:1.18.16")
+            annotationProcessor("org.mapstruct:mapstruct-processor:1.4.1.Final")
         }
 
         tasks.withType<Test>().configureEach {

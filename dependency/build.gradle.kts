@@ -18,7 +18,7 @@ dependencies {
         api("org.junit.jupiter:junit-jupiter:5.7.0-RC1")
         api("org.mockito:mockito-core:3.5.11")
         api("org.projectlombok:lombok:1.18.16")
-
+        api("org.mapstruct:mapstruct-processor:1.4.1.Final")
     }
 
 }

@@ -8,8 +8,8 @@ subprojects {
         //implementation("org.springframework.boot:spring-boot-starter-webflux")
         //implementation("org.springframework.boot:spring-boot-starter-jooq")
         implementation("org.springframework.boot:spring-boot-devtools")
-        implementation("org.springframework.kafka:spring-kafka:2.6.1")
-        testImplementation("org.springframework.kafka:spring-kafka-test:2.6.1")
+        //implementation("org.springframework.kafka:spring-kafka:2.6.1")
+        //testImplementation("org.springframework.kafka:spring-kafka-test:2.6.1")
 
         testImplementation("org.springframework.boot:spring-boot-starter-test")
         //testImplementation("org.springframework.boot:spring-boot-test")

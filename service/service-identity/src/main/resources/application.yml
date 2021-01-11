@@ -1,0 +1,12 @@
+server:
+  port: 8005
+
+spring:
+  application:
+    name: identity
+  datasource:
+    url: jdbc:mysql://localhost:3306/pms?serverTimezone=UTC
+    username: root
+    password: abc123
+  liquibase:
+    enabled: false
