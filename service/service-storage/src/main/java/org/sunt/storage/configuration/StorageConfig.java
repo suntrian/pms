@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.sunt.storage.FTPStorage;
 import org.sunt.storage.IStorage;
 import org.sunt.storage.LocalStorage;
-import org.sunt.storage.SshStorage;
 
 import java.io.IOException;
 import java.net.URL;
@@ -25,8 +24,8 @@ public class StorageConfig {
 //                return new HdfsStorage(rootPath);
             case "ftp":
                 return new FTPStorage(rootPath, null, null);
-            case "ssh":
-                return new SshStorage();
+//            case "ssh":
+//                return new SshStorage();
             default:
                 throw new UnsupportedAddressTypeException();
         }

@@ -1,14 +1,26 @@
 package org.sunt.storage;
 
+import com.jcraft.jsch.Session;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
 public class SshStorage implements IStorage {
 
+    private static final String PROTOCOL_PREFIX = "ssh:";
+
+    private Authentication authentication;
+
+    private Session session;
+
+    public SshStorage(Authentication authentication) {
+        this.authentication = authentication;
+    }
+
     @Override
     public boolean acceptURL(URL url) {
-        return false;
+        return url.getProtocol() != null && url.getProtocol().toLowerCase().startsWith(PROTOCOL_PREFIX);
     }
 
     @Override
@@ -55,4 +67,17 @@ public class SshStorage implements IStorage {
     public boolean exists(String path) throws IOException {
         return false;
     }
+
+    private static abstract class Authentication {
+
+    }
+
+    private static class UserPassAuthentication extends Authentication {
+
+    }
+
+    private static class PrivateKeyAuthentication extends Authentication {
+
+    }
+
 }
