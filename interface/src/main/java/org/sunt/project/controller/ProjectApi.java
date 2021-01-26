@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.sunt.common.R;
 
-@FeignClient(name = "project", url = "/project")
+@FeignClient(name = "project", path = "/project")
 public interface ProjectApi {
 
     @GetMapping("/hello/{world}")

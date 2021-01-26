@@ -10,7 +10,7 @@ subprojects {
         implementation("org.springframework.boot:spring-boot-devtools")
         //implementation("org.springframework.kafka:spring-kafka:2.6.1")
         //testImplementation("org.springframework.kafka:spring-kafka-test:2.6.1")
-
+        //implementation("org.apache.rocketmq:rocketmq-spring-boot-starter:2.1.1")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
         //testImplementation("org.springframework.boot:spring-boot-test")
         testImplementation("org.mockito:mockito-core")

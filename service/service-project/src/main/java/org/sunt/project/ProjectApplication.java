@@ -1,5 +1,6 @@
 package org.sunt.project;
 
+import com.alibaba.cloud.nacos.ribbon.RibbonNacosAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -9,13 +10,22 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.netflix.ribbon.RibbonAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
 @EnableFeignClients(basePackages = {"org.sunt"})
 @EnableDiscoveryClient
-@SpringBootApplication(scanBasePackages = {"org.sunt"}, exclude = {DataSourceAutoConfiguration.class, SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class})
+@SpringBootApplication(scanBasePackages = {"org.sunt"},
+        exclude = {
+                DataSourceAutoConfiguration.class,
+                SecurityAutoConfiguration.class,
+                SecurityFilterAutoConfiguration.class,
+                ManagementWebSecurityAutoConfiguration.class,
+                RibbonNacosAutoConfiguration.class,
+                RibbonAutoConfiguration.class
+        })
 public class ProjectApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {

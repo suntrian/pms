@@ -6,10 +6,6 @@ pms:
 spring:
   application:
     name: storage
-  cloud:
-    nacos:
-      config:
-        server-addr: 192.168.2.112:8848
-        file-extension: yaml
-      discovery:
-        server-addr: 192.168.2.112:8848
+  flyway:
+    placeholders:
+      prefix:

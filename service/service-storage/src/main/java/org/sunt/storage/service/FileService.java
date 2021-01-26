@@ -1,11 +1,11 @@
 package org.sunt.storage.service;
 
-import org.sunt.storage.entity.FileEntity;
+import org.sunt.storage.entity.UploadFile;
 
 public interface FileService {
 
 
-    FileEntity save(FileEntity fileEntity);
+    UploadFile insert(UploadFile fileEntity);
 
-    FileEntity getFileDetail(Integer fileId);
+    UploadFile getFileDetail(Integer fileId);
 }

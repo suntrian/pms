@@ -7,7 +7,7 @@ import org.sunt.identity.entity.MenuNode;
 
 import java.util.List;
 
-@FeignClient(name = "menu", url = "/menu")
+@FeignClient(name = "menu", path = "/menu")
 public interface MenuApi {
 
     @GetMapping("")

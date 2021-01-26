@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.sunt.common.R;
 
-@FeignClient(name = "schedule", url = "/schedule")
+@FeignClient(name = "schedule", path = "/schedule")
 public interface ScheduleApi {
 
     @GetMapping("/ping")

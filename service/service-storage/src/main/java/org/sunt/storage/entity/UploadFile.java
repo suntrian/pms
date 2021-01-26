@@ -7,7 +7,9 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class FileInfoDTO {
+public class UploadFile {
+
+    private static final long serialVersionUID = -269022953824371600L;
 
     private Integer id;
     private Integer parentId;
@@ -18,7 +20,7 @@ public class FileInfoDTO {
     private String fileSuffix;
     private LocalDateTime createAt;
     private Integer createBy;
-    private String createUser;
     private Integer referenced;
+    private Integer tenantId;
 
 }

@@ -1,6 +1,7 @@
 package org.sunt.project.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.sunt.common.R;
@@ -31,5 +32,9 @@ public class ProjectController implements ProjectApi {
         return storageApi.pong(hello + param);
     }
 
+    @GetMapping("/port")
+    public R<Integer> port() {
+        return storageApi.getPort();
+    }
 
 }
