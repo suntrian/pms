@@ -1,6 +1,6 @@
 package org.sunt.formula.define
 
-enum class SqlProduct(val driver: List<String>, val port: Int, vararg val protocols: String) {
+enum class SqlDialect(val driver: List<String>, val port: Int, vararg val protocols: String) {
 
     MYSQL(listOf("com.mysql.cj.jdbc.Driver"), 3306, "mysql"),
     MARIADB(listOf("org.mariadb.jdbc.Driver"), 3306, "mariadb"),
@@ -33,7 +33,7 @@ enum class SqlProduct(val driver: List<String>, val port: Int, vararg val protoc
     companion object {
 
         @JvmStatic
-        fun of(product: String): SqlProduct {
+        fun of(product: String): SqlDialect {
             return try {
                 valueOf(product.toUpperCase());
             } catch (e: Exception) {

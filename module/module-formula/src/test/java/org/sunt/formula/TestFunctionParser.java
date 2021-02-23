@@ -3,13 +3,11 @@ package org.sunt.formula;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sunt.formula.define.SqlProduct;
-import org.sunt.formula.function.FunctionDefine;
-import org.sunt.formula.function.FunctionDefineParser;
+import org.sunt.formula.define.SqlDialect;
+import org.sunt.formula.function.FunctionDefinition;
+import org.sunt.formula.function.FunctionDefinitionParser;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TestFunctionParser {
 
@@ -17,25 +15,25 @@ public class TestFunctionParser {
 
     @Test
     public void testParseFunctionFile() {
-        FunctionDefineParser defineParser = FunctionDefineParser.INSTANCE;
-        List<FunctionDefine> functions = defineParser.getFunctionMapByProduct(SqlProduct.IMPALA).values().stream().flatMap(Collection::stream).collect(Collectors.toList());
-        for (FunctionDefine function : functions) {
+        FunctionDefinitionParser defineParser = FunctionDefinitionParser.INSTANCE;
+        List<FunctionDefinition> functions = defineParser.listFunctions(SqlDialect.IMPALA);
+        for (FunctionDefinition function : functions) {
             logger.debug("{}", function);
         }
     }
 
     @Test
     public void testParseFunctionDialectFile() {
-        FunctionDefineParser defineParser = FunctionDefineParser.INSTANCE;
-        List<FunctionDefine> impalaFunctions = defineParser.getFunctionMapByProduct(SqlProduct.IMPALA).values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+        FunctionDefinitionParser defineParser = FunctionDefinitionParser.INSTANCE;
+        List<FunctionDefinition> impalaFunctions = defineParser.listFunctions(SqlDialect.IMPALA);
         logger.info("IMPALA");
-        for (FunctionDefine function : impalaFunctions) {
+        for (FunctionDefinition function : impalaFunctions) {
             logger.debug("{}", function);
         }
 
         logger.info("MYSQL");
-        List<FunctionDefine> mysqlFunctions = defineParser.getFunctionMapByProduct(SqlProduct.MYSQL).values().stream().flatMap(Collection::stream).collect(Collectors.toList());
-        for (FunctionDefine mysqlFunction : mysqlFunctions) {
+        List<FunctionDefinition> mysqlFunctions = defineParser.listFunctions(SqlDialect.MYSQL);
+        for (FunctionDefinition mysqlFunction : mysqlFunctions) {
             logger.debug("{}", mysqlFunction);
         }
     }

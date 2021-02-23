@@ -3,72 +3,95 @@ parser grammar FunctionParser;
 options { tokenVocab=FunctionLexer; }
 
 root
-    : (functionItem
-    | functionAlias
-    | NEW_LINE) +
+    : packageDeclare
+    importDeclare*
+    (typeAliasDelare | dialectInterface)*
     EOF
     ;
 
-category
-    : IDENTIFIER
-    | LS_BRACKET IDENTIFIER (COMMA IDENTIFIER)* RS_BRACKET
+packageDeclare
+    : PACKAGE identifier SEMICOLON?
     ;
 
-functionItem
-    : DESCRIPTION NEW_LINE*? category NEW_LINE*? COLON COLON NEW_LINE*? funcDefine NEW_LINE*? funcImplement
+importDeclare
+    : IMPORT identifier (DOT ASTERISK)? SEMICOLON?
     ;
 
-functionAlias
-    : ALIAS IDENTIFIER EQUAL IDENTIFIER (COMMA IDENTIFIER)*
+dialectInterface
+    : INTERFACE simpleIdentifier (COLON identifier)? (LCURL functionDefine* RCURL)?
     ;
 
-funcDefine
-    : IDENTIFIER L_BRACKET funcArgs? R_BRACKET COLON (dataType | argRef DOT TYPE)
+typeAliasDelare
+    : TYPEALIAS (identifier | dataType) EQUAL identifier
     ;
 
-funcImplement
-    : TRANSFER_L funcImplementBody NEWLINE?
-    | TRANSFER_S funcImplementBody S_BLOCK
-    | TRANSFER_D funcImplementBody D_BLOCK
+functionDefine
+    : functionModifierList? FUN typeParameters? simpleIdentifier LPAREN functionParamDefines? RPAREN COLON dataType SEMICOLON?
     ;
 
-funcImplementBody
-    : ( ANY_L | WS_L )+?
-    | ( ANY_S | WS_S )+?
-    | ( ANY_D | WS_D )+?
+functionModifierList
+    : (annotation | functionModifier)+
     ;
 
-funcArgs
-    : VARARG? funcArg
-    | funcArg COMMA (funcArg COMMA)* VARARG? funcArg?
+annotation
+    : AT identifier (LPAREN functionParamUsages? RPAREN)?
     ;
 
-funcArg
-    : argName COLON dataType (COLON LS_BRACKET enumerations RS_BRACKET )?
+functionModifier
+    : OVERRIDE
+    | PRIVATE
+    | ABSTRACT
     ;
 
-argName
-    : IDENTIFIER
-    | dataType
+typeParameters
+    : LANGLE dataType (COMMA dataType)* RANGLE
     ;
 
-argRef
-    : DOLLAR (INTEGER | argName | L_BRACE argName R_BRACE)
+functionParamDefines
+    : functionParamDefine  (COMMA functionParamDefine)* COMMA?
     ;
 
-enumerations
-    : STRING (COMMA STRING)*
-    | NUMBER (COMMA NUMBER)*
+functionParamDefine
+    : functionParamModifierList? simpleIdentifier COLON dataType (EQUAL expression)?
     ;
 
-allSymbol
-    : IDENTIFIER | STRING | NUMBER | INTEGER
-    |  DOLLAR | PLUS | MINUS
-    | COLON | COMMA | DOT
-    | L_BRACKET | R_BRACKET | LS_BRACKET | RS_BRACKET | L_BRACE | R_BRACE
-    | SYMBOL | dataType
+functionParamModifierList
+    : (annotation | functionParamModifier)+
+    ;
+
+functionParamModifier
+    : VARARG        //used by last parameter
+    ;
+
+functionParamUsages
+    : expression (COMMA expression)*
+    ;
+
+expression
+    : STRING
+    | NUMBER
     ;
 
 dataType
-    : DT_STRING | DT_DECIMAL | DT_INTEGER | DT_BOOLEAN | DT_DATETIME | DT_DATE | DT_TIME | DT_ANY
+    : DT_BOOLEAN
+    | DT_INT
+    | DT_DOUBLE
+    | DT_STRING
+    | DT_DATE
+    | DT_TIME
+    | DT_DATETIME
+    | DT_ANY
+    | identifier typeParameters?
+    ;
+
+identifier
+    : simpleIdentifier (DOT simpleIdentifier)*
+    ;
+
+simpleIdentifier
+    : IDENTIFIER
+    | PACKAGE
+    | IMPORT
+    | INTERFACE
+    | VARARG
     ;

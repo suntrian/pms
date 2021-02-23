@@ -2,14 +2,18 @@ package org.sunt.formula
 
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
-import org.sunt.formula.define.SqlProduct
+import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.exception.DataTypeMismatchException
 import org.sunt.formula.exception.ParamsSizeMismatchException
-import org.sunt.formula.function.FunctionDefine
+import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.parser.FormulaParser.*
 import java.util.function.Function
 
-class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, IColumn?>, getColumnByName: Function<String, IColumn?>) : AbstractFormulaVisitor(product, getColumnById, getColumnByName) {
+class FormulaToSqlVisitor(
+    product: SqlDialect,
+    getColumnById: Function<String, IColumn?>,
+    getColumnByName: Function<String, IColumn?>
+) : AbstractFormulaVisitor(product, getColumnById, getColumnByName) {
 
     override fun visitFormula(ctx: FormulaContext): StatementInfo {
         return visitStatement(ctx.statement())
@@ -221,8 +225,9 @@ class FormulaToSqlVisitor(product: SqlProduct, getColumnById: Function<String, I
     override fun visitFunctionStatement(ctx: FunctionStatementContext): StatementInfo {
         val funcName = ctx.IDENTITY().text
         val params = visitFunctionParams(ctx.functionParams())
-        val functionDefines = this.functionMap[funcName] ?: this.functionMap[this.aliasFunctionNameMap[funcName]] ?: throw IllegalStateException("函数${funcName}不存在")
-        val finalFunctionDefine: FunctionDefine = figureFunctionDefine(functionDefines, params)
+        val functionDefines = this.functionMap[funcName] ?: this.functionMap[this.aliasFunctionNameMap[funcName]]
+        ?: throw IllegalStateException("函数${funcName}不存在")
+        val finalFunctionDefine: FunctionDefinition = figureFunctionDefine(functionDefines, params)
         val funcStmt = StatementInfo(ctx)
         funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege }!!
         funcStmt.dataType = if (finalFunctionDefine.typeParamIndex != null) params[finalFunctionDefine.typeParamIndex!!].dataType else finalFunctionDefine.dataType

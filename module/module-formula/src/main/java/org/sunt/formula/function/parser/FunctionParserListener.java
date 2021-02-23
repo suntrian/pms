@@ -1,6 +1,5 @@
-// Generated from C:/Users/suntr/Project/pms/module/module-formula/src/main/java/org/sunt/formula/function/parser\FunctionParser.g4 by ANTLR 4.8
+// Generated from D:/projects/pms/module/module-formula/src/main/java/org/sunt/formula/functionKt/parser\FunctionParser.g4 by ANTLR 4.9.1
 package org.sunt.formula.function.parser;
-
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -23,172 +22,214 @@ public interface FunctionParserListener extends ParseTreeListener {
     void exitRoot(FunctionParser.RootContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#category}.
+     * Enter a parse tree produced by {@link FunctionParser#packageDeclare}.
      *
      * @param ctx the parse tree
      */
-    void enterCategory(FunctionParser.CategoryContext ctx);
+    void enterPackageDeclare(FunctionParser.PackageDeclareContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#category}.
+     * Exit a parse tree produced by {@link FunctionParser#packageDeclare}.
      *
      * @param ctx the parse tree
      */
-    void exitCategory(FunctionParser.CategoryContext ctx);
+    void exitPackageDeclare(FunctionParser.PackageDeclareContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#functionItem}.
+     * Enter a parse tree produced by {@link FunctionParser#importDeclare}.
      *
      * @param ctx the parse tree
      */
-    void enterFunctionItem(FunctionParser.FunctionItemContext ctx);
+    void enterImportDeclare(FunctionParser.ImportDeclareContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#functionItem}.
+     * Exit a parse tree produced by {@link FunctionParser#importDeclare}.
      *
      * @param ctx the parse tree
      */
-    void exitFunctionItem(FunctionParser.FunctionItemContext ctx);
+    void exitImportDeclare(FunctionParser.ImportDeclareContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#functionAlias}.
+     * Enter a parse tree produced by {@link FunctionParser#dialectInterface}.
      *
      * @param ctx the parse tree
      */
-    void enterFunctionAlias(FunctionParser.FunctionAliasContext ctx);
+    void enterDialectInterface(FunctionParser.DialectInterfaceContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#functionAlias}.
+     * Exit a parse tree produced by {@link FunctionParser#dialectInterface}.
      *
      * @param ctx the parse tree
      */
-    void exitFunctionAlias(FunctionParser.FunctionAliasContext ctx);
+    void exitDialectInterface(FunctionParser.DialectInterfaceContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#funcDefine}.
+     * Enter a parse tree produced by {@link FunctionParser#typeAliasDelare}.
      *
      * @param ctx the parse tree
      */
-    void enterFuncDefine(FunctionParser.FuncDefineContext ctx);
+    void enterTypeAliasDelare(FunctionParser.TypeAliasDelareContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#funcDefine}.
+     * Exit a parse tree produced by {@link FunctionParser#typeAliasDelare}.
      *
      * @param ctx the parse tree
      */
-    void exitFuncDefine(FunctionParser.FuncDefineContext ctx);
+    void exitTypeAliasDelare(FunctionParser.TypeAliasDelareContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#funcImplement}.
+     * Enter a parse tree produced by {@link FunctionParser#functionDefine}.
      *
      * @param ctx the parse tree
      */
-    void enterFuncImplement(FunctionParser.FuncImplementContext ctx);
+    void enterFunctionDefine(FunctionParser.FunctionDefineContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#funcImplement}.
+     * Exit a parse tree produced by {@link FunctionParser#functionDefine}.
      *
      * @param ctx the parse tree
      */
-    void exitFuncImplement(FunctionParser.FuncImplementContext ctx);
+    void exitFunctionDefine(FunctionParser.FunctionDefineContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#funcImplementBody}.
+     * Enter a parse tree produced by {@link FunctionParser#functionModifierList}.
      *
      * @param ctx the parse tree
      */
-    void enterFuncImplementBody(FunctionParser.FuncImplementBodyContext ctx);
+    void enterFunctionModifierList(FunctionParser.FunctionModifierListContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#funcImplementBody}.
+     * Exit a parse tree produced by {@link FunctionParser#functionModifierList}.
      *
      * @param ctx the parse tree
      */
-    void exitFuncImplementBody(FunctionParser.FuncImplementBodyContext ctx);
+    void exitFunctionModifierList(FunctionParser.FunctionModifierListContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#funcArgs}.
+     * Enter a parse tree produced by {@link FunctionParser#annotation}.
      *
      * @param ctx the parse tree
      */
-    void enterFuncArgs(FunctionParser.FuncArgsContext ctx);
+    void enterAnnotation(FunctionParser.AnnotationContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#funcArgs}.
+     * Exit a parse tree produced by {@link FunctionParser#annotation}.
      *
      * @param ctx the parse tree
      */
-    void exitFuncArgs(FunctionParser.FuncArgsContext ctx);
+    void exitAnnotation(FunctionParser.AnnotationContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#funcArg}.
+     * Enter a parse tree produced by {@link FunctionParser#functionModifier}.
      *
      * @param ctx the parse tree
      */
-    void enterFuncArg(FunctionParser.FuncArgContext ctx);
+    void enterFunctionModifier(FunctionParser.FunctionModifierContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#funcArg}.
+     * Exit a parse tree produced by {@link FunctionParser#functionModifier}.
      *
      * @param ctx the parse tree
      */
-    void exitFuncArg(FunctionParser.FuncArgContext ctx);
+    void exitFunctionModifier(FunctionParser.FunctionModifierContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#argName}.
+     * Enter a parse tree produced by {@link FunctionParser#typeParameters}.
      *
      * @param ctx the parse tree
      */
-    void enterArgName(FunctionParser.ArgNameContext ctx);
+    void enterTypeParameters(FunctionParser.TypeParametersContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#argName}.
+     * Exit a parse tree produced by {@link FunctionParser#typeParameters}.
      *
      * @param ctx the parse tree
      */
-    void exitArgName(FunctionParser.ArgNameContext ctx);
+    void exitTypeParameters(FunctionParser.TypeParametersContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#argRef}.
+     * Enter a parse tree produced by {@link FunctionParser#functionParamDefines}.
      *
      * @param ctx the parse tree
      */
-    void enterArgRef(FunctionParser.ArgRefContext ctx);
+    void enterFunctionParamDefines(FunctionParser.FunctionParamDefinesContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#argRef}.
+     * Exit a parse tree produced by {@link FunctionParser#functionParamDefines}.
      *
      * @param ctx the parse tree
      */
-    void exitArgRef(FunctionParser.ArgRefContext ctx);
+    void exitFunctionParamDefines(FunctionParser.FunctionParamDefinesContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#enumerations}.
+     * Enter a parse tree produced by {@link FunctionParser#functionParamDefine}.
      *
      * @param ctx the parse tree
      */
-    void enterEnumerations(FunctionParser.EnumerationsContext ctx);
+    void enterFunctionParamDefine(FunctionParser.FunctionParamDefineContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#enumerations}.
+     * Exit a parse tree produced by {@link FunctionParser#functionParamDefine}.
      *
      * @param ctx the parse tree
      */
-    void exitEnumerations(FunctionParser.EnumerationsContext ctx);
+    void exitFunctionParamDefine(FunctionParser.FunctionParamDefineContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#allSymbol}.
+     * Enter a parse tree produced by {@link FunctionParser#functionParamModifierList}.
      *
      * @param ctx the parse tree
      */
-    void enterAllSymbol(FunctionParser.AllSymbolContext ctx);
+    void enterFunctionParamModifierList(FunctionParser.FunctionParamModifierListContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#allSymbol}.
+     * Exit a parse tree produced by {@link FunctionParser#functionParamModifierList}.
      *
      * @param ctx the parse tree
      */
-    void exitAllSymbol(FunctionParser.AllSymbolContext ctx);
+    void exitFunctionParamModifierList(FunctionParser.FunctionParamModifierListContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#functionParamModifier}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterFunctionParamModifier(FunctionParser.FunctionParamModifierContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#functionParamModifier}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitFunctionParamModifier(FunctionParser.FunctionParamModifierContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#functionParamUsages}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterFunctionParamUsages(FunctionParser.FunctionParamUsagesContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#functionParamUsages}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitFunctionParamUsages(FunctionParser.FunctionParamUsagesContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#expression}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterExpression(FunctionParser.ExpressionContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#expression}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitExpression(FunctionParser.ExpressionContext ctx);
 
     /**
      * Enter a parse tree produced by {@link FunctionParser#dataType}.
@@ -203,4 +244,32 @@ public interface FunctionParserListener extends ParseTreeListener {
      * @param ctx the parse tree
      */
     void exitDataType(FunctionParser.DataTypeContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#identifier}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterIdentifier(FunctionParser.IdentifierContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#identifier}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitIdentifier(FunctionParser.IdentifierContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#simpleIdentifier}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterSimpleIdentifier(FunctionParser.SimpleIdentifierContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#simpleIdentifier}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitSimpleIdentifier(FunctionParser.SimpleIdentifierContext ctx);
 }

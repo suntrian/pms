@@ -4,13 +4,13 @@ import org.antlr.v4.runtime.ParserRuleContext
 import org.slf4j.LoggerFactory
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
-import org.sunt.formula.define.SqlProduct
+import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.exception.AbstractFormulaException
 import org.sunt.formula.exception.DataTypeMismatchException
 import org.sunt.formula.exception.ParamsSizeMismatchException
 import org.sunt.formula.exception.WillNeverHappenException
-import org.sunt.formula.function.FunctionDefine
-import org.sunt.formula.function.FunctionDefineParser.getFunctionMapByProduct
+import org.sunt.formula.function.FunctionDefinition
+import org.sunt.formula.function.FunctionDefinitionParser.loadFunctions
 import org.sunt.formula.parser.FormulaBaseVisitor
 import org.sunt.formula.parser.FormulaParser.*
 import org.sunt.formula.suggestion.SuggestionScope
@@ -19,9 +19,13 @@ import java.util.*
 import java.util.function.Function
 import kotlin.collections.ArrayList
 
-abstract class AbstractFormulaVisitor(protected val dialect: SqlProduct, protected val getColumnById: Function<String, IColumn?>, protected val getColumnByName: Function<String, IColumn?>) : FormulaBaseVisitor<Any?>() {
+abstract class AbstractFormulaVisitor(
+    protected val dialect: SqlDialect,
+    protected val getColumnById: Function<String, IColumn?>,
+    protected val getColumnByName: Function<String, IColumn?>
+) : FormulaBaseVisitor<Any?>() {
 
-    protected val functionMap: Map<String, List<FunctionDefine>> = getFunctionMapByProduct(dialect)
+    protected val functionMap: Map<String, List<FunctionDefinition>> = loadFunctions(dialect)
 
     protected val aliasFunctionNameMap: Map<String, String>
 
@@ -66,7 +70,7 @@ abstract class AbstractFormulaVisitor(protected val dialect: SqlProduct, protect
     }
 
     override fun visitIdentity(ctx: IdentityContext): StatementInfo {
-        var funcDefines: List<FunctionDefine>? = emptyList()
+        var funcDefines: List<FunctionDefinition>? = emptyList()
         var column: IColumn? = null
         val stmt = StatementInfo(ctx)
         val identity = ctx.text
@@ -118,24 +122,27 @@ abstract class AbstractFormulaVisitor(protected val dialect: SqlProduct, protect
         return colStmt
     }
 
-    protected fun figureFunctionDefine(functionDefines: List<FunctionDefine>, params: List<StatementInfo>): FunctionDefine {
-        val matched = ArrayList<FunctionDefine>(functionDefines.size)
+    protected fun figureFunctionDefine(
+        functionDefines: List<FunctionDefinition>,
+        params: List<StatementInfo>
+    ): FunctionDefinition {
+        val matched = ArrayList<FunctionDefinition>(functionDefines.size)
         val errorInfos = ArrayList<List<AbstractFormulaException>>(functionDefines.size)
 
         outer@ for (funcDefine in functionDefines) {
             val errors = LinkedList<AbstractFormulaException>()
-            if (funcDefine.args.isEmpty() && params.isNotEmpty()) {
-                errors.add(ParamsSizeMismatchException(funcDefine.funcName, funcDefine.args.size, params.size));
+            if (funcDefine.arguments.isEmpty() && params.isNotEmpty()) {
+                errors.add(ParamsSizeMismatchException(funcDefine.funcName, funcDefine.arguments.size, params.size));
                 //"函数${funcDefine.funcName}期待${funcDefine.args.size}个参数，实际为${params.size}"
                 errorInfos.add(errors)
                 continue
             }
             val paramIter: Iterator<StatementInfo> = params.listIterator()
             var i = 0
-            for (arg in funcDefine.args) {
+            for (arg in funcDefine.arguments) {
                 i++
                 if (!paramIter.hasNext()) {
-                    errors.add(ParamsSizeMismatchException(funcDefine.funcName, funcDefine.args.size, params.size))
+                    errors.add(ParamsSizeMismatchException(funcDefine.funcName, funcDefine.arguments.size, params.size))
                     //"函数${funcDefine.funcName}期待${funcDefine.args.size}个参数，实际为${params.size}"
                     errorInfos.add(errors)
                     continue@outer
