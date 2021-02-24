@@ -45,7 +45,7 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
             for (annotationContext in ctx.functionModifierList().annotation()) {
                 val annotationType = annotationContext.identifier().text
                 val annotationParams =
-                    annotationContext.functionParamUsages()?.expression()?.map { it.text } ?: emptyList()
+                    annotationContext.functionParamUsages()?.expression()?.map { it.text.trim('"') } ?: emptyList()
                 when (annotationType) {
                     Category::class.simpleName, Category::class.qualifiedName -> {
                         functionDefinition.categories = annotationParams.toSet()

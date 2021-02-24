@@ -8,19 +8,34 @@ import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.function.parser.FunctionLexer
 import org.sunt.formula.function.parser.FunctionParser
 import java.net.URI
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 object FunctionDefinitionParser {
 
     private val log = LoggerFactory.getLogger(FunctionDefinitionParser.javaClass)
     private val functionDefUri = URI("classpath://function/function.kt")
+    private val dialectCache: MutableMap<SqlDialect, Map<String, List<FunctionDefinition>>> = ConcurrentHashMap()
 
-    fun loadFunctions(dialect: SqlDialect): Map<String, List<FunctionDefinition>> {
-        val functionGroup = _loadFunctions(this.functionDefUri)[dialect.name]
-            ?: throw IllegalStateException("未找到${dialect.name}的函数定义")
-        return mergeFunction(functionGroup)
+    @JvmOverloads
+    fun loadFunctions(dialect: SqlDialect = SqlDialect.DEFALUT): Map<String, List<FunctionDefinition>> {
+        var dialectFunctions = dialectCache[dialect]
+        if (dialectFunctions == null) {
+            synchronized(dialectCache) {
+                dialectFunctions = dialectCache[dialect]
+                if (dialectFunctions == null) {
+                    val functionGroup = _loadFunctions(functionDefUri)[dialect?.name ?: "Common"]
+                        ?: throw IllegalStateException("未找到${dialect?.name ?: "Common"}的函数定义")
+                    dialectFunctions = mergeFunction(functionGroup)
+                    dialectCache[dialect] = dialectFunctions!!
+                }
+            }
+        }
+        return dialectFunctions!!
     }
 
-    fun listFunctions(dialect: SqlDialect): List<FunctionDefinition> {
+    @JvmOverloads
+    fun listFunctions(dialect: SqlDialect = SqlDialect.DEFALUT): List<FunctionDefinition> {
         return loadFunctions(dialect).values.flatten()
     }
 
@@ -58,7 +73,7 @@ object FunctionDefinitionParser {
 
     //处理overload的函数
     private fun handleOverload(functionList: List<FunctionDefinition>): Map<String, List<FunctionDefinition>> {
-        val funcGroupByName = functionList.groupBy { it.funcName }
+        val funcGroupByName = functionList.groupByTo(TreeMap(String.CASE_INSENSITIVE_ORDER)) { it.funcName }
         for ((funcName, functions) in funcGroupByName) {
             for (function in functions) {
                 if (function.overload) {
@@ -87,7 +102,7 @@ object FunctionDefinitionParser {
         childFunctions: Map<String, List<FunctionDefinition>>,
         parentFunctions: Map<String, List<FunctionDefinition>>
     ): Map<String, List<FunctionDefinition>> {
-        val functionMap = HashMap(parentFunctions)
+        val functionMap = TreeMap(parentFunctions)
         for ((thisFuncName, thisFuncList) in childFunctions) {
             val parentFuncList = functionMap[thisFuncName]
             if (parentFuncList == null) {

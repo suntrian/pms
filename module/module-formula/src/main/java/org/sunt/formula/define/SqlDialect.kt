@@ -2,6 +2,7 @@ package org.sunt.formula.define
 
 enum class SqlDialect(val driver: List<String>, val port: Int, vararg val protocols: String) {
 
+    DEFALUT(emptyList(), 0, "default"),
     MYSQL(listOf("com.mysql.cj.jdbc.Driver"), 3306, "mysql"),
     MARIADB(listOf("org.mariadb.jdbc.Driver"), 3306, "mariadb"),
     ORACLE(listOf("oracle.jdbc.driver.OracleDriver"), 1521, "oracle:thin"),

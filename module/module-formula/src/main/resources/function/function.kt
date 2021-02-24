@@ -347,7 +347,7 @@ DATEADD
     """
     )
     @Category("时间函数")
-    @Translate("DATE_ADD($1, interval $2 {\"$3\".substring(1, \"$3\".length()-1)})")
+    @Translate("""DATE_ADD($1, interval $2 {"$3".substring(1, "$3".length()-1)})""")
     fun DATEADD(date: Date, delta: Int, @Option("'year'", "'month'", "'day'") datepart: String): Date
 
     @Description(
@@ -363,7 +363,7 @@ DATEADD
     """
     )
     @Category("时间函数")
-    @Translate("DATE_ADD($1, interval $2 {\"$3\".substring(1, \"$3\".length()-1)})")
+    @Translate("""DATE_ADD($1, interval $2 {"$3".substring(1, "$3".length()-1)})""")
     fun DATEADD(
         date: DateTime,
         delta: Int,
@@ -591,6 +591,8 @@ GROUP_SUM
 
     @Overload
     fun GROUP_SUM(agg: Int, vararg group: Any): Int
+
+
 }
 
 interface Hive : Common {
@@ -607,10 +609,10 @@ interface Hive : Common {
     @Translate("CEILING(MONTH($1)/3)")
     override fun QUARTER(date: Any): Int
 
-    @Translate("TO_DATE( DATE_ADD(cast($1 as timestamp), interval $2 {\"$3\".substring(1, \"$3\".length()-1)}))")
+    @Translate("""TO_DATE( DATE_ADD(cast($1 as timestamp), interval $2 {"$3".substring(1, "$3".length()-1)}))""")
     override fun DATEADD(date: Date, delta: Int, datepart: String): Date
 
-    @Translate("TO_DATE( DATE_ADD(cast($1 as timestamp), interval $2 {\"$3\".substring(1, \"$3\".length()-1)}))")
+    @Translate("""TO_DATE( DATE_ADD(cast($1 as timestamp), interval $2 {"$3".substring(1, "$3".length()-1)}))""")
     override fun DATEADD(date: DateTime, delta: Int, datepart: String): DateTime
 
     @Translate("TO_TIMESTAMP($1, $2)")
@@ -678,10 +680,10 @@ interface Mysql : Common {
     @Translate("STR_TO_DATE($1,$2)")
     override fun TO_DATE(text: String, format: String): Date
 
-    @Translate("TIMESTAMPDIFF({\"$3\".substring(1, \"$3\".length()-1)},  $1, $2)")
+    @Translate("""TIMESTAMPDIFF({"$3".substring(1, "$3".length()-1)},  $1, $2)""")
     override fun DATEDIFF(fromDate: Date, toDate: Date, unit: String): Int
 
-    @Translate("TIMESTAMPDIFF({\"$3\".substring(1, \"$3\".length()-1)},  $1, $2)")
+    @Translate("""TIMESTAMPDIFF({"$3".substring(1, "$3".length()-1)},  $1, $2)""")
     override fun DATEDIFF(fromDate: DateTime, toDate: DateTime, unit: String): Int
 
 
