@@ -3,6 +3,8 @@ package org.sunt.formula.function
 import bsh.EvalError
 import bsh.Interpreter
 import org.sunt.formula.define.DataType
+import org.sunt.formula.function.parser.FunctionTranslator
+import org.sunt.formula.suggestion.SuggestionItem
 import java.util.regex.Pattern
 
 class FunctionDefinition(val funcName: String) {
@@ -11,14 +13,20 @@ class FunctionDefinition(val funcName: String) {
 
     var categories: Set<String> = emptySet()
     var alias: Set<String> = emptySet()
-    var arguments: List<FunctionArgument> = emptyList()
+    var arguments: FunctionArgumentList = FunctionArgumentList.emptyList
     var description: String = ""
     var implement: String = ""
         set(value) {
             field = value
-            this.functionImplement = FunctionImplement(this.funcName, this.implement)
+            if (value.isNotBlank()) {
+                this.functionImplement = FunctionImplement(this.funcName, this.implement)
+            }
         }
+
+
     private var functionImplement: FunctionImplement? = null
+
+
     var typeParamIndex: Int? = null
 
     var private = false
@@ -30,13 +38,17 @@ class FunctionDefinition(val funcName: String) {
         this.dataType = dataType
     }
 
+    fun setFunctionImplement(translatorClass: String, constructArgs: Array<String>) {
+        this.functionImplement = FunctionImplement(this.funcName, translatorClass, constructArgs)
+    }
+
     fun translate(vararg params: String): String {
-        return this.functionImplement?.translate(params) ?: ""
+        return this.functionImplement?.translate(this.arguments, params) ?: ""
     }
 
     @JvmOverloads
     fun translate(idxParams: List<String>, namedParams: Map<String, String> = emptyMap()): String {
-        return this.functionImplement?.translate(idxParams.toTypedArray(), namedParams) ?: ""
+        return this.functionImplement?.translate(this.arguments, idxParams.toTypedArray(), namedParams) ?: ""
     }
 
     override fun equals(other: Any?): Boolean {
@@ -79,9 +91,13 @@ class FunctionDefinition(val funcName: String) {
     class FunctionArgument(val name: String, val index: Int, val dataType: DataType) {
 
         var vararg: Boolean = false
-        var optionValues: Set<Any> = emptySet()
+        var optionValues: List<Any> = emptyList()
         var defaultValue: Any? = null
         var genericType: String? = null
+        var nullable: Boolean = false
+        var constant: Boolean = false
+        var reserved: List<String> = emptyList()
+        var suggest: SuggestionItem = SuggestionItem.NONE()
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -107,44 +123,65 @@ class FunctionDefinition(val funcName: String) {
 
     }
 
-    class FunctionImplement(private val funcName: String, private val implement: String) {
+    class FunctionArgumentList(private val arguments: List<FunctionArgument>) : List<FunctionArgument> by arguments {
 
-        fun translate(idxParams: Array<out String>, namedParams: Map<String, String> = emptyMap()): String {
-            var matcher = PARAM_PATTERN.matcher(this.implement)
-            val sqlBuffer = StringBuffer()
-            while (matcher.find()) {
-                val idx: Int
-                val name: String
-                if (matcher.group("idx").also { idx = it.toInt() } != null) {
-                    if (idxParams.size < idx) {
-                        throw IllegalStateException("函数${funcName}参数个数不符")
-                    }
-                    if (idx == 0) {
-                        matcher.appendReplacement(sqlBuffer, idxParams.joinToString(","))
-                    } else {
-                        matcher.appendReplacement(sqlBuffer, idxParams[idx - 1])
-                    }
-                } else if (matcher.group("arg").also { name = it } != null) {
-                    if (namedParams[name] != null) {
-                        matcher.appendReplacement(sqlBuffer, namedParams[name])
-                    }
+        override fun get(index: Int): FunctionArgument {
+            if (index < arguments.size) {
+                return arguments[index]
+            } else {
+                val last = arguments.lastOrNull() ?: throw IndexOutOfBoundsException(index)
+                if (last.vararg) {
+                    return last
                 }
+                throw IndexOutOfBoundsException(index)
             }
-            matcher.appendTail(sqlBuffer)
-            matcher = RAW_CODE_PATTERN.matcher(sqlBuffer)
-            val sqlBuffer2 = StringBuffer()
-            while (matcher.find()) {
-                val rawCode = matcher.group(1)
-                try {
-                    val result: Any = CODE_INTERPRETER.eval(rawCode)
-                        ?: throw IllegalStateException("函数${funcName}转换方法${implement}返回为空")
-                    matcher.appendReplacement(sqlBuffer2, result.toString())
-                } catch (e: EvalError) {
-                    throw IllegalStateException("函数${funcName}转换方法${implement}执行错误", e)
-                }
-            }
-            matcher.appendTail(sqlBuffer2)
-            return sqlBuffer2.toString()
+        }
+
+        companion object {
+            val emptyList = FunctionArgumentList(emptyList())
+        }
+
+    }
+
+    class FunctionImplement(private val funcName: String, private val implement: String) : FunctionTranslator {
+
+        private var translator: FunctionTranslator? = null
+
+        constructor(funcName: String, translatorClass: String, constructArgs: Array<String>) : this(funcName, "") {
+            this.translator = FunctionTranslator.of(translatorClass, constructArgs)
+        }
+
+        override fun translate(funcName: String, funcArgs: List<FunctionArgument>, args: Array<out String?>): String {
+            return Companion.translate(this.funcName, this.implement, funcArgs, args)
+        }
+
+        fun translate(
+            arguments: List<FunctionArgument>,
+            idxParams: Array<out String>,
+            namedParams: Map<String, String> = emptyMap()
+        ): String {
+            return if (this.implement.isNotBlank()) {
+                translateByScript(arguments, idxParams, namedParams)
+            } else if (this.translator != null) {
+                translateByClass(arguments, idxParams, namedParams)
+            } else throw IllegalStateException("${funcName}未提供转换SQL方法")
+        }
+
+        private fun translateByScript(
+            arguments: List<FunctionArgument>,
+            idxParams: Array<out String>,
+            namedParams: Map<String, String> = emptyMap()
+        ): String {
+            return Companion.translate(funcName, implement, arguments, idxParams, namedParams)
+        }
+
+        @Suppress("unused")
+        private fun translateByClass(
+            arguments: List<FunctionArgument>,
+            idxParams: Array<out String>,
+            namedParams: Map<String, String> = emptyMap()
+        ): String {
+            return this.translator!!.translate(funcName, arguments, idxParams)
         }
 
         companion object {
@@ -152,6 +189,61 @@ class FunctionDefinition(val funcName: String) {
             val PARAM_PATTERN = Pattern.compile("\\$((?<idx>\\d+)|\\{(?<arg>\\S+?)})")!!
             val RAW_CODE_PATTERN = Pattern.compile("\\{(.*)}", Pattern.DOTALL)!!
             val CODE_INTERPRETER = Interpreter()
+
+            fun translate(
+                funcName: String,
+                implement: String,
+                arguments: List<FunctionArgument>,
+                idxParams: Array<out String?>,
+                namedParams: Map<String, String?> = emptyMap()
+            ): String {
+                var matcher = PARAM_PATTERN.matcher(implement)
+                val sqlBuffer = StringBuffer()
+                while (matcher.find()) {
+                    val idx: Int
+                    val name: String
+                    if (matcher.group("idx").also { idx = it.toInt() } != null) {
+                        if (idxParams.size < idx) {
+                            if (arguments.size < idx || arguments[idx - 1].defaultValue == null) {
+                                throw IllegalStateException("函数${funcName}参数个数不符")
+                            }
+                            matcher.appendReplacement(sqlBuffer, arguments[idx - 1].defaultValue.toString())
+                        } else {
+                            if (idx == 0) {
+                                matcher.appendReplacement(sqlBuffer, idxParams.joinToString(","))
+                            } else {
+                                matcher.appendReplacement(sqlBuffer, idxParams[idx - 1])
+                            }
+                        }
+                    } else if (matcher.group("arg").also { name = it } != null) {
+                        if (namedParams[name] != null) {
+                            matcher.appendReplacement(sqlBuffer, namedParams[name])
+                        } else {
+                            matcher.appendReplacement(
+                                sqlBuffer,
+                                arguments.firstOrNull { it.name == name }?.defaultValue?.toString()
+                                    ?: throw IllegalStateException("函数${funcName}未提供参数${name}")
+                            )
+                        }
+                    }
+                }
+                matcher.appendTail(sqlBuffer)
+                matcher = RAW_CODE_PATTERN.matcher(sqlBuffer)
+                val sqlBuffer2 = StringBuffer()
+                while (matcher.find()) {
+                    val rawCode = matcher.group(1)
+                    try {
+                        val result: Any = CODE_INTERPRETER.eval(rawCode)
+                            ?: throw IllegalStateException("函数${funcName}转换方法${implement}返回为空")
+                        matcher.appendReplacement(sqlBuffer2, result.toString())
+                    } catch (e: EvalError) {
+                        throw IllegalStateException("函数${funcName}转换方法${implement}执行错误", e)
+                    }
+                }
+                matcher.appendTail(sqlBuffer2)
+                return sqlBuffer2.toString()
+            }
+
         }
 
     }

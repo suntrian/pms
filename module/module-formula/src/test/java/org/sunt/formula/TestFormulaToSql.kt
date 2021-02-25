@@ -42,6 +42,46 @@ class TestFormulaToSql {
         val stmt = helper.toSql("SUBSTRING(IFNULL(TO_STRING(xyz), ''), 2, 6) ", SqlDialect.MYSQL);
         println(stmt)
         println(stmt.expression)
+
+        val stmt2 = helper.toSql("SUBSTR(IFNULL(TO_STRING(xyz), ''), 2, 6) ", SqlDialect.MYSQL);
+        println(stmt2)
+        println(stmt2.expression)
+    }
+
+    @Test
+    fun testGroupFunction() {
+        val helper = FormulaHelper.of({ id -> getColumnById(id, DataType.STRING) },
+            { name -> getColumnByName(name, DataType.STRING) })
+        val stmt = helper.toSql("GROUP_COUNT(abcd, eefe, aaab)", SqlDialect.HIVE)
+        println(stmt)
+        println(stmt.expression)
+
+        val stmt2 = helper.toSql("GROUP_COUNT(DISTINCT, abcd, eefe, aaab)", SqlDialect.HIVE)
+        println(stmt2)
+        println(stmt2.expression)
+    }
+
+    @Test
+    fun testWindowFunction() {
+        val helper = FormulaHelper.of({ id -> getColumnById(id, DataType.STRING) },
+            { name -> getColumnByName(name, DataType.STRING) })
+
+        val map = mapOf(
+//            "LAG_OVER(abcd, 1, 'abcd', [ddd], [aaa, bbb])" to "LAG(abcd, 1, 'abcd') OVER ( PARTITION BY ddd ORDER BY aaa, bbb)",
+//            "LAG_OVER(abcd, 1, 'abcd', [ddd,eee], ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (PARTITION BY ddd, eee ORDER BY aaa, bbb DESC)",
+//            "LAG_OVER(abcd, 1, 'abcd', PARTITION_BY(ddd,eee), ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (PARTITION BY ddd, eee ORDER BY aaa, bbb DESC)",
+//            "LAG_OVER(abcd, 1, 'abcd', null, ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (ORDER BY aaa, bbb DESC)",
+            "LEAD_OVER(abcd, [], [aaaa])" to "LEAD(abcd) OVER (ORDER BY aaaa)"
+        )
+
+
+        for ((f, e) in map) {
+            val stmt = helper.toSql(f, SqlDialect.HIVE)
+            println(stmt)
+            println("expect:$e")
+            println("actual:" + stmt.expression)
+        }
+
     }
 
 }

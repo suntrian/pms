@@ -2,6 +2,7 @@ package org.sunt.formula.function
 
 import org.sunt.formula.define.DataType
 import org.sunt.formula.function.parser.*
+import org.sunt.formula.suggestion.SuggestionItem
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
@@ -9,6 +10,7 @@ import kotlin.collections.HashSet
 class FunctionDefinitionListener : FunctionParserBaseListener() {
 
     val functionGroups: MutableMap<String, FunctionGroup> = TreeMap(String.CASE_INSENSITIVE_ORDER)
+    private val customDataType: MutableMap<String, String> = TreeMap(String.CASE_INSENSITIVE_ORDER)
     private lateinit var dialect: String
     private lateinit var functionDefinitions: MutableList<FunctionDefinition>
     private lateinit var functionArguments: MutableList<FunctionDefinition.FunctionArgument>
@@ -31,6 +33,14 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
         this.functionGroups[this.dialect] = functionGroup
     }
 
+    override fun exitClassDeclare(ctx: FunctionParser.ClassDeclareContext) {
+        val className = ctx.identifier(0).text
+        val superClassName = if (ctx.identifier().size > 1) {
+            ctx.identifier(1).text
+        } else "Any"
+        this.customDataType[className] = superClassName
+    }
+
     override fun enterFunctionDefine(ctx: FunctionParser.FunctionDefineContext?) {
         this.functionArguments = LinkedList()
         this.typeParameters = HashSet(2)
@@ -38,14 +48,14 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
 
     override fun exitFunctionDefine(ctx: FunctionParser.FunctionDefineContext) {
         val functionName = ctx.simpleIdentifier().text
-        val dataType = ctx.dataType().text
+        val dataType = ctx.dataTypeNull().dataType().text
         val functionDefinition = FunctionDefinition(functionName, DataType.of(dataType))
-        functionDefinition.arguments = this.functionArguments
+        functionDefinition.arguments = FunctionDefinition.FunctionArgumentList(this.functionArguments)
         if (ctx.functionModifierList() != null) {
             for (annotationContext in ctx.functionModifierList().annotation()) {
                 val annotationType = annotationContext.identifier().text
                 val annotationParams =
-                    annotationContext.functionParamUsages()?.expression()?.map { it.text.trim('"') } ?: emptyList()
+                    annotationContext.functionParams()?.expression()?.map { it.text.trim('"') } ?: emptyList()
                 when (annotationType) {
                     Category::class.simpleName, Category::class.qualifiedName -> {
                         functionDefinition.categories = annotationParams.toSet()
@@ -55,11 +65,18 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
                     }
                     Description::class.simpleName, Description::class.qualifiedName -> {
                         functionDefinition.description =
-                            annotationParams.getOrNull(0) ?: throw IllegalStateException("未提供函数描述内容")
+                            annotationParams.getOrNull(0) ?: throw IllegalStateException("${functionName}未提供描述内容")
                     }
                     Translate::class.simpleName, Translate::class.qualifiedName -> {
                         functionDefinition.implement =
-                            annotationParams.getOrNull(0) ?: throw IllegalStateException("未提供函数转换SQL方法")
+                            annotationParams.getOrNull(0) ?: throw IllegalStateException("${functionName}未提供转换SQL方法")
+                        if (annotationParams.size > 1) {
+                            val translatorClass = annotationParams[1].substringBefore("::")
+                            val constructorArgs =
+                                if (annotationParams.size > 2) annotationParams.subList(2, annotationParams.size)
+                                    .toTypedArray() else emptyArray()
+                            functionDefinition.setFunctionImplement(translatorClass, constructorArgs)
+                        }
                     }
                     Overload::class.simpleName, Overload::class.qualifiedName -> {
                         functionDefinition.overload = true
@@ -81,8 +98,8 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
     }
 
     override fun exitTypeParameters(ctx: FunctionParser.TypeParametersContext) {
-        for (dataTypeContext in ctx.dataType()) {
-            this.typeParameters.add(dataTypeContext.text)
+        for (dataTypeContext in ctx.dataTypeNull()) {
+            this.typeParameters.add(dataTypeContext.dataType().text)
         }
     }
 
@@ -91,18 +108,33 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
         ctxx.functionParamDefine().forEachIndexed { index, ctx ->
             run {
                 val paramName = ctx.simpleIdentifier().text
-                val dataType = ctx.dataType().text
+                val dataType = ctx.dataTypeNull().dataType().text
+                val nullable = ctx.dataTypeNull().QUESTION() != null
                 val functionArgument = FunctionDefinition.FunctionArgument(paramName, index, DataType.of(dataType))
+                functionArgument.nullable = nullable
                 if (this.typeParameters.contains(dataType)) {
                     functionArgument.genericType = dataType
                 }
                 if (ctx.functionParamModifierList() != null) {
                     for (annotationContext in ctx.functionParamModifierList().annotation()) {
                         val annotationType = annotationContext.identifier().text
-                        val annotationParams = annotationContext.functionParamUsages().expression().map { it.text }
+                        val annotationParams =
+                            annotationContext.functionParams()?.expression()?.map { it.text.trim('"') } ?: emptyList()
                         when (annotationType) {
                             Option::class.simpleName, Option::class.qualifiedName -> {
-                                functionArgument.optionValues = annotationParams.toSet()
+                                functionArgument.optionValues = annotationParams
+                            }
+                            Constant::class.simpleName, Constant::class.qualifiedName -> {
+                                functionArgument.constant = true
+                            }
+                            Reserved::class.simpleName, Reserved::class.qualifiedName -> {
+                                functionArgument.reserved = annotationParams
+                            }
+                            Suggest::class.simpleName, Suggest::class.qualifiedName -> {
+                                if (annotationParams.size == 2) {
+                                    functionArgument.suggest =
+                                        SuggestionItem.of(annotationParams[1], annotationParams[0])
+                                }
                             }
                         }
                     }

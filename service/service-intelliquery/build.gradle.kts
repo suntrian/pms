@@ -4,8 +4,8 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("org.antlr:antlr4:4.8-1")
-    implementation("org.antlr:antlr4-runtime:4.8-1")
+    implementation("org.antlr:antlr4")
+    implementation("org.antlr:antlr4-runtime")
 
     implementation(project(":module:module-formula"))
 

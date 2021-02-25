@@ -18,18 +18,32 @@ object FunctionDefinitionParser {
     private val dialectCache: MutableMap<SqlDialect, Map<String, List<FunctionDefinition>>> = ConcurrentHashMap()
 
     @JvmOverloads
-    fun loadFunctions(dialect: SqlDialect = SqlDialect.DEFALUT): Map<String, List<FunctionDefinition>> {
+    fun loadFunctions(
+        dialect: SqlDialect = SqlDialect.DEFALUT,
+        category: String? = null
+    ): Map<String, List<FunctionDefinition>> {
         var dialectFunctions = dialectCache[dialect]
         if (dialectFunctions == null) {
             synchronized(dialectCache) {
                 dialectFunctions = dialectCache[dialect]
                 if (dialectFunctions == null) {
-                    val functionGroup = _loadFunctions(functionDefUri)[dialect?.name ?: "Common"]
-                        ?: throw IllegalStateException("未找到${dialect?.name ?: "Common"}的函数定义")
+                    val dialectName = dialect.name.takeIf { it != "DEFAULT" } ?: "Common"
+                    val functionGroup = _loadFunctions(functionDefUri)[dialectName]
+                        ?: throw IllegalStateException("未找到${dialectName}的函数定义")
                     dialectFunctions = mergeFunction(functionGroup)
                     dialectCache[dialect] = dialectFunctions!!
                 }
             }
+        }
+        if (category != null) {
+            val categoryFunctionMap = TreeMap<String, List<FunctionDefinition>>(String.CASE_INSENSITIVE_ORDER)
+            for ((funcName, funcDefs) in dialectFunctions!!) {
+                val categoryDefs = funcDefs.filter { it.categories.contains(category) }
+                if (categoryDefs.isNotEmpty()) {
+                    categoryFunctionMap[funcName] = categoryDefs
+                }
+            }
+            dialectFunctions = categoryFunctionMap
         }
         return dialectFunctions!!
     }

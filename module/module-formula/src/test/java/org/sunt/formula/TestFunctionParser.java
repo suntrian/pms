@@ -8,6 +8,7 @@ import org.sunt.formula.function.FunctionDefinition;
 import org.sunt.formula.function.FunctionDefinitionParser;
 
 import java.util.List;
+import java.util.Map;
 
 public class TestFunctionParser {
 
@@ -36,5 +37,17 @@ public class TestFunctionParser {
         for (FunctionDefinition mysqlFunction : mysqlFunctions) {
             logger.debug("{}", mysqlFunction);
         }
+    }
+
+    @Test
+    public void testParseFunctionDialectCategoryFile() {
+        FunctionDefinitionParser defineParser = FunctionDefinitionParser.INSTANCE;
+        Map<String, List<FunctionDefinition>> funDefs = defineParser.loadFunctions(SqlDialect.IMPALA, "分析函数");
+        for (Map.Entry<String, List<FunctionDefinition>> stringListEntry : funDefs.entrySet()) {
+            for (FunctionDefinition functionDefinition : stringListEntry.getValue()) {
+                logger.debug("{}", functionDefinition);
+            }
+        }
+
     }
 }

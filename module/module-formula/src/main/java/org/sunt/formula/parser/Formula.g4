@@ -24,6 +24,7 @@ statement
     | statement op= XOR statement                                                               #logicalPredicate
     | statement op= OR statement                                                                #logicalPredicate
     | L_PARENTHESES statement R_PARENTHESES                                                     #parenthesesExpression
+    | L_SQUARE (statement (COMMA statement)*)? R_SQUARE                                         #squareExpression
     ;
 
 functionStatement
@@ -34,7 +35,12 @@ functionStatement
     ;
 
 functionParams
-    : statement (COMMA statement)*
+    : functionParam (COMMA functionParam)*
+    ;
+
+functionParam
+    : statement
+    | IDENTITY EQUAL statement
     ;
 
 caseStatement
@@ -94,6 +100,8 @@ L_PARENTHESES: '(';
 R_PARENTHESES: ')';
 L_BRACE:    '{';
 R_BRACE:    '}';
+L_SQUARE:   '[';
+R_SQUARE:   ']';
 COMMA: ',';
 COLON:  ':';
 

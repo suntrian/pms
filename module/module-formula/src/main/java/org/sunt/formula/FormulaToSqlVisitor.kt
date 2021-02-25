@@ -7,6 +7,7 @@ import org.sunt.formula.exception.DataTypeMismatchException
 import org.sunt.formula.exception.ParamsSizeMismatchException
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.parser.FormulaParser.*
+import org.sunt.formula.suggestion.TokenStatus
 import java.util.function.Function
 
 class FormulaToSqlVisitor(
@@ -33,6 +34,7 @@ class FormulaToSqlVisitor(
             is ParenthesesExpressionContext -> visitParenthesesExpression(ctx)
             is NotPredicateContext -> visitNotPredicate(ctx)
             is LikePredicateContext -> visitLikePredicate(ctx)
+            is SquareExpressionContext -> visitSquareExpression(ctx)
             else -> StatementInfo(ctx)
         }
     }
@@ -163,11 +165,11 @@ class FormulaToSqlVisitor(
             }
             PLUS -> {
                 mathStmt.expression = left.expression + operatorMap[PLUS] + right.expression
-                mathStmt.dataType = maxOf(left.dataType, right.dataType, Comparator.comparingInt { it.compatibility })
+                mathStmt.dataType = DataType.commonType(left.dataType, right.dataType)
             }
             MINUS -> {
                 mathStmt.expression = left.expression + operatorMap[MINUS] + right.expression
-                mathStmt.dataType = maxOf(left.dataType, right.dataType, Comparator.comparingInt { it.compatibility })
+                mathStmt.dataType = DataType.commonType(left.dataType, right.dataType)
             }
         }
 
@@ -218,6 +220,18 @@ class FormulaToSqlVisitor(
         return likeStmt
     }
 
+    override fun visitSquareExpression(ctx: SquareExpressionContext): StatementInfo {
+        val statements = ctx.statement().map { visitStatement(it) }
+        val result = StatementInfo(ctx)
+        with(result) {
+            expression = statements.joinToString(", ") { it.expression }
+            status = statements.map { it.status }.maxByOrNull { it.privilege } ?: TokenStatus.NORMAL
+            val commonDataType = DataType.commonType(statements.map { it.dataType })
+            dataType = DataType.of("List<${commonDataType.name}>")
+        }
+        return result
+    }
+
     override fun visitFunctionExpression(ctx: FunctionExpressionContext): StatementInfo {
         return visitFunctionStatement(ctx.functionStatement())
     }
@@ -236,9 +250,9 @@ class FormulaToSqlVisitor(
     }
 
     override fun visitFunctionParams(ctx: FunctionParamsContext): List<StatementInfo> {
-        val stmts: ArrayList<StatementInfo> = ArrayList(ctx.statement().size)
-        for (statementContext in ctx.statement()) {
-            stmts.add(visitStatement(statementContext))
+        val stmts: ArrayList<StatementInfo> = ArrayList(ctx.functionParam().size)
+        for (paramCtx in ctx.functionParam()) {
+            stmts.add(visitStatement(paramCtx.statement()))
         }
         return stmts
     }

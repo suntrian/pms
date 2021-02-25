@@ -5,7 +5,9 @@ options { tokenVocab=FunctionLexer; }
 root
     : packageDeclare
     importDeclare*
-    (typeAliasDelare | dialectInterface)*
+    (typeAliasDelare
+    | classDeclare
+    | dialectInterface)*
     EOF
     ;
 
@@ -22,11 +24,15 @@ dialectInterface
     ;
 
 typeAliasDelare
-    : TYPEALIAS (identifier | dataType) EQUAL identifier
+    : TYPEALIAS (identifier | dataTypeNull) EQUAL identifier
+    ;
+
+classDeclare
+    :  CLASS identifier (COLON identifier)? (LCURL RCURL)?
     ;
 
 functionDefine
-    : functionModifierList? FUN typeParameters? simpleIdentifier LPAREN functionParamDefines? RPAREN COLON dataType SEMICOLON?
+    : functionModifierList? FUN typeParameters? simpleIdentifier LPAREN functionParamDefines? RPAREN COLON dataTypeNull  functionImplement?
     ;
 
 functionModifierList
@@ -34,7 +40,7 @@ functionModifierList
     ;
 
 annotation
-    : AT identifier (LPAREN functionParamUsages? RPAREN)?
+    : AT identifier (LPAREN functionParams? RPAREN)?
     ;
 
 functionModifier
@@ -43,8 +49,21 @@ functionModifier
     | ABSTRACT
     ;
 
+functionImplement
+    : functionSimpleImpl
+    | functionFullImpl
+    ;
+
+functionSimpleImpl
+    : EQUAL expression
+    ;
+
+functionFullImpl
+    : LCURL (.*?) RCURL
+    ;
+
 typeParameters
-    : LANGLE dataType (COMMA dataType)* RANGLE
+    : LANGLE dataTypeNull (COMMA dataTypeNull)* RANGLE
     ;
 
 functionParamDefines
@@ -52,7 +71,7 @@ functionParamDefines
     ;
 
 functionParamDefine
-    : functionParamModifierList? simpleIdentifier COLON dataType (EQUAL expression)?
+    : functionParamModifierList? simpleIdentifier COLON dataTypeNull (EQUAL expression)?
     ;
 
 functionParamModifierList
@@ -63,13 +82,21 @@ functionParamModifier
     : VARARG        //used by last parameter
     ;
 
-functionParamUsages
+functionParams
     : expression (COMMA expression)*
+    ;
+
+functionCall
+    : identifier LPAREN functionParams? RPAREN
     ;
 
 expression
     : STRING
     | NUMBER
+    | NULL
+    | functionCall
+    | identifier COLONCOLON CLASS
+    | identifier EQUAL expression
     ;
 
 dataType
@@ -82,6 +109,10 @@ dataType
     | DT_DATETIME
     | DT_ANY
     | identifier typeParameters?
+    ;
+
+dataTypeNull
+    : dataType QUESTION?
     ;
 
 identifier

@@ -21,6 +21,8 @@ dependencies {
         api("org.mapstruct:mapstruct-processor:1.4.1.Final")
         api("mysql:mysql-connector-java:8.0.21")
         api("org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.4")
+        api("org.antlr:antlr4:4.9.1")
+        api("org.antlr:antlr4-runtime:4.9.1")
     }
 
 }

@@ -1,4 +1,4 @@
-// Generated from D:/projects/pms/module/module-formula/src/main/java/org/sunt/formula/functionKt/parser\FunctionParser.g4 by ANTLR 4.9.1
+// Generated from D:/projects/pms/module/module-formula/src/main/java/org/sunt/formula/function/parser\FunctionParser.g4 by ANTLR 4.9.1
 package org.sunt.formula.function.parser;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
@@ -78,6 +78,20 @@ public interface FunctionParserListener extends ParseTreeListener {
     void exitTypeAliasDelare(FunctionParser.TypeAliasDelareContext ctx);
 
     /**
+     * Enter a parse tree produced by {@link FunctionParser#classDeclare}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterClassDeclare(FunctionParser.ClassDeclareContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#classDeclare}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitClassDeclare(FunctionParser.ClassDeclareContext ctx);
+
+    /**
      * Enter a parse tree produced by {@link FunctionParser#functionDefine}.
      *
      * @param ctx the parse tree
@@ -132,6 +146,48 @@ public interface FunctionParserListener extends ParseTreeListener {
      * @param ctx the parse tree
      */
     void exitFunctionModifier(FunctionParser.FunctionModifierContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#functionImplement}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterFunctionImplement(FunctionParser.FunctionImplementContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#functionImplement}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitFunctionImplement(FunctionParser.FunctionImplementContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#functionSimpleImpl}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterFunctionSimpleImpl(FunctionParser.FunctionSimpleImplContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#functionSimpleImpl}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitFunctionSimpleImpl(FunctionParser.FunctionSimpleImplContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#functionFullImpl}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterFunctionFullImpl(FunctionParser.FunctionFullImplContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#functionFullImpl}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitFunctionFullImpl(FunctionParser.FunctionFullImplContext ctx);
 
     /**
      * Enter a parse tree produced by {@link FunctionParser#typeParameters}.
@@ -204,18 +260,32 @@ public interface FunctionParserListener extends ParseTreeListener {
     void exitFunctionParamModifier(FunctionParser.FunctionParamModifierContext ctx);
 
     /**
-     * Enter a parse tree produced by {@link FunctionParser#functionParamUsages}.
+     * Enter a parse tree produced by {@link FunctionParser#functionParams}.
      *
      * @param ctx the parse tree
      */
-    void enterFunctionParamUsages(FunctionParser.FunctionParamUsagesContext ctx);
+    void enterFunctionParams(FunctionParser.FunctionParamsContext ctx);
 
     /**
-     * Exit a parse tree produced by {@link FunctionParser#functionParamUsages}.
+     * Exit a parse tree produced by {@link FunctionParser#functionParams}.
      *
      * @param ctx the parse tree
      */
-    void exitFunctionParamUsages(FunctionParser.FunctionParamUsagesContext ctx);
+    void exitFunctionParams(FunctionParser.FunctionParamsContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#functionCall}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterFunctionCall(FunctionParser.FunctionCallContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#functionCall}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitFunctionCall(FunctionParser.FunctionCallContext ctx);
 
     /**
      * Enter a parse tree produced by {@link FunctionParser#expression}.
@@ -244,6 +314,20 @@ public interface FunctionParserListener extends ParseTreeListener {
      * @param ctx the parse tree
      */
     void exitDataType(FunctionParser.DataTypeContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link FunctionParser#dataTypeNull}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterDataTypeNull(FunctionParser.DataTypeNullContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#dataTypeNull}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitDataTypeNull(FunctionParser.DataTypeNullContext ctx);
 
     /**
      * Enter a parse tree produced by {@link FunctionParser#identifier}.

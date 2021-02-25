@@ -1,6 +1,6 @@
 package org.sunt.formula.suggestion;
 
-public enum TokenStatus {
+public enum TokenStatus implements Comparable<TokenStatus> {
 
     //正常
     NORMAL(1),
@@ -24,5 +24,6 @@ public enum TokenStatus {
     public int getPrivilege() {
         return privilege;
     }
+
 
 }

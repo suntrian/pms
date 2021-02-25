@@ -20,6 +20,7 @@ COMMA: ',';
 DOT: '.';
 ASTERISK: '*';
 SEMICOLON: ';';
+QUESTION: '?';
 PACKAGE: 'package';
 IMPORT: 'import';
 CLASS: 'class';
@@ -38,6 +39,7 @@ DT_DATE: 'Date';
 DT_TIME: 'Time';
 DT_DATETIME: 'DateTime';
 DT_DOUBLE: 'Double';
+NULL: 'null';
 
 NUMBER: [-+]? (DIGIT+ | DIGIT+ DOT DIGIT);
 STRING: '"'(ESC_DQUOTE|.)*?'"' | '\''(ESC_SQUOTE|.)*?'\'' | '"""' .*? '"""';

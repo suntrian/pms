@@ -13,7 +13,7 @@ import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.function.FunctionDefinitionParser.loadFunctions
 import org.sunt.formula.parser.FormulaBaseVisitor
 import org.sunt.formula.parser.FormulaParser.*
-import org.sunt.formula.suggestion.SuggestionScope
+import org.sunt.formula.suggestion.SuggestionItem
 import org.sunt.formula.suggestion.TokenStatus
 import java.util.*
 import java.util.function.Function
@@ -27,7 +27,9 @@ abstract class AbstractFormulaVisitor(
 
     protected val functionMap: Map<String, List<FunctionDefinition>> = loadFunctions(dialect)
 
-    protected val aliasFunctionNameMap: Map<String, String>
+    protected val aliasFunctionNameMap: Map<String, String> =
+        functionMap.values.flatMap { l -> l.asIterable() }
+            .flatMap { func -> func.alias.map { Pair(it, func.funcName) }.asIterable() }.toMap()
 
     override fun visitConstantExpression(ctx: ConstantExpressionContext): StatementInfo {
         return visitConstant(ctx.constant())
@@ -53,10 +55,10 @@ abstract class AbstractFormulaVisitor(
         } else if (ctx.STRING() != null) {
             stmt.dataType = DataType.STRING
         } else if (ctx.NULL() != null) {
-            stmt.dataType = DataType.ANY
+            stmt.dataType = DataType.NONE
         }
         stmt.expression = ctx.text
-        stmt.scope = SuggestionScope.CONSTANT(stmt.expression)
+        stmt.suggest = SuggestionItem.CONSTANT(stmt.expression)
         stmt.status = TokenStatus.NORMAL
         return stmt
     }
@@ -75,18 +77,18 @@ abstract class AbstractFormulaVisitor(
         val stmt = StatementInfo(ctx)
         val identity = ctx.text
         if (functionMap[identity]?.also { funcDefines = it } != null) {
-            stmt.scope = SuggestionScope.FUNCTION(identity)
+            stmt.suggest = SuggestionItem.FUNCTION(identity)
             stmt.dataType = funcDefines!![0].dataType
             stmt.expression = identity
             stmt.status = TokenStatus.EXPECTED
         } else if (aliasFunctionNameMap[identity]?.also { funcDefines = functionMap[it] } != null) {
-            stmt.scope = SuggestionScope.FUNCTION(identity)
+            stmt.suggest = SuggestionItem.FUNCTION(identity)
             stmt.dataType = funcDefines!![0].dataType
             stmt.expression = identity
             stmt.status = TokenStatus.EXPECTED
         } else if (getColumn(ctx.text)?.also { column = it } != null) {
             stmt.status = TokenStatus.NORMAL
-            stmt.scope = SuggestionScope.COLUMN(identity)
+            stmt.suggest = SuggestionItem.COLUMN(identity)
             stmt.expression = column!!.expression
             stmt.dataType = column!!.dataType
         } else {
@@ -109,7 +111,7 @@ abstract class AbstractFormulaVisitor(
 
     private fun getColumnStmt(ctx: ParserRuleContext, column: IColumn?): StatementInfo {
         val colStmt = StatementInfo(ctx)
-        colStmt.scope = SuggestionScope.COLUMN(ctx.text)
+        colStmt.suggest = SuggestionItem.COLUMN(ctx.text)
         if (column == null) {
             colStmt.status = TokenStatus.UNKNOWN
             colStmt.expression = ctx.text
@@ -149,7 +151,7 @@ abstract class AbstractFormulaVisitor(
                 }
                 var paramStmt = paramIter.next()
                 if (!arg.vararg) {
-                    if (paramInvalid(arg.dataType, paramStmt.dataType)) {
+                    if (paramInvalid(arg, paramStmt)) {
                         errors.add(DataTypeMismatchException(paramStmt.expression, arg.dataType, paramStmt.dataType))
                         //"函数${funcDefine.funcName}第${i}个参数期待${arg.dataType}类型, 实际为${paramStmt.dataType}类型"
                         errorInfos.add(errors)
@@ -159,8 +161,14 @@ abstract class AbstractFormulaVisitor(
                     while (paramIter.hasNext()) {
                         i++
                         paramStmt = paramIter.next()
-                        if (paramInvalid(arg.dataType, paramStmt.dataType)) {
-                            errors.add(DataTypeMismatchException(paramStmt.expression, arg.dataType, paramStmt.dataType))
+                        if (paramInvalid(arg, paramStmt)) {
+                            errors.add(
+                                DataTypeMismatchException(
+                                    paramStmt.expression,
+                                    arg.dataType,
+                                    paramStmt.dataType
+                                )
+                            )
                             //"函数${funcDefine.funcName}第${i}个参数期待${arg.dataType}类型, 实际为${paramStmt.dataType}类型"
                             errorInfos.add(errors)
                             continue@outer
@@ -179,8 +187,8 @@ abstract class AbstractFormulaVisitor(
         throw WillNeverHappenException("不应该来这里")
     }
 
-    protected fun paramInvalid(expectedType: DataType, actualType: DataType): Boolean {
-        if (DataType.ANY == expectedType || DataType.ANY == actualType || expectedType == actualType) return false
+    protected fun paramInvalid(expected: FunctionDefinition.FunctionArgument, actual: StatementInfo): Boolean {
+        if (expected.dataType.isAssignableFrom(actual.dataType)) return false
         return true
     }
 
@@ -204,24 +212,21 @@ abstract class AbstractFormulaVisitor(
             throw ParamsSizeMismatchException("", expectedSize, stmts.size)
         }
 
-        public val operatorMap = mapOf(
-                AND to " AND ",
-                XOR to " XOR ",
-                OR to " OR ",
-                MUL to " * ",
-                DIV to " / ",
-                MOD to " % ",
-                PLUS to " + ",
-                MINUS to " - ",
-                GREATER to " > ",
-                GREATER_EQUAL to " >= ",
+        val operatorMap = mapOf(
+            AND to " AND ",
+            XOR to " XOR ",
+            OR to " OR ",
+            MUL to " * ",
+            DIV to " / ",
+            MOD to " % ",
+            PLUS to " + ",
+            MINUS to " - ",
+            GREATER to " > ",
+            GREATER_EQUAL to " >= ",
                 LESS to " < ",
                 LESS_EQUAL to " <= ",
                 EQUAL to " = "
         )
     }
 
-    init {
-        aliasFunctionNameMap = functionMap.values.flatMap { l -> l.asIterable() }.flatMap { func -> func.alias.map { Pair(it, func.funcName) }.asIterable() }.toMap()
-    }
 }

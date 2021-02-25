@@ -21,7 +21,7 @@ LOWER
    4. 参数：string: 文本类型字段
     """
     )
-    @Alias("LOW", "TO_LOWER")
+    @Alias("LOW", "LOWCASE")
     @Translate("LOWER($1)")
     @Category("文本函数")
     fun LOWER(text: String): String
@@ -36,10 +36,24 @@ UPPER
    4. 参数：string：文本类型字段
     """
     )
-    @Alias("UP", "TO_UPPER")
+    @Alias("UP", "UPCASE")
     @Translate("UPPER($1)")
     @Category("文本函数")
     fun UPPER(text: String): String
+
+    @Description(
+        """
+REVERSE
+
+   1. 用法：REVERSE(string)
+   2. 说明：把文本中所有字符倒序排列
+   3. 示例：REVERSE("abcde") = "edcba"
+   4. 参数：string：文本类型字段    
+    """
+    )
+    @Category("文本函数")
+    @Translate("REVERSE($1)")
+    fun REVERSE(text: String): String
 
     @Description(
         """
@@ -54,6 +68,20 @@ CONCAT
     @Translate("CONCAT($1, $0)")
     @Category("文本函数")
     fun CONCAT(one: String, vararg remain: String): String
+
+    @Description(
+        """
+CONCAT_WS
+
+   1. 用法：CONCAT_WS(split, str1,str2, ... strN)
+   2. 说明：返回字符串拼接的结果
+   3. 示例：CONCAT_WS("+", "Hello", " ", "World") = "Hello+ +World"
+   4. 参数：string: 文本类型
+    """
+    )
+    @Translate("CONCAT_WS($1, $2, $0)")
+    @Category("文本函数")
+    fun CONCAT_WS(split: String, one: String, vararg remain: String): String
 
     @Description(
         """
@@ -508,17 +536,17 @@ GROUP_COUNT
 
     @Description(
         """
-GROUP_COUNT_DISTINCT
+GROUP_COUNT
 
-       1. 用法：GROUP_COUNT_DISTINCT(agg:Any, group:Any... varN: Any)
+       1. 用法：GROUP_COUNT([DISTINCT|ALL] agg:Any, group:Any... varN: Any)
        2. 说明：返回agg按group字段聚合后的唯一值个数
-       3. 示例：GROUP_COUNT_DISTINCT(customer, branch_no), 各个营业部的客户唯一数
+       3. 示例：GROUP_COUNT([DISTINCT|ALL] customer, branch_no), 各个营业部的客户唯一数
        4. 参数类型：任意字段类型
     """
     )
     @Category("聚合函数")
-    @Translate("COUNT(DISTINCT $1)")
-    fun GROUP_COUNT_DISTINCT(agg: Any, vararg group: Any): Int
+    @Translate("COUNT($1 $2)")
+    fun GROUP_COUNT(@Reserved("DISTINCT", "ALL") dist: Unit, agg: Any, vararg group: Any): Int
 
     @Description(
         """
@@ -592,7 +620,265 @@ GROUP_SUM
     @Overload
     fun GROUP_SUM(agg: Int, vararg group: Any): Int
 
+    @Description("")
+    @Category("聚合函数")
+    @Translate("GROUP_CONCAT($1, $2)")
+    fun GROUP_CONCAT(agg: String, @Constant split: String, vararg group: Any): String
 
+    @Description("")
+    @Category("聚合函数")
+    @Translate("GROUP_CONCAT($1)")
+    fun GROUP_CONCAT(agg: String, vararg group: Any): String
+
+    @Description("")
+    @Category("聚合函数")
+    @Translate("STDDEV($1)")
+    fun GROUP_STDDEV(agg: Double, vararg group: Any): Double
+
+    @Description("")
+    @Category("聚合函数")
+    @Translate("VARIANCE($1)")
+    fun GROUP_VARIANCE(agg: Double, vararg group: Any): Double
+
+
+    @Description(
+        """
+RANK_OVER
+   
+    """
+    )
+    @Category("分析函数")
+    @Translate("", PartitionOrderTranslator::class, "RANK")
+    fun RANK_OVER(
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): Int
+
+    @Description(
+        """
+        
+    """
+    )
+    @Category("分析函数")
+    @Translate("", PartitionOrderTranslator::class, "DENSE_RANK")
+    fun DENSE_RANK_OVER(
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): Int
+
+    @Description(
+        """
+
+    """
+    )
+    @Category("分析函数")
+    @Translate("", PartitionOrderTranslator::class, "PERCENT_RANK")
+    fun PERCENT_RANK_OVER(
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): Int
+
+    @Description("")
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderTranslator::class, "NTILE($1)", "1", "2")
+    fun NTILE_OVER(
+        bucket: Int,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): Int
+
+    @Description("")
+    @Category("分析函数")
+    @Translate("", PartitionOrderTranslator::class, "ROW_NUMBER")
+    fun ROW_NUM_OVER(
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): Int
+
+    @Category("分析函数")
+    @Translate("", LagLeadTranslator::class, "LAG")
+    fun <T> LAG_OVER(
+        field: T,
+        offset: Int? = 0,
+        defaultVal: T? = null,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): T
+
+    @Category("分析函数")
+    @Translate("", LagLeadTranslator::class, "LEAD")
+    fun <T> LEAD_OVER(
+        field: T,
+        offset: Int? = 0,
+        defaultVal: T? = null,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): T
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "FIRST_VALUE($1)", "1", "2", "3", "4", "5")
+    fun <T> FIRST_VALUE_OVER(
+        field: T,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): T
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "LAST_VALUE($1)", "1", "2", "3", "4", "5")
+    fun <T> LAST_VALUE_OVER(
+        field: T,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): T
+
+//    @Category("分析函数")
+//    fun <T> NTH_VALUE_OVER(field: T, offset: Int, @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?, @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>, @Reserved("ROWS", "RANGE") unit: String="ROWS",  @Constant from: Int?=0, @Constant end: Int?=0): T
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "COUNT($1)", "1", "2", "3", "4", "5")
+    fun COUNT_OVER(
+        field: Any,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): Int
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "COUNT($1 $2)", "2", "3", "4", "5", "6")
+    fun COUNT_OVER(
+        @Reserved("DISTINCT", "ALL") dist: Unit,
+        field: Any,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): Int
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "MAX($1)", "1", "2", "3", "4", "5")
+    fun <T> MAX_OVER(
+        field: T,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): T
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "MIN($1)", "1", "2", "3", "4", "5")
+    fun <T> MIN_OVER(
+        field: T,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): T
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "AVG($1)", "1", "2", "3", "4", "5")
+    fun AVG_OVER(
+        field: Double,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): Double
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "AVG($1)", "1", "2", "3", "4", "5")
+    fun AVG_OVER(
+        field: Int,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): Double
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "SUM($1)", "1", "2", "3", "4", "5")
+    fun SUM_OVER(
+        field: Double,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): Double
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "SUM($1)", "1", "2", "3", "4", "5")
+    fun SUM_OVER(
+        field: Int,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): Int
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "STDDEV($1)", "1", "2", "3", "4", "5")
+    fun STDDEV_OVER(
+        field: Double,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): Double
+
+    @Category("分析函数")
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "STDDEV($1)", "1", "2", "3", "4", "5")
+    fun STDDEV_OVER(
+        field: Int,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): Double
+
+    @Category("分析函数")
+    @Description(
+        """
+CUME_DIST_OVER
+
+        
+    """
+    )
+    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "CUME_DIST()", "0", "1", "2", "3", "4")
+    fun CUME_DIST_OVER(
+        partitionBy: List<Any>?,
+        orderBy: List<Any>?,
+        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
+        @Constant from: Int? = 0,
+        @Constant end: Int? = 0
+    ): Double
+
+    @Translate("$0")
+    private fun LIST(vararg item: Any): List<Any> = emptyList()
+
+    @Translate("$0")
+    private fun PARTITION_BY(vararg item: Any): List<Any> = emptyList()
+
+    @Translate("$0")
+    private fun ORDER_BY(@Suggest("ORDER_ITEM", "FUNCTION") vararg item: Any): List<Any> = emptyList()
+
+    @Translate("$1 $2")
+    private fun <T> ORDER_ITEM(item: T, @Reserved("ASC", "DESC") order: Unit): T? = null
 }
 
 interface Hive : Common {
@@ -690,3 +976,4 @@ interface Mysql : Common {
 }
 
 interface MariaDB : Mysql
+
