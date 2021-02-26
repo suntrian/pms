@@ -2,10 +2,9 @@ package org.sunt.formula.function
 
 import org.sunt.formula.define.DataType
 import org.sunt.formula.function.parser.*
-import org.sunt.formula.suggestion.SuggestionItem
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 
 class FunctionDefinitionListener : FunctionParserBaseListener() {
 
@@ -14,7 +13,7 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
     private lateinit var dialect: String
     private lateinit var functionDefinitions: MutableList<FunctionDefinition>
     private lateinit var functionArguments: MutableList<FunctionDefinition.FunctionArgument>
-    private lateinit var typeParameters: MutableSet<String>
+    private lateinit var typeParameters: MutableList<String>
     private lateinit var overloadFunctions: MutableMap<String, MutableList<FunctionDefinition>>
 
     override fun enterDialectInterface(ctx: FunctionParser.DialectInterfaceContext) {
@@ -43,7 +42,7 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
 
     override fun enterFunctionDefine(ctx: FunctionParser.FunctionDefineContext?) {
         this.functionArguments = LinkedList()
-        this.typeParameters = HashSet(2)
+        this.typeParameters = ArrayList(2)
     }
 
     override fun exitFunctionDefine(ctx: FunctionParser.FunctionDefineContext) {
@@ -90,9 +89,13 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
             }
         }
 
-        if (this.typeParameters.contains(dataType)) {
-            functionDefinition.typeParamIndex = this.functionArguments.first { it.genericType == dataType }.index
+        if (this.typeParameters.isNotEmpty()) {
+            functionDefinition.genericTypes = this.typeParameters
+            if (this.typeParameters.contains(dataType)) {
+                functionDefinition.typeParamIndex = this.functionArguments.first { it.genericType == dataType }.index
+            }
         }
+
         this.functionDefinitions.add(functionDefinition)
 
     }
@@ -128,12 +131,12 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
                                 functionArgument.constant = true
                             }
                             Reserved::class.simpleName, Reserved::class.qualifiedName -> {
-                                functionArgument.reserved = annotationParams
+                                functionArgument.reserved = annotationParams.map { it.toUpperCase() }
                             }
                             Suggest::class.simpleName, Suggest::class.qualifiedName -> {
                                 if (annotationParams.size == 2) {
                                     functionArgument.suggest =
-                                        SuggestionItem.of(annotationParams[1], annotationParams[0])
+                                        TokenItem.of(annotationParams[1], annotationParams[0])
                                 }
                             }
                         }

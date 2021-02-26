@@ -102,8 +102,12 @@ object FunctionDefinitionParser {
                         function.alias = functions.firstOrNull { it.alias.isNotEmpty() }?.alias ?: emptySet()
                     }
                     if (function.implement.isBlank()) {
-                        function.implement = functions.firstOrNull { it.implement.isNotBlank() }?.implement
-                            ?: throw IllegalStateException("函数${funcName}未提供转换SQL方法")
+                        function.implement = functions.firstOrNull { it.implement.isNotBlank() }?.implement ?: ""
+                        if (function.implement.isBlank()) {
+                            function.functionImplement =
+                                functions.firstOrNull { it.functionImplement != null }?.functionImplement
+                                    ?: throw IllegalStateException("函数${funcName}未提供转换SQL方法")
+                        }
                     }
                 }
             }

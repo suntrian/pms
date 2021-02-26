@@ -4,7 +4,6 @@ import bsh.EvalError
 import bsh.Interpreter
 import org.sunt.formula.define.DataType
 import org.sunt.formula.function.parser.FunctionTranslator
-import org.sunt.formula.suggestion.SuggestionItem
 import java.util.regex.Pattern
 
 class FunctionDefinition(val funcName: String) {
@@ -15,7 +14,7 @@ class FunctionDefinition(val funcName: String) {
     var alias: Set<String> = emptySet()
     var arguments: FunctionArgumentList = FunctionArgumentList.emptyList
     var description: String = ""
-    var implement: String = ""
+    internal var implement: String = ""
         set(value) {
             field = value
             if (value.isNotBlank()) {
@@ -24,9 +23,9 @@ class FunctionDefinition(val funcName: String) {
         }
 
 
-    private var functionImplement: FunctionImplement? = null
+    internal var functionImplement: FunctionImplement? = null
 
-
+    var genericTypes: List<String> = emptyList()
     var typeParamIndex: Int? = null
 
     var private = false
@@ -38,16 +37,12 @@ class FunctionDefinition(val funcName: String) {
         this.dataType = dataType
     }
 
-    fun setFunctionImplement(translatorClass: String, constructArgs: Array<String>) {
+    internal fun setFunctionImplement(translatorClass: String, constructArgs: Array<String>) {
         this.functionImplement = FunctionImplement(this.funcName, translatorClass, constructArgs)
     }
 
-    fun translate(vararg params: String): String {
-        return this.functionImplement?.translate(this.arguments, params) ?: ""
-    }
-
     @JvmOverloads
-    fun translate(idxParams: List<String>, namedParams: Map<String, String> = emptyMap()): String {
+    fun translate(idxParams: List<String?>, namedParams: Map<String, String?> = emptyMap()): String {
         return this.functionImplement?.translate(this.arguments, idxParams.toTypedArray(), namedParams) ?: ""
     }
 
@@ -84,9 +79,31 @@ class FunctionDefinition(val funcName: String) {
                         }"
                     }
                 } ) " +
-                " : ${if (typeParamIndex != null) "$${typeParamIndex}.type" else dataType.name} -> $implement "
+                " : ${if (typeParamIndex != null) "$${typeParamIndex}.type" else dataType} -> $implement "
     }
 
+    fun getDefinition(): String {
+        val builder = StringBuilder()
+        if (private) builder.append("private ")
+        if (abstract) builder.append("abstract ")
+        if (override) builder.append("override ")
+        builder.append("fun ")
+        if (genericTypes.isNotEmpty()) builder.append("<").append(genericTypes.joinToString(", ")).append("> ")
+        builder.append(funcName).append("( ")
+        for (argument in arguments) {
+            if (argument.vararg) builder.append("vararg ")
+            builder.append(argument.name).append(": ").append(argument.genericType ?: argument.dataType)
+            if (argument.nullable) builder.append("?")
+            builder.append(", ")
+        }
+        builder.append(")").append(":")
+        if (typeParamIndex != null) {
+            builder.append(arguments[typeParamIndex!!].genericType)
+        } else {
+            builder.append(dataType)
+        }
+        return builder.toString()
+    }
 
     class FunctionArgument(val name: String, val index: Int, val dataType: DataType) {
 
@@ -97,7 +114,33 @@ class FunctionDefinition(val funcName: String) {
         var nullable: Boolean = false
         var constant: Boolean = false
         var reserved: List<String> = emptyList()
-        var suggest: SuggestionItem = SuggestionItem.NONE()
+        var suggest: TokenItem = TokenItem.NONE()
+
+        @JvmOverloads
+        fun match(expr: String, dataType: DataType, tokenItem: TokenItem?, genericRealType: DataType? = null): Boolean {
+            if (!this.dataType.isAssignableFrom(dataType)) {
+                return false
+            }
+            if (genericType != null && genericRealType?.isAssignableFrom(dataType) == false) {
+                return false
+            }
+            if (this.reserved.isNotEmpty() && !reserved.contains(expr.toUpperCase())) {
+                return false
+            }
+            if (this.reserved.isEmpty() && tokenItem?.scope?.equals(TokenScope.RESERVED) == true) {
+                return false
+            }
+            if (optionValues.isNotEmpty() && !optionValues.contains(expr)) {
+                return false
+            }
+            if (constant && !(numberRegex.matches(expr) || stringRegex.matches(expr))) {
+                return false
+            }
+            if (!nullable && "null".equals(expr, true)) {
+                return false
+            }
+            return true
+        }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -121,12 +164,25 @@ class FunctionDefinition(val funcName: String) {
             return result
         }
 
+        companion object {
+            private val numberRegex = Regex("[-+]?\\d+(\\.\\d+)?")
+            private val stringRegex = Regex("(['\"]).*\\1")
+        }
     }
 
     class FunctionArgumentList(private val arguments: List<FunctionArgument>) : List<FunctionArgument> by arguments {
 
+        init {
+            val iter = arguments.iterator()
+            for (functionArgument in iter) {
+                if (functionArgument.vararg && iter.hasNext()) {
+                    throw IllegalStateException("可变参数只可用于最后一个参数")
+                }
+            }
+        }
+
         override fun get(index: Int): FunctionArgument {
-            if (index < arguments.size) {
+            if (index >= 0 && index < arguments.size) {
                 return arguments[index]
             } else {
                 val last = arguments.lastOrNull() ?: throw IndexOutOfBoundsException(index)
@@ -151,14 +207,14 @@ class FunctionDefinition(val funcName: String) {
             this.translator = FunctionTranslator.of(translatorClass, constructArgs)
         }
 
-        override fun translate(funcName: String, funcArgs: List<FunctionArgument>, args: Array<out String?>): String {
+        override fun translate(funcName: String, funcArgs: List<FunctionArgument>, args: Array<String?>): String {
             return Companion.translate(this.funcName, this.implement, funcArgs, args)
         }
 
         fun translate(
             arguments: List<FunctionArgument>,
-            idxParams: Array<out String>,
-            namedParams: Map<String, String> = emptyMap()
+            idxParams: Array<String?>,
+            namedParams: Map<String, String?> = emptyMap()
         ): String {
             return if (this.implement.isNotBlank()) {
                 translateByScript(arguments, idxParams, namedParams)
@@ -169,8 +225,8 @@ class FunctionDefinition(val funcName: String) {
 
         private fun translateByScript(
             arguments: List<FunctionArgument>,
-            idxParams: Array<out String>,
-            namedParams: Map<String, String> = emptyMap()
+            idxParams: Array<String?>,
+            namedParams: Map<String, String?> = emptyMap()
         ): String {
             return Companion.translate(funcName, implement, arguments, idxParams, namedParams)
         }
@@ -178,23 +234,23 @@ class FunctionDefinition(val funcName: String) {
         @Suppress("unused")
         private fun translateByClass(
             arguments: List<FunctionArgument>,
-            idxParams: Array<out String>,
-            namedParams: Map<String, String> = emptyMap()
+            idxParams: Array<String?>,
+            namedParams: Map<String, String?> = emptyMap()
         ): String {
             return this.translator!!.translate(funcName, arguments, idxParams)
         }
 
         companion object {
             //$1, $2, $3 按索引使用参数,  ${value} 按名称使用参数
-            val PARAM_PATTERN = Pattern.compile("\\$((?<idx>\\d+)|\\{(?<arg>\\S+?)})")!!
-            val RAW_CODE_PATTERN = Pattern.compile("\\{(.*)}", Pattern.DOTALL)!!
-            val CODE_INTERPRETER = Interpreter()
+            private val PARAM_PATTERN = Pattern.compile("\\$((?<idx>\\d+)|\\{(?<arg>\\S+?)})")!!
+            private val RAW_CODE_PATTERN = Pattern.compile("\\{(.*)}", Pattern.DOTALL)!!
+            private val CODE_INTERPRETER = Interpreter()
 
             fun translate(
                 funcName: String,
                 implement: String,
                 arguments: List<FunctionArgument>,
-                idxParams: Array<out String?>,
+                idxParams: Array<String?>,
                 namedParams: Map<String, String?> = emptyMap()
             ): String {
                 var matcher = PARAM_PATTERN.matcher(implement)

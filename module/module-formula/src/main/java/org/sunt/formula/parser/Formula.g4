@@ -1,5 +1,6 @@
 grammar Formula;
 
+//入口
 formula
     : statement EOF
     ;
@@ -30,7 +31,7 @@ statement
 functionStatement
     : IDENTITY
     L_PARENTHESES
-    functionParams
+    functionParams?
     R_PARENTHESES
     ;
 

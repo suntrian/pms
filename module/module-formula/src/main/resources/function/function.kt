@@ -699,8 +699,23 @@ RANK_OVER
     @Translate("", LagLeadTranslator::class, "LAG")
     fun <T> LAG_OVER(
         field: T,
-        offset: Int? = 0,
-        defaultVal: T? = null,
+        offset: Int?,
+        defaultVal: T?,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): T
+
+    @Overload
+    fun <T> LAG_OVER(
+        field: T,
+        offset: Int?,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): T
+
+    @Overload
+    fun <T> LAG_OVER(
+        field: T,
         @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
         @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
     ): T
@@ -709,8 +724,23 @@ RANK_OVER
     @Translate("", LagLeadTranslator::class, "LEAD")
     fun <T> LEAD_OVER(
         field: T,
-        offset: Int? = 0,
-        defaultVal: T? = null,
+        offset: Int?,
+        defaultVal: T?,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): T
+
+    @Overload
+    fun <T> LEAD_OVER(
+        field: T,
+        offset: Int?,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+    ): T
+
+    @Overload
+    fun <T> LEAD_OVER(
+        field: T,
         @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
         @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
     ): T
@@ -861,8 +891,8 @@ CUME_DIST_OVER
     )
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "CUME_DIST()", "0", "1", "2", "3", "4")
     fun CUME_DIST_OVER(
-        partitionBy: List<Any>?,
-        orderBy: List<Any>?,
+        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
+        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0

@@ -7,88 +7,80 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  * by {@link FormulaParser}.
  *
  * @param <T> The return type of the visit operation. Use {@link Void} for
- * operations with no return type.
+ *            operations with no return type.
  */
 public interface FormulaVisitor<T> extends ParseTreeVisitor<T> {
-    /**
-     * Visit a parse tree produced by {@link FormulaParser#formula}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitFormula(FormulaParser.FormulaContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link FormulaParser#formula}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFormula(FormulaParser.FormulaContext ctx);
 
-    /**
-     * Visit a parse tree produced by the {@code constantExpression}
-     * labeled alternative in {@link FormulaParser#statement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitConstantExpression(FormulaParser.ConstantExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code constantExpression}
+	 * labeled alternative in {@link FormulaParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstantExpression(FormulaParser.ConstantExpressionContext ctx);
 
-    /**
-     * Visit a parse tree produced by the {@code inPredicate}
-     * labeled alternative in {@link FormulaParser#statement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitInPredicate(FormulaParser.InPredicateContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code inPredicate}
+	 * labeled alternative in {@link FormulaParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInPredicate(FormulaParser.InPredicateContext ctx);
 
-    /**
-     * Visit a parse tree produced by the {@code mathExpression}
-     * labeled alternative in {@link FormulaParser#statement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitMathExpression(FormulaParser.MathExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code mathExpression}
+	 * labeled alternative in {@link FormulaParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMathExpression(FormulaParser.MathExpressionContext ctx);
 
-    /**
-     * Visit a parse tree produced by the {@code likePredicate}
-     * labeled alternative in {@link FormulaParser#statement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitLikePredicate(FormulaParser.LikePredicateContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code likePredicate}
+	 * labeled alternative in {@link FormulaParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLikePredicate(FormulaParser.LikePredicateContext ctx);
 
-    /**
-     * Visit a parse tree produced by the {@code functionExpression}
-     * labeled alternative in {@link FormulaParser#statement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitFunctionExpression(FormulaParser.FunctionExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code functionExpression}
+	 * labeled alternative in {@link FormulaParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionExpression(FormulaParser.FunctionExpressionContext ctx);
 
-    /**
-     * Visit a parse tree produced by the {@code parenthesesExpression}
-     * labeled alternative in {@link FormulaParser#statement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitParenthesesExpression(FormulaParser.ParenthesesExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code parenthesesExpression}
+	 * labeled alternative in {@link FormulaParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParenthesesExpression(FormulaParser.ParenthesesExpressionContext ctx);
 
-    /**
-     * Visit a parse tree produced by the {@code squareExpression}
-     * labeled alternative in {@link FormulaParser#statement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitSquareExpression(FormulaParser.SquareExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code squareExpression}
+	 * labeled alternative in {@link FormulaParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSquareExpression(FormulaParser.SquareExpressionContext ctx);
 
-    /**
-     * Visit a parse tree produced by the {@code comparePredicate}
-     * labeled alternative in {@link FormulaParser#statement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitComparePredicate(FormulaParser.ComparePredicateContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code comparePredicate}
+	 * labeled alternative in {@link FormulaParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComparePredicate(FormulaParser.ComparePredicateContext ctx);
+
 	/**
 	 * Visit a parse tree produced by the {@code caseExpression}
 	 * labeled alternative in {@link FormulaParser#statement}.
@@ -96,6 +88,7 @@ public interface FormulaVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitCaseExpression(FormulaParser.CaseExpressionContext ctx);
+
 	/**
 	 * Visit a parse tree produced by the {@code columnExpression}
 	 * labeled alternative in {@link FormulaParser#statement}.
@@ -117,51 +110,56 @@ public interface FormulaVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitLogicalPredicate(FormulaParser.LogicalPredicateContext ctx);
+
 	/**
 	 * Visit a parse tree produced by the {@code ifExpression}
 	 * labeled alternative in {@link FormulaParser#statement}.
+	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
-     */
-    T visitIfExpression(FormulaParser.IfExpressionContext ctx);
+	 */
+	T visitIfExpression(FormulaParser.IfExpressionContext ctx);
 
-    /**
-     * Visit a parse tree produced by {@link FormulaParser#functionStatement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitFunctionStatement(FormulaParser.FunctionStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link FormulaParser#functionStatement}.
+	 *
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionStatement(FormulaParser.FunctionStatementContext ctx);
 
-    /**
-     * Visit a parse tree produced by {@link FormulaParser#functionParams}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitFunctionParams(FormulaParser.FunctionParamsContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link FormulaParser#functionParams}.
+	 *
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionParams(FormulaParser.FunctionParamsContext ctx);
 
-    /**
-     * Visit a parse tree produced by {@link FormulaParser#functionParam}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitFunctionParam(FormulaParser.FunctionParamContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link FormulaParser#functionParam}.
+	 *
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionParam(FormulaParser.FunctionParamContext ctx);
 
-    /**
-     * Visit a parse tree produced by {@link FormulaParser#caseStatement}.
-     *
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    T visitCaseStatement(FormulaParser.CaseStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link FormulaParser#caseStatement}.
+	 *
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCaseStatement(FormulaParser.CaseStatementContext ctx);
+
 	/**
 	 * Visit a parse tree produced by {@link FormulaParser#ifSpecial}.
+	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitIfSpecial(FormulaParser.IfSpecialContext ctx);
+
 	/**
 	 * Visit a parse tree produced by {@link FormulaParser#ifFunction}.
 	 * @param ctx the parse tree

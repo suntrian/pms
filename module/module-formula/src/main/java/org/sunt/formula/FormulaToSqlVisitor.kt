@@ -1,20 +1,17 @@
 package org.sunt.formula
 
 import org.sunt.formula.define.DataType
-import org.sunt.formula.define.IColumn
 import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.exception.DataTypeMismatchException
 import org.sunt.formula.exception.ParamsSizeMismatchException
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.parser.FormulaParser.*
 import org.sunt.formula.suggestion.TokenStatus
-import java.util.function.Function
 
 class FormulaToSqlVisitor(
     product: SqlDialect,
-    getColumnById: Function<String, IColumn?>,
-    getColumnByName: Function<String, IColumn?>
-) : AbstractFormulaVisitor(product, getColumnById, getColumnByName) {
+    columnInterface: ColumnInterface
+) : AbstractFormulaVisitor(product, columnInterface) {
 
     override fun visitFormula(ctx: FormulaContext): StatementInfo {
         return visitStatement(ctx.statement())
@@ -227,7 +224,7 @@ class FormulaToSqlVisitor(
             expression = statements.joinToString(", ") { it.expression }
             status = statements.map { it.status }.maxByOrNull { it.privilege } ?: TokenStatus.NORMAL
             val commonDataType = DataType.commonType(statements.map { it.dataType })
-            dataType = DataType.of("List<${commonDataType.name}>")
+            dataType = DataType.of("List<${commonDataType}>")
         }
         return result
     }
@@ -238,14 +235,21 @@ class FormulaToSqlVisitor(
 
     override fun visitFunctionStatement(ctx: FunctionStatementContext): StatementInfo {
         val funcName = ctx.IDENTITY().text
-        val params = visitFunctionParams(ctx.functionParams())
         val functionDefines = this.functionMap[funcName] ?: this.functionMap[this.aliasFunctionNameMap[funcName]]
         ?: throw IllegalStateException("函数${funcName}不存在")
-        val finalFunctionDefine: FunctionDefinition = figureFunctionDefine(functionDefines, params)
+
+        val params =
+            recordCurrent(functionDefines, functionDefines.flatMap { it.arguments }.flatMap { it.reserved }.toSet()) {
+                visitFunctionParams(ctx.functionParams())
+            }
+        val filledParams: MutableList<StatementInfo?> = params.toMutableList()
+        val finalFunctionDefine: FunctionDefinition = figureFunctionDefine(functionDefines, filledParams)
         val funcStmt = StatementInfo(ctx)
         funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege }!!
-        funcStmt.dataType = if (finalFunctionDefine.typeParamIndex != null) params[finalFunctionDefine.typeParamIndex!!].dataType else finalFunctionDefine.dataType
-        funcStmt.expression = finalFunctionDefine.translate(params.map { it.expression })
+        funcStmt.dataType =
+            if (finalFunctionDefine.typeParamIndex != null) filledParams[finalFunctionDefine.typeParamIndex!!]!!.dataType else finalFunctionDefine.dataType
+        funcStmt.expression = finalFunctionDefine.translate(filledParams.map { it?.expression })
+
         return funcStmt
     }
 

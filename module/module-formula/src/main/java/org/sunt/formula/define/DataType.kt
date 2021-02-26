@@ -4,9 +4,9 @@ import java.io.Serializable
 import java.util.regex.Pattern
 
 class DataType private constructor(
-    val name: String,
-    val parentType: DataType? = ANY,
-    val genericType: List<DataType> = emptyList()
+    private val name: String,
+    private val parentType: DataType? = ANY,
+    private val genericType: List<DataType> = emptyList()
 ) : Serializable {
 
     fun name(): String = name
@@ -17,15 +17,18 @@ class DataType private constructor(
      */
     fun isAssignableFrom(dataType: DataType): Boolean {
         //类型完全相同
-        if (this == dataType || this == ANY || dataType == NONE) {
+        if (this == dataType) {
+            return true
+        }
+        if (this === ANY || dataType === NONE) {
             return true
         }
         //int 赋值给double
-        if (this == DECIMAL && dataType == INTEGER) {
+        if (this === DECIMAL && dataType === INTEGER) {
             return true
         }
         //string赋值给date/time
-        if (this.isDate() && dataType == STRING) {
+        if (this.isDate() && dataType === STRING) {
             return true
         }
 
@@ -44,7 +47,7 @@ class DataType private constructor(
         //本类为父类
         var parType = dataType.parentType
         while (parType != null && parType != ANY) {
-            if (this == parType) {
+            if (isAssignableFrom(parType)) {
                 return true
             }
             parType = parType.parentType
@@ -65,7 +68,7 @@ class DataType private constructor(
         if (this === other) return true
         if (other !is DataType) return false
 
-        if (name.equals(other.name, true)) return false
+        if (!name.equals(other.name, true)) return false
         if (parentType != other.parentType) return false
         if (genericType != other.genericType) return false
 

@@ -9,10 +9,12 @@ import org.sunt.formula.support.TestColumn
 class TestFormulaToSql {
 
     private fun getColumnByName(id: String, dataType: DataType): IColumn {
+        println("请求字段NAME:${id}")
         return TestColumn(id, dataType)
     }
 
     private fun getColumnById(id: String, dataType: DataType): IColumn? {
+        println("请求字段ID:${id}")
         return TestColumn(id, dataType)
     }
 
@@ -67,19 +69,21 @@ class TestFormulaToSql {
             { name -> getColumnByName(name, DataType.STRING) })
 
         val map = mapOf(
-//            "LAG_OVER(abcd, 1, 'abcd', [ddd], [aaa, bbb])" to "LAG(abcd, 1, 'abcd') OVER ( PARTITION BY ddd ORDER BY aaa, bbb)",
-//            "LAG_OVER(abcd, 1, 'abcd', [ddd,eee], ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (PARTITION BY ddd, eee ORDER BY aaa, bbb DESC)",
-//            "LAG_OVER(abcd, 1, 'abcd', PARTITION_BY(ddd,eee), ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (PARTITION BY ddd, eee ORDER BY aaa, bbb DESC)",
-//            "LAG_OVER(abcd, 1, 'abcd', null, ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (ORDER BY aaa, bbb DESC)",
-            "LEAD_OVER(abcd, [], [aaaa])" to "LEAD(abcd) OVER (ORDER BY aaaa)"
+            "LAG_OVER(abcd, 1, 'abcd', [ddd], [aaa, bbb])" to "LAG(abcd, 1, 'abcd') OVER ( PARTITION BY ddd ORDER BY aaa, bbb)",
+            "LAG_OVER(abcd, 1, 'abcd', [ddd,eee], ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (PARTITION BY ddd, eee ORDER BY aaa, bbb DESC)",
+            "LAG_OVER(abcd, 1, 'abcd', PARTITION_BY(ddd,eee), ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (PARTITION BY ddd, eee ORDER BY aaa, bbb DESC)",
+            "LAG_OVER(abcd, 1, 'abcd', null, ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (ORDER BY aaa, bbb DESC)",
+            "LEAD_OVER(abcd, [], [aaaa])" to "LEAD(abcd) OVER (ORDER BY aaaa)",
+            "GROUP_COUNT(DISTINCT, abcd, DDDD, FFFFF)" to "COUNT(DISTINCT abcd)"
         )
 
 
         for ((f, e) in map) {
+            println("FUNCTION: $f")
             val stmt = helper.toSql(f, SqlDialect.HIVE)
             println(stmt)
-            println("expect:$e")
-            println("actual:" + stmt.expression)
+            println("EXPECT: $e")
+            println("ACTUAL: " + stmt.expression)
         }
 
     }

@@ -5,24 +5,20 @@ import org.slf4j.LoggerFactory
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
 import org.sunt.formula.define.SqlDialect
-import org.sunt.formula.exception.AbstractFormulaException
-import org.sunt.formula.exception.DataTypeMismatchException
-import org.sunt.formula.exception.ParamsSizeMismatchException
-import org.sunt.formula.exception.WillNeverHappenException
+import org.sunt.formula.exception.*
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.function.FunctionDefinitionParser.loadFunctions
+import org.sunt.formula.function.TokenItem
 import org.sunt.formula.parser.FormulaBaseVisitor
 import org.sunt.formula.parser.FormulaParser.*
-import org.sunt.formula.suggestion.SuggestionItem
 import org.sunt.formula.suggestion.TokenStatus
 import java.util.*
-import java.util.function.Function
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 abstract class AbstractFormulaVisitor(
     protected val dialect: SqlDialect,
-    protected val getColumnById: Function<String, IColumn?>,
-    protected val getColumnByName: Function<String, IColumn?>
+    protected val columnInterface: ColumnInterface
 ) : FormulaBaseVisitor<Any?>() {
 
     protected val functionMap: Map<String, List<FunctionDefinition>> = loadFunctions(dialect)
@@ -30,6 +26,30 @@ abstract class AbstractFormulaVisitor(
     protected val aliasFunctionNameMap: Map<String, String> =
         functionMap.values.flatMap { l -> l.asIterable() }
             .flatMap { func -> func.alias.map { Pair(it, func.funcName) }.asIterable() }.toMap()
+
+    protected var currentFunctions: List<FunctionDefinition> = emptyList()
+
+    protected var currentReservedIdentities: Set<String> = emptySet()
+
+    /**
+     * 保存现场
+     */
+    protected fun <T> recordCurrent(
+        currentFunctions: List<FunctionDefinition>,
+        currentReservedIdentities: Set<String>,
+        block: () -> T
+    ): T {
+        val formerFunctions = this.currentFunctions
+        val formerReservedIdentities = this.currentReservedIdentities
+        try {
+            this.currentFunctions = currentFunctions
+            this.currentReservedIdentities = currentReservedIdentities
+            return block()
+        } finally {
+            this.currentFunctions = formerFunctions
+            this.currentReservedIdentities = formerReservedIdentities
+        }
+    }
 
     override fun visitConstantExpression(ctx: ConstantExpressionContext): StatementInfo {
         return visitConstant(ctx.constant())
@@ -58,7 +78,7 @@ abstract class AbstractFormulaVisitor(
             stmt.dataType = DataType.NONE
         }
         stmt.expression = ctx.text
-        stmt.suggest = SuggestionItem.CONSTANT(stmt.expression)
+        stmt.token = TokenItem.CONSTANT(stmt.expression)
         stmt.status = TokenStatus.NORMAL
         return stmt
     }
@@ -77,18 +97,23 @@ abstract class AbstractFormulaVisitor(
         val stmt = StatementInfo(ctx)
         val identity = ctx.text
         if (functionMap[identity]?.also { funcDefines = it } != null) {
-            stmt.suggest = SuggestionItem.FUNCTION(identity)
+            stmt.token = TokenItem.FUNCTION(identity)
             stmt.dataType = funcDefines!![0].dataType
             stmt.expression = identity
             stmt.status = TokenStatus.EXPECTED
         } else if (aliasFunctionNameMap[identity]?.also { funcDefines = functionMap[it] } != null) {
-            stmt.suggest = SuggestionItem.FUNCTION(identity)
+            stmt.token = TokenItem.FUNCTION(identity)
             stmt.dataType = funcDefines!![0].dataType
             stmt.expression = identity
             stmt.status = TokenStatus.EXPECTED
-        } else if (getColumn(ctx.text)?.also { column = it } != null) {
+        } else if (currentReservedIdentities.contains(identity.toUpperCase())) {
+            stmt.token = TokenItem.RESERVED(identity)
+            stmt.dataType = DataType.ANY
+            stmt.expression = identity
             stmt.status = TokenStatus.NORMAL
-            stmt.suggest = SuggestionItem.COLUMN(identity)
+        } else if (getColumn(identity)?.also { column = it } != null) {
+            stmt.status = TokenStatus.NORMAL
+            stmt.token = TokenItem.COLUMN(identity)
             stmt.expression = column!!.expression
             stmt.dataType = column!!.dataType
         } else {
@@ -101,17 +126,17 @@ abstract class AbstractFormulaVisitor(
 
     private fun getColumn(columnIdOrName: String): IColumn? {
         return if (columnIdOrName.startsWith("#")) {
-            getColumnById.apply(columnIdOrName.substring(1))
+            columnInterface.getColumnById(columnIdOrName.substring(1))
         } else if (columnIdOrName.startsWith("`") && columnIdOrName.endsWith("`")) {
-            getColumnByName.apply(columnIdOrName.substring(1, columnIdOrName.length - 1))
+            columnInterface.getColumnByName(columnIdOrName.substring(1, columnIdOrName.length - 1))
         } else {
-            getColumnByName.apply(columnIdOrName)
+            columnInterface.getColumnByName(columnIdOrName)
         }
     }
 
     private fun getColumnStmt(ctx: ParserRuleContext, column: IColumn?): StatementInfo {
         val colStmt = StatementInfo(ctx)
-        colStmt.suggest = SuggestionItem.COLUMN(ctx.text)
+        colStmt.token = TokenItem.COLUMN(ctx.text)
         if (column == null) {
             colStmt.status = TokenStatus.UNKNOWN
             colStmt.expression = ctx.text
@@ -126,70 +151,94 @@ abstract class AbstractFormulaVisitor(
 
     protected fun figureFunctionDefine(
         functionDefines: List<FunctionDefinition>,
-        params: List<StatementInfo>
+        actualArgs: MutableList<StatementInfo?>
     ): FunctionDefinition {
         val matched = ArrayList<FunctionDefinition>(functionDefines.size)
         val errorInfos = ArrayList<List<AbstractFormulaException>>(functionDefines.size)
 
         outer@ for (funcDefine in functionDefines) {
             val errors = LinkedList<AbstractFormulaException>()
-            if (funcDefine.arguments.isEmpty() && params.isNotEmpty()) {
-                errors.add(ParamsSizeMismatchException(funcDefine.funcName, funcDefine.arguments.size, params.size));
-                //"函数${funcDefine.funcName}期待${funcDefine.args.size}个参数，实际为${params.size}"
-                errorInfos.add(errors)
-                continue
-            }
-            val paramIter: Iterator<StatementInfo> = params.listIterator()
-            var i = 0
-            for (arg in funcDefine.arguments) {
-                i++
-                if (!paramIter.hasNext()) {
-                    errors.add(ParamsSizeMismatchException(funcDefine.funcName, funcDefine.arguments.size, params.size))
-                    //"函数${funcDefine.funcName}期待${funcDefine.args.size}个参数，实际为${params.size}"
-                    errorInfos.add(errors)
-                    continue@outer
-                }
-                var paramStmt = paramIter.next()
-                if (!arg.vararg) {
-                    if (paramInvalid(arg, paramStmt)) {
-                        errors.add(DataTypeMismatchException(paramStmt.expression, arg.dataType, paramStmt.dataType))
-                        //"函数${funcDefine.funcName}第${i}个参数期待${arg.dataType}类型, 实际为${paramStmt.dataType}类型"
+            val expectArgSize = funcDefine.arguments.size
+            val actualArgSize = actualArgs.size
+
+            //处理泛型
+            val genericTypeMap: MutableMap<String, DataType> = if (funcDefine.genericTypes.isNotEmpty()) {
+                HashMap(2)
+            } else mutableMapOf()
+
+            //有参函数
+            val expectIter = funcDefine.arguments.iterator()
+            val actualIter = actualArgs.listIterator()
+
+            var expectArg: FunctionDefinition.FunctionArgument? = null
+            var actualArg: StatementInfo? = null
+            var matchedArg = 0
+            while (true) {
+                //无实参了
+                if (!actualIter.hasNext()) {
+                    if (!expectIter.hasNext()) {
+                        break
+                    }
+                    //还有形参
+                    expectArg = expectIter.next()
+                    //无缺省值
+                    if (!expectArg.vararg && expectArg.defaultValue == null) {
+                        errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
                         errorInfos.add(errors)
                         continue@outer
                     }
-                } else {
-                    while (paramIter.hasNext()) {
-                        i++
-                        paramStmt = paramIter.next()
-                        if (paramInvalid(arg, paramStmt)) {
-                            errors.add(
-                                DataTypeMismatchException(
-                                    paramStmt.expression,
-                                    arg.dataType,
-                                    paramStmt.dataType
-                                )
-                            )
-                            //"函数${funcDefine.funcName}第${i}个参数期待${arg.dataType}类型, 实际为${paramStmt.dataType}类型"
-                            errorInfos.add(errors)
-                            continue@outer
-                        }
+                    continue
+                }
+                //无形参了
+                if (!expectIter.hasNext()) {
+                    //此处必然还有实参，那么如果不是可变参数，则不匹配
+                    if (expectArg == null || !expectArg.vararg) {
+                        errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
+                        errorInfos.add(errors)
+                        continue@outer
                     }
+                }
+
+                if (expectArg == null) expectArg = expectIter.next()
+                if (actualArg == null) actualArg = actualIter.next()
+
+                //泛型实际类型
+                val genericRealType: DataType? = expectArg.genericType?.let { genericTypeMap[it] }
+
+                //参数匹配
+                if (expectArg.match(actualArg!!.expression, actualArg.dataType, actualArg.token, genericRealType)) {
+                    if (expectArg.genericType != null && genericRealType == null) {
+                        genericTypeMap[expectArg.genericType!!] = actualArg.dataType
+                    }
+                    if (expectIter.hasNext()) expectArg = expectIter.next()
+                    if (actualIter.hasNext()) actualArg = actualIter.next()
+                    matchedArg++
+                    continue
+                }
+                //参数不匹配
+                //无缺省参数或无下一形参
+                if (expectArg.defaultValue == null || !expectIter.hasNext()) {
+                    errors.add(DataTypeMismatchException(actualArg.expression, expectArg.dataType, actualArg.dataType))
+                    errorInfos.add(errors)
+                    continue@outer
+                }
+                //有缺省参数
+                else {
+                    expectArg = expectIter.next()
                 }
             }
             matched.add(funcDefine)
         }
         if (matched.isNotEmpty()) {
+            if (matched.size > 1) {
+                throw AmbiguousFunctionException(matched)
+            }
             return matched[0]
         }
         if (errorInfos.isNotEmpty()) {
             throw errorInfos[0][0]
         }
         throw WillNeverHappenException("不应该来这里")
-    }
-
-    protected fun paramInvalid(expected: FunctionDefinition.FunctionArgument, actual: StatementInfo): Boolean {
-        if (expected.dataType.isAssignableFrom(actual.dataType)) return false
-        return true
     }
 
     companion object {
@@ -223,9 +272,9 @@ abstract class AbstractFormulaVisitor(
             MINUS to " - ",
             GREATER to " > ",
             GREATER_EQUAL to " >= ",
-                LESS to " < ",
-                LESS_EQUAL to " <= ",
-                EQUAL to " = "
+            LESS to " < ",
+            LESS_EQUAL to " <= ",
+            EQUAL to " = "
         )
     }
 

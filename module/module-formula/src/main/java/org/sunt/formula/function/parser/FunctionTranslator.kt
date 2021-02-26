@@ -13,7 +13,7 @@ interface FunctionTranslator {
     fun translate(
         funcName: String,
         funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<out String?>
+        args: Array<String?>
     ): String
 
     //fun translate(args: Map<String, String>): String
@@ -52,7 +52,7 @@ object EmptyTranslator : FunctionTranslator {
     override fun translate(
         funcName: String,
         funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<out String?>
+        args: Array<String?>
     ): String {
         throw IllegalAccessException("not supported")
     }
@@ -63,7 +63,7 @@ data class PartitionOrderTranslator(val funcName: String) : FunctionTranslator {
     override fun translate(
         funcName: String,
         funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<out String?>
+        args: Array<String?>
     ): String {
         val builder = StringBuilder(this.funcName).append("() OVER (")
         renderPartitionAndOrderBy(builder, partition = args.getOrNull(0), orderBy = args.getOrNull(1))
@@ -78,7 +78,7 @@ data class PreDefinedPartitionOrderTranslator(val expression: String, val partit
     override fun translate(
         funcName: String,
         funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<out String?>
+        args: Array<String?>
     ): String {
         val translatedExpr = FunctionDefinition.FunctionImplement.translate(funcName, expression, funcArgs, args)
         val builder = StringBuilder(translatedExpr).append(" OVER (")
@@ -103,7 +103,7 @@ data class PreDefinedPartitionOrderFrameTranslator(
     override fun translate(
         funcName: String,
         funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<out String?>
+        args: Array<String?>
     ): String {
         val builder =
             StringBuilder(FunctionDefinition.FunctionImplement.translate(funcName, expression, funcArgs, args))
@@ -159,19 +159,31 @@ data class LagLeadTranslator(val funcName: String) : FunctionTranslator {
     override fun translate(
         funcName: String,
         funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<out String?>
+        args: Array<String?>
     ): String {
-        val builder = StringBuilder(this.funcName).append("( ").append(args[0])
-        val offset = args.getOrElse(1) { i -> funcArgs[i].defaultValue?.toString() }?.toInt()
-        if (offset != null && offset != 0) {
-            builder.append(" ,").append(offset)
+        val argSize = args.size
+        if (argSize > 5) {
+            throw IllegalStateException("函数${this.funcName}调用参数过多")
         }
-        val defaultVal = args.getOrNull(2)
-        if (defaultVal != null) {
-            builder.append(" ,").append(defaultVal)
+        val builder = StringBuilder(this.funcName).append("( ").append(args[0])
+        if (argSize >= 4) {
+            val offset = args.getOrElse(1) { i -> funcArgs[i].defaultValue?.toString() }?.toInt()
+            if (offset != null && offset != 0) {
+                builder.append(" ,").append(offset)
+            }
+        }
+        if (argSize == 5) {
+            val defaultVal = args.getOrNull(2)
+            if (defaultVal != null) {
+                builder.append(" ,").append(defaultVal)
+            }
         }
         builder.append(") OVER (")
-        renderPartitionAndOrderBy(builder, partition = args.getOrNull(3), orderBy = args.getOrNull(4))
+        renderPartitionAndOrderBy(
+            builder,
+            partition = args.getOrNull(argSize - 2),
+            orderBy = args.getOrNull(argSize - 1)
+        )
         return builder.append(")").toString()
     }
 
