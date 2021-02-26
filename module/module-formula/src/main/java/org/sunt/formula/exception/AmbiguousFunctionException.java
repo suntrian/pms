@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 public class AmbiguousFunctionException extends AbstractFormulaException {
 
+    private static final long serialVersionUID = -6629216833943283878L;
+
     public AmbiguousFunctionException(String message) {
         super(message);
     }

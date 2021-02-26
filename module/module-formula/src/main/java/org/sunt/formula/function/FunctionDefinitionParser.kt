@@ -17,6 +17,7 @@ object FunctionDefinitionParser {
     private val functionDefUri = URI("classpath://function/function.kt")
     private val dialectCache: MutableMap<SqlDialect, Map<String, List<FunctionDefinition>>> = ConcurrentHashMap()
 
+    @JvmStatic
     @JvmOverloads
     fun loadFunctions(
         dialect: SqlDialect = SqlDialect.DEFALUT,
@@ -48,9 +49,10 @@ object FunctionDefinitionParser {
         return dialectFunctions!!
     }
 
+    @JvmStatic
     @JvmOverloads
-    fun listFunctions(dialect: SqlDialect = SqlDialect.DEFALUT): List<FunctionDefinition> {
-        return loadFunctions(dialect).values.flatten()
+    fun listFunctions(dialect: SqlDialect = SqlDialect.DEFALUT, category: String? = null): List<FunctionDefinition> {
+        return loadFunctions(dialect, category).values.flatten()
     }
 
     private fun _loadFunctions(uri: URI): Map<String, FunctionGroup> {

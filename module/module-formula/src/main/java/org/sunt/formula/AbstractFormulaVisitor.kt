@@ -218,7 +218,13 @@ abstract class AbstractFormulaVisitor(
                 //参数不匹配
                 //无缺省参数或无下一形参
                 if (expectArg.defaultValue == null || !expectIter.hasNext()) {
-                    errors.add(DataTypeMismatchException(actualArg.expression, expectArg.dataType, actualArg.dataType))
+                    errors.add(
+                        DataTypeMismatchException(
+                            actualArg.expression,
+                            genericRealType ?: expectArg.dataType,
+                            actualArg.dataType
+                        )
+                    )
                     errorInfos.add(errors)
                     continue@outer
                 }

@@ -91,14 +91,23 @@ class DataType private constructor(
 
     companion object {
 
+        @JvmField
         val ANY = PrimitiveType.ANY.dataType        //任何类的父类
+        @JvmField
         val NONE = PrimitiveType.NONE.dataType       //任何类的子类
+        @JvmField
         val DECIMAL = PrimitiveType.DECIMAL.dataType
+        @JvmField
         val INTEGER = PrimitiveType.INTEGER.dataType
+        @JvmField
         val BOOLEAN = PrimitiveType.BOOLEAN.dataType
+        @JvmField
         val STRING = PrimitiveType.STRING.dataType
+        @JvmField
         val DATE = PrimitiveType.DATE.dataType
+        @JvmField
         val TIME = PrimitiveType.TIME.dataType
+        @JvmField
         val DATETIME = PrimitiveType.DATETIME.dataType
 
 
