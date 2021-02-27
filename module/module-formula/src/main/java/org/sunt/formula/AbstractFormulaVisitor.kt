@@ -10,10 +10,11 @@ import org.sunt.formula.exception.ParamsSizeMismatchException
 import org.sunt.formula.exception.WillNeverHappenException
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.function.FunctionDefinitionParser.loadFunctions
+import org.sunt.formula.function.StatementInfo
 import org.sunt.formula.function.TokenItem
+import org.sunt.formula.function.TokenStatus
 import org.sunt.formula.parser.FormulaBaseVisitor
 import org.sunt.formula.parser.FormulaParser.*
-import org.sunt.formula.suggestion.TokenStatus
 
 abstract class AbstractFormulaVisitor(
     protected val dialect: SqlDialect,

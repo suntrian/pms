@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.Token
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.function.FunctionDefinitionParser
 import org.sunt.formula.function.TokenItem
+import org.sunt.formula.function.TokenStatus
 import org.sunt.formula.parser.FormulaParser.*
 
 class FormulaToken private constructor(

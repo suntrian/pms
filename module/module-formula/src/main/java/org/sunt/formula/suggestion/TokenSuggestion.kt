@@ -2,6 +2,7 @@ package org.sunt.formula.suggestion
 
 import org.sunt.formula.define.DataType
 import org.sunt.formula.function.TokenItem
+import org.sunt.formula.function.TokenStatus
 
 class TokenSuggestion(
     val text: String,

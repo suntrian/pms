@@ -61,9 +61,9 @@ class TestFormulaToSql {
         println(stmt5)
         println(stmt5.expression)
 
-        val stmt6 = helper.toSql("COALESCE(abc, def, ghi, 2, 3, 'sfee')", SqlDialect.HIVE)
-        println(stmt6)
-        println(stmt6.expression)
+//        val stmt6 = helper.toSql("COALESCE(abc, def, ghi, 2, 3, 'sfee')", SqlDialect.HIVE)
+//        println(stmt6)
+//        println(stmt6.expression)
 
         val stmt7 = helper.toSql("COALESCE(abc)", SqlDialect.HIVE)
         println(stmt7)

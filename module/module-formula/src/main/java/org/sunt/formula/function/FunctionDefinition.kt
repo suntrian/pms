@@ -41,9 +41,8 @@ class FunctionDefinition(val funcName: String) {
         this.functionImplement = FunctionImplement(this.funcName, translatorClass, constructArgs)
     }
 
-    @JvmOverloads
-    fun translate(idxParams: List<String?>, namedParams: Map<String, String?> = emptyMap()): String {
-        return this.functionImplement?.translate(this.arguments, idxParams.toTypedArray(), namedParams) ?: ""
+    fun translate(params: List<StatementInfo?>): String {
+        return this.functionImplement?.translate(this.arguments, params) ?: ""
     }
 
     override fun equals(other: Any?): Boolean {
@@ -207,37 +206,20 @@ class FunctionDefinition(val funcName: String) {
             this.translator = FunctionTranslator.of(translatorClass, constructArgs)
         }
 
-        override fun translate(funcName: String, funcArgs: List<FunctionArgument>, args: Array<String?>): String {
-            return Companion.translate(this.funcName, this.implement, funcArgs, args)
+        override fun translate(
+            funcName: String,
+            expectArgs: List<FunctionArgument>,
+            actualArgs: List<StatementInfo?>
+        ): String {
+            return Companion.translate(this.funcName, this.implement, expectArgs, actualArgs.map { it?.expression })
         }
 
-        fun translate(
-            arguments: List<FunctionArgument>,
-            idxParams: Array<String?>,
-            namedParams: Map<String, String?> = emptyMap()
-        ): String {
+        fun translate(expectArgs: List<FunctionArgument>, actualArgs: List<StatementInfo?>): String {
             return if (this.implement.isNotBlank()) {
-                translateByScript(arguments, idxParams, namedParams)
+                Companion.translate(funcName, implement, expectArgs, actualArgs.map { it?.expression })
             } else if (this.translator != null) {
-                translateByClass(arguments, idxParams, namedParams)
+                this.translator!!.translate(funcName, expectArgs, actualArgs)
             } else throw IllegalStateException("${funcName}未提供转换SQL方法")
-        }
-
-        private fun translateByScript(
-            arguments: List<FunctionArgument>,
-            idxParams: Array<String?>,
-            namedParams: Map<String, String?> = emptyMap()
-        ): String {
-            return Companion.translate(funcName, implement, arguments, idxParams, namedParams)
-        }
-
-        @Suppress("unused")
-        private fun translateByClass(
-            arguments: List<FunctionArgument>,
-            idxParams: Array<String?>,
-            namedParams: Map<String, String?> = emptyMap()
-        ): String {
-            return this.translator!!.translate(funcName, arguments, idxParams)
         }
 
         companion object {
@@ -250,7 +232,7 @@ class FunctionDefinition(val funcName: String) {
                 funcName: String,
                 implement: String,
                 arguments: List<FunctionArgument>,
-                idxParams: Array<String?>,
+                idxParams: List<String?>,
                 namedParams: Map<String, String?> = emptyMap()
             ): String {
                 var matcher = PARAM_PATTERN.matcher(implement)

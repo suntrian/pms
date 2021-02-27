@@ -1,9 +1,7 @@
-package org.sunt.formula
+package org.sunt.formula.function
 
 import org.antlr.v4.runtime.ParserRuleContext
 import org.sunt.formula.define.DataType
-import org.sunt.formula.function.TokenItem
-import org.sunt.formula.suggestion.TokenStatus
 
 data class StatementInfo(val origin: String,
                          val startIndex: Int,

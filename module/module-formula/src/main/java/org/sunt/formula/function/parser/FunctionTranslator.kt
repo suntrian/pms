@@ -1,19 +1,20 @@
 package org.sunt.formula.function.parser
 
 import org.sunt.formula.function.FunctionDefinition
+import org.sunt.formula.function.StatementInfo
 
 
 interface FunctionTranslator {
 
     /**
      * @param funcName 待转换的函数的名称，非SQL函数
-     * @param funcArgs 待转换的函数的参数定义
-     * @param args 实际的参数
+     * @param expectArgs 待转换的函数的参数定义
+     * @param actualArgs 实际的参数
      */
     fun translate(
         funcName: String,
-        funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<String?>
+        expectArgs: List<FunctionDefinition.FunctionArgument>,
+        actualArgs: List<StatementInfo?>
     ): String
 
     //fun translate(args: Map<String, String>): String
@@ -51,8 +52,8 @@ interface FunctionTranslator {
 object EmptyTranslator : FunctionTranslator {
     override fun translate(
         funcName: String,
-        funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<String?>
+        expectArgs: List<FunctionDefinition.FunctionArgument>,
+        actualArgs: List<StatementInfo?>
     ): String {
         throw IllegalAccessException("not supported")
     }
@@ -62,11 +63,15 @@ data class PartitionOrderTranslator(val funcName: String) : FunctionTranslator {
 
     override fun translate(
         funcName: String,
-        funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<String?>
+        expectArgs: List<FunctionDefinition.FunctionArgument>,
+        actualArgs: List<StatementInfo?>
     ): String {
         val builder = StringBuilder(this.funcName).append("() OVER (")
-        renderPartitionAndOrderBy(builder, partition = args.getOrNull(0), orderBy = args.getOrNull(1))
+        renderPartitionAndOrderBy(
+            builder,
+            partition = actualArgs.getOrNull(0)?.expression,
+            orderBy = actualArgs.getOrNull(1)?.expression
+        )
         return builder.append(")").toString()
     }
 
@@ -77,15 +82,17 @@ data class PreDefinedPartitionOrderTranslator(val expression: String, val partit
 
     override fun translate(
         funcName: String,
-        funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<String?>
+        expectArgs: List<FunctionDefinition.FunctionArgument>,
+        actualArgs: List<StatementInfo?>
     ): String {
-        val translatedExpr = FunctionDefinition.FunctionImplement.translate(funcName, expression, funcArgs, args)
+        val actualArgStrs = actualArgs.map { it?.expression }
+        val translatedExpr =
+            FunctionDefinition.FunctionImplement.translate(funcName, expression, expectArgs, actualArgStrs)
         val builder = StringBuilder(translatedExpr).append(" OVER (")
         renderPartitionAndOrderBy(
             builder,
-            partition = args.getOrNull(partitionIndex),
-            orderBy = args.getOrNull(orderByIndex)
+            partition = actualArgStrs.getOrNull(partitionIndex),
+            orderBy = actualArgStrs.getOrNull(orderByIndex)
         )
         return builder.append(")").toString()
     }
@@ -102,21 +109,29 @@ data class PreDefinedPartitionOrderFrameTranslator(
 ) : FunctionTranslator {
     override fun translate(
         funcName: String,
-        funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<String?>
+        expectArgs: List<FunctionDefinition.FunctionArgument>,
+        actualArgs: List<StatementInfo?>
     ): String {
+        val actualArgStrs = actualArgs.map { it?.expression }
         val builder =
-            StringBuilder(FunctionDefinition.FunctionImplement.translate(funcName, expression, funcArgs, args))
+            StringBuilder(
+                FunctionDefinition.FunctionImplement.translate(
+                    funcName,
+                    expression,
+                    expectArgs,
+                    actualArgStrs
+                )
+            )
                 .append(" OVER (")
         renderPartitionAndOrderBy(
             builder,
-            partition = args.getOrNull(partitionIndex),
-            orderBy = args.getOrNull(orderByIndex)
+            partition = actualArgStrs.getOrNull(partitionIndex),
+            orderBy = actualArgStrs.getOrNull(orderByIndex)
         )
 
-        val unit = args.getOrElse(frameUnitIndex) { i -> funcArgs[i].defaultValue?.toString() }
-        val start = args.getOrElse(frameFromIndex) { i -> funcArgs[i].defaultValue?.toString() }?.toInt()
-        val end = args.getOrElse(frameEndIndex) { i -> funcArgs[i].defaultValue?.toString() }?.toInt()
+        val unit = actualArgStrs.getOrElse(frameUnitIndex) { i -> expectArgs[i].defaultValue?.toString() }
+        val start = actualArgStrs.getOrElse(frameFromIndex) { i -> expectArgs[i].defaultValue?.toString() }?.toInt()
+        val end = actualArgStrs.getOrElse(frameEndIndex) { i -> expectArgs[i].defaultValue?.toString() }?.toInt()
         if (unit != null || start != null || end != null) {
             if (start != 0 || end != 0) {
                 builder.append(" ").append(unit).append(" ")
@@ -158,22 +173,23 @@ data class LagLeadTranslator(val funcName: String) : FunctionTranslator {
 
     override fun translate(
         funcName: String,
-        funcArgs: List<FunctionDefinition.FunctionArgument>,
-        args: Array<String?>
+        expectArgs: List<FunctionDefinition.FunctionArgument>,
+        actualArgs: List<StatementInfo?>
     ): String {
-        val argSize = args.size
+        val actualArgStrs = actualArgs.map { it?.expression }
+        val argSize = actualArgStrs.size
         if (argSize > 5) {
             throw IllegalStateException("函数${this.funcName}调用参数过多")
         }
-        val builder = StringBuilder(this.funcName).append("( ").append(args[0])
+        val builder = StringBuilder(this.funcName).append("( ").append(actualArgStrs[0])
         if (argSize >= 4) {
-            val offset = args.getOrElse(1) { i -> funcArgs[i].defaultValue?.toString() }?.toInt()
+            val offset = actualArgStrs.getOrElse(1) { i -> expectArgs[i].defaultValue?.toString() }?.toInt()
             if (offset != null && offset != 0) {
                 builder.append(" ,").append(offset)
             }
         }
         if (argSize == 5) {
-            val defaultVal = args.getOrNull(2)
+            val defaultVal = actualArgStrs.getOrNull(2)
             if (defaultVal != null) {
                 builder.append(" ,").append(defaultVal)
             }
@@ -181,8 +197,8 @@ data class LagLeadTranslator(val funcName: String) : FunctionTranslator {
         builder.append(") OVER (")
         renderPartitionAndOrderBy(
             builder,
-            partition = args.getOrNull(argSize - 2),
-            orderBy = args.getOrNull(argSize - 1)
+            partition = actualArgStrs.getOrNull(argSize - 2),
+            orderBy = actualArgStrs.getOrNull(argSize - 1)
         )
         return builder.append(")").toString()
     }

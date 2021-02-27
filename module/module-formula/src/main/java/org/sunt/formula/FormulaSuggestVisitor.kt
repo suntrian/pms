@@ -1,6 +1,7 @@
 package org.sunt.formula
 
 import org.sunt.formula.define.SqlDialect
+import org.sunt.formula.function.StatementInfo
 import org.sunt.formula.parser.FormulaParser
 
 class FormulaSuggestVisitor(

@@ -4,8 +4,9 @@ import org.sunt.formula.define.DataType
 import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.exception.*
 import org.sunt.formula.function.FunctionDefinition
+import org.sunt.formula.function.StatementInfo
+import org.sunt.formula.function.TokenStatus
 import org.sunt.formula.parser.FormulaParser.*
-import org.sunt.formula.suggestion.TokenStatus
 import java.util.*
 import kotlin.Comparator
 import kotlin.collections.ArrayList
@@ -243,7 +244,7 @@ class FormulaToSqlVisitor(
         funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege }!!
         funcStmt.dataType =
             if (finalFunctionDefine.typeParamIndex != null) filledParams[finalFunctionDefine.typeParamIndex!!]!!.dataType else finalFunctionDefine.dataType
-        funcStmt.expression = finalFunctionDefine.translate(filledParams.map { it?.expression })
+        funcStmt.expression = finalFunctionDefine.translate(filledParams)
 
         return funcStmt
     }

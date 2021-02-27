@@ -1,4 +1,4 @@
-package org.sunt.formula.suggestion
+package org.sunt.formula.function
 
 enum class TokenStatus(val privilege: Int) : Comparable<TokenStatus> {
 
