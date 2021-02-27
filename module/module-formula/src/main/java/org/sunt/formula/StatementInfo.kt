@@ -25,5 +25,6 @@ data class StatementInfo(val origin: String,
 
     var token: TokenItem = TokenItem.NONE()
 
+    var payload: Any = Unit
 
 }

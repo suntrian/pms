@@ -2,11 +2,14 @@ package org.sunt.formula
 
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.SqlDialect
-import org.sunt.formula.exception.DataTypeMismatchException
-import org.sunt.formula.exception.ParamsSizeMismatchException
+import org.sunt.formula.exception.*
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.parser.FormulaParser.*
 import org.sunt.formula.suggestion.TokenStatus
+import java.util.*
+import kotlin.Comparator
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class FormulaToSqlVisitor(
     product: SqlDialect,
@@ -15,25 +18,6 @@ class FormulaToSqlVisitor(
 
     override fun visitFormula(ctx: FormulaContext): StatementInfo {
         return visitStatement(ctx.statement())
-    }
-
-    private fun visitStatement(ctx: StatementContext?): StatementInfo {
-        return when (ctx) {
-            is FunctionExpressionContext -> visitFunctionExpression(ctx)
-            is ConstantExpressionContext -> visitConstantExpression(ctx)
-            is ColumnExpressionContext -> visitColumnExpression(ctx)
-            is MathExpressionContext -> visitMathExpression(ctx)
-            is ComparePredicateContext -> visitComparePredicate(ctx)
-            is LogicalPredicateContext -> visitLogicalPredicate(ctx)
-            is IfExpressionContext -> visitIfExpression(ctx)
-            is CaseExpressionContext -> visitCaseExpression(ctx)
-            is InPredicateContext -> visitInPredicate(ctx)
-            is ParenthesesExpressionContext -> visitParenthesesExpression(ctx)
-            is NotPredicateContext -> visitNotPredicate(ctx)
-            is LikePredicateContext -> visitLikePredicate(ctx)
-            is SquareExpressionContext -> visitSquareExpression(ctx)
-            else -> StatementInfo(ctx)
-        }
     }
 
     override fun visitParenthesesExpression(ctx: ParenthesesExpressionContext): StatementInfo {
@@ -46,6 +30,7 @@ class FormulaToSqlVisitor(
     }
 
     override fun visitComparePredicate(ctx: ComparePredicateContext): StatementInfo {
+        checkArgSize(ctx.statement(), 2)
         val left = visitStatement(ctx.statement(0))
         val right = visitStatement(ctx.statement(1))
         val predStmt = StatementInfo(ctx)
@@ -65,34 +50,26 @@ class FormulaToSqlVisitor(
             checkDataType(right, left.dataType)
         }
 
-        when (ctx.op.type) {
-            GREATER, GREATER_EQUAL, LESS, LESS_EQUAL -> predStmt.expression = left.expression + ctx.op.text + right.expression
-            EQUAL -> predStmt.expression = left.expression + "=" + right.expression
-            NOT_EQUAL -> predStmt.expression = left.expression + "!=" + right.expression
-        }
-
+        predStmt.expression = left.expression + operatorMap[ctx.op.type] + right.expression
         predStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
         return predStmt
     }
 
     override fun visitInPredicate(ctx: InPredicateContext): StatementInfo {
-        if (ctx.statement() == null || ctx.statement().size <= 1) {
-            throw IllegalStateException("操作数个数不符")
-        }
-        val left = visitStatement(ctx.statement(0))
+        val left = visitStatement(ctx.statement())
         var status = left.status
         val exprBuilder = StringBuilder(left.expression)
         if (ctx.NOT() != null) {
             exprBuilder.append(" NOT")
         }
         exprBuilder.append(" IN (")
-        for (i in 1..ctx.statement().size) {
-            val stmt = visitStatement(ctx.statement(i))
+        val rightStmts = visitStatements(ctx.statements()).iterator()
+        for (stmt in rightStmts) {
             if (stmt.status.privilege > status.privilege) {
                 status = stmt.status
             }
             exprBuilder.append(stmt.expression)
-            if (i != ctx.statement().size - 1) {
+            if (rightStmts.hasNext()) {
                 exprBuilder.append(",")
             }
         }
@@ -109,9 +86,7 @@ class FormulaToSqlVisitor(
     }
 
     override fun visitMathExpression(ctx: MathExpressionContext): StatementInfo {
-        if (ctx.statement() == null || ctx.statement().size != 2) {
-            throw java.lang.IllegalStateException("操作数个数不符")
-        }
+        checkArgSize(ctx.statement(), 2)
         val left = visitStatement(ctx.statement(0))
         val right = visitStatement(ctx.statement(1))
         val mathStmt = StatementInfo(ctx)
@@ -137,7 +112,7 @@ class FormulaToSqlVisitor(
 
         when (ctx.op.type) {
             POWER -> {
-                mathStmt.expression = left.expression + " ^ " + right.expression
+                mathStmt.expression = "POWER( ${left.expression}, ${right.expression})"
                 mathStmt.dataType = if (left.dataType == DataType.DECIMAL || right.dataType == DataType.DECIMAL) {
                     DataType.DECIMAL
                 } else {
@@ -184,9 +159,7 @@ class FormulaToSqlVisitor(
     }
 
     override fun visitLogicalPredicate(ctx: LogicalPredicateContext): StatementInfo {
-        if (ctx.statement().size != 2) {
-            throw ParamsSizeMismatchException(ctx.text, 2, ctx.statement().size)
-        }
+        checkArgSize(ctx.statement(), 2)
         val left = visitStatement(ctx.statement(0))
         checkDataType(left, DataType.BOOLEAN)
         val right = visitStatement(ctx.statement(1))
@@ -202,23 +175,35 @@ class FormulaToSqlVisitor(
         return visitIfSpecial(ctx.ifSpecial())
     }
 
+    override fun visitIfnullExpression(ctx: IfnullExpressionContext): StatementInfo {
+        checkArgSize(ctx.statement(), 2)
+        val left = visitStatement(ctx.statement(0))
+        val right = visitStatement(ctx.statement(1))
+        val stmt = StatementInfo(ctx)
+        with(stmt) {
+            dataType = left.dataType
+            status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+            //todo dialect related
+            expression = "IFNULL(${left.expression}, ${right.expression})"
+        }
+        return stmt
+    }
+
     override fun visitLikePredicate(ctx: LikePredicateContext): StatementInfo {
-        val left = visitStatement(ctx.statement())
+        checkArgSize(ctx.statement(), 2)
+        val left = visitStatement(ctx.statement(0))
         val not = ctx.NOT() != null
-        val right = ctx.STRING().text;
+        val right = visitStatement(ctx.statement(1))
+        checkDataType(right, DataType.STRING)
         val likeStmt = StatementInfo(ctx)
-        likeStmt.expression = left.expression + if (not) {
-            " NOT"
-        } else {
-            ""
-        } + " LIKE " + right
+        likeStmt.expression = left.expression + (if (not) " NOT" else "") + " LIKE " + right.expression
         likeStmt.status = left.status
         likeStmt.dataType = DataType.BOOLEAN
         return likeStmt
     }
 
     override fun visitSquareExpression(ctx: SquareExpressionContext): StatementInfo {
-        val statements = ctx.statement().map { visitStatement(it) }
+        val statements = ctx.statements()?.let { visitStatements(it) } ?: emptyList()
         val result = StatementInfo(ctx)
         with(result) {
             expression = statements.joinToString(", ") { it.expression }
@@ -227,6 +212,10 @@ class FormulaToSqlVisitor(
             dataType = DataType.of("List<${commonDataType}>")
         }
         return result
+    }
+
+    override fun visitStatements(ctx: StatementsContext): List<StatementInfo> {
+        return ctx.statement().map { visitStatement(it) }
     }
 
     override fun visitFunctionExpression(ctx: FunctionExpressionContext): StatementInfo {
@@ -374,4 +363,101 @@ class FormulaToSqlVisitor(
         throw java.lang.IllegalStateException("Not Expected Here")
     }
 
+    private fun figureFunctionDefine(
+        functionDefines: List<FunctionDefinition>,
+        actualArgs: MutableList<StatementInfo?>
+    ): FunctionDefinition {
+        val matched = ArrayList<FunctionDefinition>(functionDefines.size)
+        val errorInfos = ArrayList<List<AbstractFormulaException>>(functionDefines.size)
+
+        outer@ for (funcDefine in functionDefines) {
+            val errors = LinkedList<AbstractFormulaException>()
+            val expectArgSize = funcDefine.arguments.size
+            val actualArgSize = actualArgs.size
+
+            //处理泛型
+            val genericTypeMap: MutableMap<String, DataType> = if (funcDefine.genericTypes.isNotEmpty()) {
+                HashMap(2)
+            } else mutableMapOf()
+
+            //有参函数
+            val expectIter = funcDefine.arguments.iterator()
+            val actualIter = actualArgs.listIterator()
+
+            var expectArg: FunctionDefinition.FunctionArgument? = null
+            var actualArg: StatementInfo? = null
+            var matchedArg = 0
+            while (true) {
+                //无实参了
+                if (!actualIter.hasNext()) {
+                    if (!expectIter.hasNext()) {
+                        break
+                    }
+                    //还有形参
+                    expectArg = expectIter.next()
+                    //无缺省值
+                    if (!expectArg.vararg && expectArg.defaultValue == null) {
+                        errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
+                        errorInfos.add(errors)
+                        continue@outer
+                    }
+                    continue
+                }
+                //无形参了
+                if (!expectIter.hasNext()) {
+                    //此处必然还有实参，那么如果不是可变参数，则不匹配
+                    if (expectArg == null || !expectArg.vararg) {
+                        errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
+                        errorInfos.add(errors)
+                        continue@outer
+                    }
+                }
+
+                if (expectArg == null) expectArg = expectIter.next()
+                if (actualArg == null) actualArg = actualIter.next()
+
+                //泛型实际类型
+                val genericRealType: DataType? = expectArg.genericType?.let { genericTypeMap[it] }
+
+                //参数匹配
+                if (expectArg.match(actualArg!!.expression, actualArg.dataType, actualArg.token, genericRealType)) {
+                    if (expectArg.genericType != null && genericRealType == null) {
+                        genericTypeMap[expectArg.genericType!!] = actualArg.dataType
+                    }
+                    if (expectIter.hasNext()) expectArg = expectIter.next()
+                    if (actualIter.hasNext()) actualArg = actualIter.next()
+                    matchedArg++
+                    continue
+                }
+                //参数不匹配
+                //无缺省参数或无下一形参
+                if (expectArg.defaultValue == null || !expectIter.hasNext()) {
+                    errors.add(
+                        DataTypeMismatchException(
+                            actualArg.expression,
+                            genericRealType ?: expectArg.dataType,
+                            actualArg.dataType
+                        )
+                    )
+                    errorInfos.add(errors)
+                    continue@outer
+                }
+                //有缺省参数
+                else {
+                    expectArg = expectIter.next()
+                }
+            }
+            matched.add(funcDefine)
+        }
+        if (matched.isNotEmpty()) {
+            if (matched.size > 1) {
+                throw AmbiguousFunctionException(matched)
+            }
+            return matched[0]
+        }
+        if (errorInfos.isNotEmpty()) {
+            throw errorInfos[0][0]
+        }
+        throw WillNeverHappenException("不应该来这里")
+    }
 }

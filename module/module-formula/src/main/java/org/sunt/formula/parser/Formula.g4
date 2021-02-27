@@ -18,14 +18,15 @@ statement
     | statement op=(MUL | DIV) statement                                                        #mathExpression
     | statement op=(PLUS | MINUS) statement                                                     #mathExpression
     | statement op=(GREATER | GREATER_EQUAL | LESS | LESS_EQUAL | EQUAL | NOT_EQUAL) statement  #comparePredicate
-    | statement NOT? op=IN L_PARENTHESES statement (COMMA statement)* R_PARENTHESES             #inPredicate
-    | statement NOT? op=LIKE STRING                                                             #likePredicate
+    | statement NOT? op=IN L_PARENTHESES statements R_PARENTHESES                               #inPredicate
+    | statement NOT? op=LIKE statement                                                          #likePredicate
     | NOT statement                                                                             #notPredicate
     | statement op= AND statement                                                               #logicalPredicate
     | statement op= XOR statement                                                               #logicalPredicate
     | statement op= OR statement                                                                #logicalPredicate
     | L_PARENTHESES statement R_PARENTHESES                                                     #parenthesesExpression
-    | L_SQUARE (statement (COMMA statement)*)? R_SQUARE                                         #squareExpression
+    | L_SQUARE statements? R_SQUARE                                                             #squareExpression
+    | statement IFNULL statement                                                                #ifnullExpression
     ;
 
 functionStatement
@@ -42,6 +43,10 @@ functionParams
 functionParam
     : statement
     | IDENTITY EQUAL statement
+    ;
+
+statements
+    : statement (COMMA statement)*
     ;
 
 caseStatement
@@ -112,6 +117,7 @@ PLUS: '+';
 MINUS: '-';
 POWER: '^';
 MOD: '%' | M O D;
+IFNULL: '?' ':';
 
 GREATER: '>';
 GREATER_EQUAL: '>=';
