@@ -65,7 +65,7 @@ CONCAT
    4. 参数：string: 文本类型
     """
     )
-    @Translate("CONCAT($1, $0)")
+    @Translate("CONCAT($0)")
     @Category("文本函数")
     fun CONCAT(one: String, vararg remain: String): String
 
@@ -79,7 +79,7 @@ CONCAT_WS
    4. 参数：string: 文本类型
     """
     )
-    @Translate("CONCAT_WS($1, $2, $0)")
+    @Translate("CONCAT_WS($1, $0)")
     @Category("文本函数")
     fun CONCAT_WS(split: String, one: String, vararg remain: String): String
 
@@ -262,7 +262,7 @@ GREATEST
        4. 参数: 任意类型参数
     """
     )
-    @Translate("GREATEST($1, $0)")
+    @Translate("GREATEST($0)")
     @Category("数值函数", "文本函数")
     fun <T> GREATEST(one: T, vararg remain: T): T
 
@@ -276,7 +276,7 @@ LEAST
        4. 参数: 任意类型参数
     """
     )
-    @Translate("LEAST($1, $0)")
+    @Translate("LEAST($0)")
     @Category("数值函数", "文本函数")
     fun <T> LEAST(one: T, vararg remain: T): T
 
@@ -517,7 +517,7 @@ COALESCE
     """
     )
     @Category("其他函数")
-    @Translate("COALESCE($1, $0)")
+    @Translate("COALESCE($0)")
     fun <T> COALESCE(one: T, vararg remain: T): T
 
     @Description(

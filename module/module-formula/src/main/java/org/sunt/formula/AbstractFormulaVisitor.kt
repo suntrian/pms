@@ -143,7 +143,7 @@ abstract class AbstractFormulaVisitor(
                 payload = funcDefines!!
             } else if (currentReservedIdentities.contains(identity.toUpperCase())) {
                 token = TokenItem.RESERVED(identity)
-                dataType = DataType.ANY
+                dataType = DataType.NONE
                 expression = identity
                 status = TokenStatus.NORMAL
             } else if (columnInterface.getColumnByName(identity)?.also { column = it } != null) {

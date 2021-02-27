@@ -255,10 +255,12 @@ class FunctionDefinition(val funcName: String) {
             ): String {
                 var matcher = PARAM_PATTERN.matcher(implement)
                 val sqlBuffer = StringBuffer()
+                var lastMatchedIndex = 0
                 while (matcher.find()) {
                     val idx: Int
                     val name: String
                     if (matcher.group("idx").also { idx = it.toInt() } != null) {
+                        if (idx > lastMatchedIndex) lastMatchedIndex = idx
                         if (idxParams.size < idx) {
                             if (arguments.size < idx || arguments[idx - 1].defaultValue == null) {
                                 throw IllegalStateException("函数${funcName}参数个数不符")
@@ -266,7 +268,7 @@ class FunctionDefinition(val funcName: String) {
                             matcher.appendReplacement(sqlBuffer, arguments[idx - 1].defaultValue.toString())
                         } else {
                             if (idx == 0) {
-                                matcher.appendReplacement(sqlBuffer, idxParams.joinToString(","))
+                                matcher.appendReplacement(sqlBuffer, idxParams.drop(lastMatchedIndex).joinToString(","))
                             } else {
                                 matcher.appendReplacement(sqlBuffer, idxParams[idx - 1])
                             }

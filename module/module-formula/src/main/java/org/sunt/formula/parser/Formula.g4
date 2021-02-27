@@ -117,7 +117,7 @@ PLUS: '+';
 MINUS: '-';
 POWER: '^';
 MOD: '%' | M O D;
-IFNULL: '?' ':';
+IFNULL: '?' WS* ':';
 
 GREATER: '>';
 GREATER_EQUAL: '>=';

@@ -48,6 +48,26 @@ class TestFormulaToSql {
         val stmt2 = helper.toSql("SUBSTR(IFNULL(TO_STRING(xyz), ''), 2, 6) ", SqlDialect.MYSQL);
         println(stmt2)
         println(stmt2.expression)
+
+        val stmt3 = helper.toSql("COALESCE(abc, def, ghi, 2, 3)", SqlDialect.HIVE)
+        println(stmt3)
+        println(stmt3.expression)
+
+        val stmt4 = helper.toSql("abc?: def ?: ghi?:2?:3?:'sfw'", SqlDialect.HIVE)
+        println(stmt4)
+        println(stmt4.expression)
+
+        val stmt5 = helper.toSql("abc?: def", SqlDialect.HIVE)
+        println(stmt5)
+        println(stmt5.expression)
+
+        val stmt6 = helper.toSql("COALESCE(abc, def, ghi, 2, 3, 'sfee')", SqlDialect.HIVE)
+        println(stmt6)
+        println(stmt6.expression)
+
+        val stmt7 = helper.toSql("COALESCE(abc)", SqlDialect.HIVE)
+        println(stmt7)
+        println(stmt7.expression)
     }
 
     @Test
@@ -61,6 +81,11 @@ class TestFormulaToSql {
         val stmt2 = helper.toSql("GROUP_COUNT(DISTINCT, abcd, eefe, aaab)", SqlDialect.HIVE)
         println(stmt2)
         println(stmt2.expression)
+
+        val stmt3 = helper.toSql("GROUP_count(distinct, abcd?:efgh?:0, eefe, aaab)", SqlDialect.HIVE)
+        println(stmt3)
+        println(stmt3.expression)
+        println("COUNT(DISTINCT COALESCE(abcd, efgh, 0))")
     }
 
     @Test
@@ -74,7 +99,9 @@ class TestFormulaToSql {
             "LAG_OVER(abcd, 1, 'abcd', PARTITION_BY(ddd,eee), ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (PARTITION BY ddd, eee ORDER BY aaa, bbb DESC)",
             "LAG_OVER(abcd, 1, 'abcd', null, ORDER_BY(aaa, ORDER_ITEM(bbb, DESC)))" to "LAG(abcd, 1, 'abcd') OVER (ORDER BY aaa, bbb DESC)",
             "LEAD_OVER(abcd, [], [aaaa])" to "LEAD(abcd) OVER (ORDER BY aaaa)",
-            "GROUP_COUNT(DISTINCT, abcd, DDDD, FFFFF)" to "COUNT(DISTINCT abcd)"
+            "GROUP_COUNT(DISTINCT, abcd, DDDD, FFFFF)" to "COUNT(DISTINCT abcd)",
+            "MAX_OVER(abcd, [], [aaaa], ROWS, -1, 1)" to "MAX(abcd) OVER ( ORDER BY aaaa ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)",
+            "MIN_OVER(abcd, [], [aaaa])" to "MIN(abcd) OVER (ORDER BY aaaa)",
         )
 
 

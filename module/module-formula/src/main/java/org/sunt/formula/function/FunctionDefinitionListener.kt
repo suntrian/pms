@@ -101,8 +101,10 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
     }
 
     override fun exitTypeParameters(ctx: FunctionParser.TypeParametersContext) {
-        for (dataTypeContext in ctx.dataTypeNull()) {
-            this.typeParameters.add(dataTypeContext.dataType().text)
+        if (ctx.parent is FunctionParser.FunctionDefineContext) {
+            for (dataTypeContext in ctx.dataTypeNull()) {
+                this.typeParameters.add(dataTypeContext.dataType().text)
+            }
         }
     }
 

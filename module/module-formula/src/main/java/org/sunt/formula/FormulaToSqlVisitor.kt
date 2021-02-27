@@ -180,12 +180,18 @@ class FormulaToSqlVisitor(
         val left = visitStatement(ctx.statement(0))
         val right = visitStatement(ctx.statement(1))
         val stmt = StatementInfo(ctx)
-        with(stmt) {
-            dataType = left.dataType
-            status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
-            //todo dialect related
-            expression = "IFNULL(${left.expression}, ${right.expression})"
+        stmt.dataType = left.dataType
+        stmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+        val exprBuilder = StringBuilder()
+        if (ctx.statement(0) !is IfnullExpressionContext) {
+            exprBuilder.append("COALESCE(").append(left.expression).append(", ").append(right.expression)
+        } else {
+            exprBuilder.append(left.expression).append(", ").append(right.expression)
         }
+        if (ctx.parent !is IfnullExpressionContext) {
+            exprBuilder.append(")")
+        }
+        stmt.expression = exprBuilder.toString()
         return stmt
     }
 
@@ -374,6 +380,23 @@ class FormulaToSqlVisitor(
             val errors = LinkedList<AbstractFormulaException>()
             val expectArgSize = funcDefine.arguments.size
             val actualArgSize = actualArgs.size
+            val lastVararg = funcDefine.arguments.lastOrNull()?.vararg ?: false
+
+            //无参函数
+            if (actualArgSize == 0 && (expectArgSize == 0 || (expectArgSize == 1 && lastVararg))) {
+                matched.add(funcDefine)
+                continue
+            } else if ((expectArgSize == 0 && actualArgSize > 0) || (actualArgSize == 0 && expectArgSize > 0)) {
+                errors.add(
+                    ParamsSizeMismatchException(
+                        funcDefine.funcName,
+                        funcDefine.arguments.size,
+                        actualArgs.size
+                    )
+                );
+                errorInfos.add(errors)
+                continue
+            }
 
             //处理泛型
             val genericTypeMap: MutableMap<String, DataType> = if (funcDefine.genericTypes.isNotEmpty()) {
@@ -384,68 +407,74 @@ class FormulaToSqlVisitor(
             val expectIter = funcDefine.arguments.iterator()
             val actualIter = actualArgs.listIterator()
 
-            var expectArg: FunctionDefinition.FunctionArgument? = null
-            var actualArg: StatementInfo? = null
+            var expectArg: FunctionDefinition.FunctionArgument = expectIter.next()
+            var actualArg: StatementInfo = actualIter.next()!!
+            var firstNoMatchArgType: DataType? = null
             var matchedArg = 0
             while (true) {
-                //无实参了
-                if (!actualIter.hasNext()) {
-                    if (!expectIter.hasNext()) {
-                        break
-                    }
-                    //还有形参
-                    expectArg = expectIter.next()
-                    //无缺省值
-                    if (!expectArg.vararg && expectArg.defaultValue == null) {
-                        errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
-                        errorInfos.add(errors)
-                        continue@outer
-                    }
-                    continue
-                }
-                //无形参了
-                if (!expectIter.hasNext()) {
-                    //此处必然还有实参，那么如果不是可变参数，则不匹配
-                    if (expectArg == null || !expectArg.vararg) {
-                        errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
-                        errorInfos.add(errors)
-                        continue@outer
-                    }
-                }
-
-                if (expectArg == null) expectArg = expectIter.next()
-                if (actualArg == null) actualArg = actualIter.next()
-
                 //泛型实际类型
                 val genericRealType: DataType? = expectArg.genericType?.let { genericTypeMap[it] }
 
                 //参数匹配
-                if (expectArg.match(actualArg!!.expression, actualArg.dataType, actualArg.token, genericRealType)) {
+                if (expectArg.match(actualArg.expression, actualArg.dataType, actualArg.token, genericRealType)) {
                     if (expectArg.genericType != null && genericRealType == null) {
                         genericTypeMap[expectArg.genericType!!] = actualArg.dataType
                     }
-                    if (expectIter.hasNext()) expectArg = expectIter.next()
-                    if (actualIter.hasNext()) actualArg = actualIter.next()
                     matchedArg++
-                    continue
                 }
                 //参数不匹配
-                //无缺省参数或无下一形参
-                if (expectArg.defaultValue == null || !expectIter.hasNext()) {
-                    errors.add(
-                        DataTypeMismatchException(
-                            actualArg.expression,
-                            genericRealType ?: expectArg.dataType,
-                            actualArg.dataType
-                        )
-                    )
-                    errorInfos.add(errors)
-                    continue@outer
-                }
-                //有缺省参数
                 else {
-                    expectArg = expectIter.next()
+                    if (firstNoMatchArgType == null) {
+                        firstNoMatchArgType = genericRealType ?: expectArg.dataType
+                    }
+                    //无缺省参数或无下一形参
+                    if (expectArg.defaultValue == null || !expectIter.hasNext()) {
+                        errors.add(
+                            DataTypeMismatchException(
+                                actualArg.expression,
+                                firstNoMatchArgType,
+                                actualArg.dataType
+                            )
+                        )
+                        errorInfos.add(errors)
+                        continue@outer
+                    }
+                    //有缺省参数
+                    else {
+                        expectArg = expectIter.next()
+                        continue
+                    }
                 }
+
+                //无实参了
+                if (!actualIter.hasNext()) {
+                    while (expectIter.hasNext()) {
+                        //还有形参
+                        expectArg = expectIter.next()
+                        //无缺省值
+                        if (expectArg.defaultValue == null && !expectArg.vararg) {
+                            errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
+                            errorInfos.add(errors)
+                            continue@outer
+                        }
+                    }
+                    break
+                }
+                //无形参了
+                if (!expectIter.hasNext()) {
+                    //此处必然还有实参，那么如果不是可变参数，则不匹配
+                    if (!expectArg.vararg) {
+                        errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
+                        errorInfos.add(errors)
+                        continue@outer
+                    } else {
+                        actualArg = actualIter.next()!!
+                        continue
+                    }
+                }
+
+                expectArg = expectIter.next()
+                actualArg = actualIter.next()!!
             }
             matched.add(funcDefine)
         }

@@ -122,7 +122,7 @@ object FunctionDefinitionParser {
         childFunctions: Map<String, List<FunctionDefinition>>,
         parentFunctions: Map<String, List<FunctionDefinition>>
     ): Map<String, List<FunctionDefinition>> {
-        val functionMap = TreeMap(parentFunctions)
+        val functionMap = TreeMap(parentFunctions as SortedMap<String, List<FunctionDefinition>>)
         for ((thisFuncName, thisFuncList) in childFunctions) {
             val parentFuncList = functionMap[thisFuncName]
             if (parentFuncList == null) {
