@@ -66,12 +66,15 @@ class TestFormulaSuggest {
             FormulaHelper.of(RestrictColumn(emptyMap())).suggest("CEiL(abcd", "CEiL".length, SqlDialect.HIVE)
         log.info("suggestion9: {}", suggestion9)
         Assertions.assertEquals(2, suggestion9.suggestions.size)
-        Assertions.assertTrue(
-            suggestion9.suggestions[0].status == TokenStatus.UNKNOWN && suggestion9.suggestions[0].dataTypes.contains(
-                DataType.DECIMAL
-            )
-        )
+        Assertions.assertTrue(suggestion9.suggestions[0].status == TokenStatus.UNKNOWN)
+        Assertions.assertTrue(suggestion9.suggestions[0].dataTypes.contains(DataType.DECIMAL))
         Assertions.assertTrue(suggestion9.suggestions[1].scopes.contains(TokenItem.FUNCTION()) && suggestion9.suggestions[1].leftPart == "CEiL")
+
+        val suggestion10 = FormulaHelper.of(RestrictColumn(mapOf("dddd" to DataType.STRING))).suggest("abcd(dddd)", "abcd".length, SqlDialect.HIVE)
+        log.info("{}", suggestion10)
+        Assertions.assertEquals(1, suggestion10.suggestions.size)
+        Assertions.assertTrue(suggestion10.suggestions[0].status == TokenStatus.UNKNOWN)
+        Assertions.assertTrue(suggestion10.suggestions[0].scopes == setOf(TokenItem.FUNCTION("abcd")))
     }
 
     @Test
@@ -244,11 +247,19 @@ class TestFormulaSuggest {
         suggestion = FormulaHelper.of(RestrictColumn(mapOf("abcd" to DataType.STRING, "bcde" to DataType.STRING)))
             .suggest("GREATEST(abcd, bcde", "GREATEST(abc".length, SqlDialect.HIVE)
         log.info("{}", suggestion)
+        Assertions.assertEquals(2, suggestion.suggestions.size)
+        Assertions.assertTrue(suggestion.suggestions[0].status == TokenStatus.EXPECTED)
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.PARENTHESES(")")))
+        Assertions.assertTrue(suggestion.suggestions[1].leftPart == "abc")
+
+        suggestion = FormulaHelper.of(RestrictColumn(mapOf("abcd" to DataType.STRING, "bcde" to DataType.STRING)))
+            .suggest("GREATEST(abcd, bcde", "GREATEST(abcd, bcde".length, SqlDialect.HIVE)
+        log.info("{}", suggestion)
         Assertions.assertEquals(3, suggestion.suggestions.size)
         Assertions.assertTrue(suggestion.suggestions[0].status == TokenStatus.EXPECTED)
         Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.COMMA()))
         Assertions.assertTrue(suggestion.suggestions[1].scopes.contains(TokenItem.PARENTHESES(")")))
-        Assertions.assertTrue(suggestion.suggestions[2].leftPart == "abc")
+        Assertions.assertTrue(suggestion.suggestions[2].leftPart == "bcde")
 
         suggestion = FormulaHelper.of(RestrictColumn(mapOf("abcd" to DataType.STRING, "bcde" to DataType.DECIMAL)))
             .suggest("GREATEST(abcd, bcde", "GREATEST(abc".length, SqlDialect.HIVE)
@@ -349,22 +360,19 @@ class TestFormulaSuggest {
         suggestion = FormulaHelper.of(RestrictColumn(mapOf("abcd" to DataType.DATETIME, "bcde" to DataType.DATETIME)))
             .suggest("DATEDIFF(abcd, bcde, 'year') ", "DATEDIFF(abcd, bcde, 'yea".length, SqlDialect.HIVE)
         log.info("{}", suggestion)
-        Assertions.assertEquals(2, suggestion.suggestions.size)
+        Assertions.assertEquals(1, suggestion.suggestions.size)
         Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.CONSTANT("'year'")))
-        Assertions.assertEquals("DATEDIFF(abcd, bcde".length, suggestion.suggestions[0].start)
-        Assertions.assertEquals("DATEDIFF(abcd, bcde".length, suggestion.suggestions[0].stop)
+        Assertions.assertEquals("DATEDIFF(abcd, bcde， ".length, suggestion.suggestions[0].start)
+        Assertions.assertEquals("DATEDIFF(abcd, bcde， 'year'".length, suggestion.suggestions[0].stop)
 
         //todo with suggest string
         suggestion = FormulaHelper.of(RestrictColumn(mapOf("abcd" to DataType.DATETIME, "bcde" to DataType.DATETIME)))
             .suggest("DATEDIFF(abcd, bcde, 'yea) ", "DATEDIFF(abcd, bcde, 'yea".length, SqlDialect.HIVE)
         log.info("{}", suggestion)
-        Assertions.assertEquals(2, suggestion.suggestions.size)
+        Assertions.assertEquals(1, suggestion.suggestions.size)
         Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.CONSTANT("'year'")))
-        Assertions.assertEquals(
-            "DATEDIFF(abcd, bcde".length, suggestion
-                .suggestions[0].start
-        )
-        Assertions.assertEquals("DATEDIFF(abcd, bcde".length, suggestion.suggestions[0].stop)
+        Assertions.assertEquals("DATEDIFF(abcd, bcde, ".length, suggestion.suggestions[0].start)
+        Assertions.assertEquals("DATEDIFF(abcd, bcde, 'yea".length, suggestion.suggestions[0].stop)
     }
 
     @Test
@@ -419,7 +427,27 @@ class TestFormulaSuggest {
 
     @Test
     fun TestSuggestedArgFunction() {
+        var suggest: FormulaSuggestion
+        suggest = FormulaHelper.of(RestrictColumn(mapOf())).suggest("RANK_OVER(", "RANK_OVER(".length, SqlDialect.HIVE)
+        log.info("{}", suggest)
+        Assertions.assertEquals(1, suggest.suggestions.size)
+        Assertions.assertTrue(suggest.suggestions[0].scopes.contains(TokenItem.FUNCTION("PARTITION_BY")))
 
+        suggest = FormulaHelper.of(RestrictColumn(mapOf())).suggest("RANK_OVER(PARTITION_BY(", "RANK_OVER(PARTITION_BY(".length, SqlDialect.HIVE)
+        log.info("{}", suggest)
+        Assertions.assertEquals(2, suggest.suggestions.size)
+        Assertions.assertTrue(suggest.suggestions.any { it.scopes.contains(TokenItem.COLUMN()) })
+        Assertions.assertTrue(suggest.suggestions.any { it.scopes.contains(TokenItem.PARENTHESES(")")) })
+
+        suggest = FormulaHelper.of(RestrictColumn(mapOf())).suggest("RANK_OVER(PARTITION_BY()", "RANK_OVER(PARTITION_BY()".length, SqlDialect.HIVE)
+        log.info("{}", suggest)
+        Assertions.assertEquals(1, suggest.suggestions.size)
+        Assertions.assertTrue(suggest.suggestions[0].scopes.contains(TokenItem.COMMA()))
+
+        suggest = FormulaHelper.of(RestrictColumn(mapOf())).suggest("RANK_OVER(PARTITION_BY(),", "RANK_OVER(PARTITION_BY(),".length, SqlDialect.HIVE)
+        log.info("{}", suggest)
+        Assertions.assertEquals(1, suggest.suggestions.size)
+        Assertions.assertTrue(suggest.suggestions[0].scopes.contains(TokenItem.FUNCTION("ORDER_BY")))
     }
 
     @Test

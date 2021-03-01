@@ -14,35 +14,9 @@ import org.sunt.formula.suggestion.FormulaSuggestion
 import org.sunt.formula.suggestion.TokenSuggestion
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.List
-import kotlin.collections.MutableList
-import kotlin.collections.MutableMap
-import kotlin.collections.Set
-import kotlin.collections.all
-import kotlin.collections.any
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.emptyList
-import kotlin.collections.emptySet
-import kotlin.collections.first
-import kotlin.collections.flatMap
-import kotlin.collections.flatten
-import kotlin.collections.get
-import kotlin.collections.getOrNull
-import kotlin.collections.isNotEmpty
-import kotlin.collections.iterator
-import kotlin.collections.joinToString
-import kotlin.collections.map
-import kotlin.collections.minOrNull
-import kotlin.collections.mutableListOf
-import kotlin.collections.mutableMapOf
-import kotlin.collections.mutableSetOf
-import kotlin.collections.none
 import kotlin.collections.set
-import kotlin.collections.setOf
-import kotlin.collections.toMutableList
-import kotlin.collections.toSet
-import kotlin.collections.withIndex
 
 private typealias ExpectArgMap = MutableMap<FunctionDefinition, Set<FunctionDefinition.FunctionArgument>>
 private typealias GenericsMap = MutableMap<FunctionDefinition, MutableMap<String, DataType>>
@@ -79,14 +53,6 @@ class FormulaSuggestVisitor(
                 else null)?.toMutableList()
         //未匹配函数
         if (functionDefines == null || functionDefines.isEmpty()) {
-            val tokenSuggestion = TokenSuggestion.ofThis(functionNameNode).apply {
-                this.leftPart = functionNameNode.takeIf { isCursorToken(it) || isCursorTokenEnd(it) }
-                    ?.let { it.text.substring(0, cursor - it.symbol.startIndex) }
-                this.setScopes(TokenItem.FUNCTION())
-                this.status = TokenStatus.UNKNOWN
-                this.setDataTypes(currentDataTypeCandidates)
-            }
-            this.tokenSuggestions.add(tokenSuggestion)
             return StatementInfo(ctx).apply {
                 expression = ctx.text
                 token = TokenItem.FUNCTION()
@@ -97,6 +63,7 @@ class FormulaSuggestVisitor(
         //无参数
         if (ctx.functionParams() == null) {
             val firstArgs = functionDefines.map { it.arguments.getOrNull(0) }
+            var tokenStatus = TokenStatus.NORMAL
             for (firstArg in firstArgs) {
                 //存在无参函数或者单可变参数函数,且无右括号时，推荐右括号
                 if (firstArg == null || firstArg.vararg) {
@@ -109,31 +76,38 @@ class FormulaSuggestVisitor(
                                 comment = "期待')'"
                             }
                         this.tokenSuggestions.add(tokenSuggestion)
+                        tokenStatus = TokenStatus.EXPECTED
                     }
                     if (firstArg == null) continue
                 }
-                val tokenSuggestion = TokenSuggestion.ofNext(ctx.L_PARENTHESES()).apply {
-                    status = TokenStatus.EXPECTED
-                    setDataTypes(firstArg.dataType)
-                    if (firstArg.reserved.isNotEmpty()) {
-                        scopes = firstArg.reserved.map { TokenItem.RESERVED(it) }.toSet()
-                        comment = "期待关键词[${firstArg.reserved.joinToString(",")}]"
-                    } else if (firstArg.optionValues.isNotEmpty()) {
-                        scopes = firstArg.optionValues.map { TokenItem.CONSTANT(it.toString()) }.toSet()
-                        comment = "期待选项[${firstArg.optionValues.joinToString(",")}]"
-                    } else if (firstArg.constant) {
-                        scopes = setOf(TokenItem.NONE())
-                        comment = "期待${firstArg.dataType}类型常量"
-                    } else {
-                        scopes = setOf(TokenItem.FUNCTION(), TokenItem.COLUMN())
+                //当前非可变参数，或者光标在此时，才推荐参数
+                if (!firstArg.vararg || isCursorTokenEnd(ctx.L_PARENTHESES())) {
+                    val tokenSuggestion = TokenSuggestion.ofNext(ctx.L_PARENTHESES()).apply {
+                        status = TokenStatus.EXPECTED
+                        setDataTypes(firstArg.dataType)
+                        if (firstArg.reserved.isNotEmpty()) {
+                            scopes = firstArg.reserved.map { TokenItem.RESERVED(it) }.toSet()
+                            comment = "期待关键词[${firstArg.reserved.joinToString(",")}]"
+                        } else if (firstArg.optionValues.isNotEmpty()) {
+                            scopes = firstArg.optionValues.map { TokenItem.CONSTANT(it.toString()) }.toSet()
+                            comment = "期待选项[${firstArg.optionValues.joinToString(",")}]"
+                        } else if (firstArg.constant) {
+                            scopes = setOf(TokenItem.NONE())
+                            comment = "期待${firstArg.dataType}类型常量"
+                        } else if (firstArg.suggest != TokenItem.NONE()) {
+                            scopes = setOf(firstArg.suggest)
+                        } else {
+                            scopes = setOf(TokenItem.FUNCTION(), TokenItem.COLUMN())
+                        }
                     }
+                    this.tokenSuggestions.add(tokenSuggestion)
+                    tokenStatus = TokenStatus.EXPECTED
                 }
-                this.tokenSuggestions.add(tokenSuggestion)
             }
             return StatementInfo(ctx).apply {
                 expression = ctx.text
                 token = TokenItem.FUNCTION(functionName)
-                status = TokenStatus.EXPECTED
+                status = tokenStatus
                 dataType = functionDefines[0].dataType
             }
         }
@@ -241,7 +215,9 @@ class FormulaSuggestVisitor(
                 visitStatement(paramCtx.statement())
             }
             result.add(paramStmt)
-
+            if (paramStmt.status.privilege >= TokenStatus.UNKNOWN.privilege) {
+                continue
+            }
             val currentFunctionsIter = this.currentFunctionCandidates.iterator()
             for (candidate in currentFunctionsIter) {
                 val expectArg = candidate.arguments.getOrNull(index) ?: continue
@@ -280,9 +256,10 @@ class FormulaSuggestVisitor(
             val noneVararg = expectArgs.none { it.vararg }
             if (!hasComma) {
                 //推荐,的情况
+                //0,前面的参数无错误，如 CONCAT(TO_STRING(abc
                 //1,存在非可变参数
                 //2,可变参数，且光标处于当前位置
-                if (noneVararg || isCursorTokenEnd(ctx.functionParam(lastUnVisitedArg - 1).stop)) {
+                if ((result.last().status.privilege < TokenStatus.EXPECTED.privilege) && (noneVararg || isCursorTokenEnd(ctx.functionParam(lastUnVisitedArg - 1).stop))) {
                     tokenSuggestions.add(TokenSuggestion.ofNext(ctx.functionParam(lastUnVisitedArg - 1).stop).apply {
                         status = TokenStatus.EXPECTED
                         scopes = setOf(TokenItem.COMMA())
@@ -309,6 +286,8 @@ class FormulaSuggestVisitor(
                                 .toSet()
                     } else if (expectArgs.any { it.suggest != TokenItem.NONE() }) {
                         scopes = setOf(expectArgs.first { it.suggest != TokenItem.NONE() }.suggest)
+                    } else if (expectArgs.any { it.constant }) {
+                        comment = "期待${expectArgs[0]}类型常量"
                     } else {
                         scopes = functionAndColumn
                     }
@@ -344,32 +323,31 @@ class FormulaSuggestVisitor(
                 this.tokenSuggestions.add(TokenSuggestion.ofThis(identity).apply {
                     scopes = currentOptValueCandidates.map { TokenItem.RESERVED(it) }.toSet()
                     dataTypes = setOf(DataType.ANY)
-                    status = TokenStatus.EXPECTED
+                    status = TokenStatus.UNKNOWN
                     comment = "期待[" + currentOptValueCandidates.joinToString(", ") + "]"
                     leftPart = identity.takeIf { isCursorToken(it) || isCursorTokenEnd(it) }
                         ?.let { it.text.substring(0, cursor - it.symbol.startIndex) }
                 })
-                return StatementInfo(ctx).apply {
-                    status = TokenStatus.EXPECTED
-                    dataType = DataType.ANY
-                    expression = text
-                }
-            } else {
-                val tokenSuggestion = TokenSuggestion.ofThis(identity).apply {
-                    scopes = functionAndColumn
-                    dataTypes = currentDataTypeCandidates
-                    status = TokenStatus.UNKNOWN
-                    comment = "未识别的内容:$text"
-                    leftPart = identity.takeIf { isCursorToken(it) || isCursorTokenEnd(it) }
-                        ?.let { it.text.substring(0, cursor - it.symbol.startIndex) }
-                }
-                this.tokenSuggestions.add(tokenSuggestion)
-                return StatementInfo(ctx).apply {
-                    status = TokenStatus.UNKNOWN
-                    dataType = DataType.NONE
-                    expression = text
+            }
+            val tokenSuggestion = TokenSuggestion.ofThis(identity).apply {
+                scopes = if (ctx.parent is FunctionStatementContext) setOf(TokenItem.FUNCTION(text)) else functionAndColumn
+                dataTypes = currentDataTypeCandidates
+                status = TokenStatus.UNKNOWN
+                comment = "未识别的内容:$text"
+                leftPart = identity.takeIf { isCursorToken(it) || isCursorTokenEnd(it) }
+                    ?.let { it.text.substring(0, cursor - it.symbol.startIndex) }
+            }
+            this.tokenSuggestions.add(tokenSuggestion)
+            return StatementInfo(ctx).apply {
+                status = TokenStatus.UNKNOWN
+                dataType = DataType.ANY
+                expression = text
+                if (ctx.parent is FunctionStatementContext) {
+                    token = TokenItem.FUNCTION(text)
+                    payload = emptyList<FunctionDefinition>()
                 }
             }
+
         } else if (isColName) {
             rewriter.replace(ctx.start, ctx.stop, convertColumnExpression(column!!))
         }
@@ -429,6 +407,20 @@ class FormulaSuggestVisitor(
                 }
             }
         }
+    }
+
+    override fun visitConstant(ctx: ConstantContext): StatementInfo {
+        if (isCursorToken(ctx.start) || isCursorTokenEnd(ctx.start)) {
+            if (currentOptValueCandidates.isNotEmpty()) {
+                this.tokenSuggestions.add(TokenSuggestion.ofThis(ctx).apply {
+                    status = TokenStatus.NORMAL
+                    scopes = currentOptValueCandidates.map { TokenItem.CONSTANT(it) }.toSet()
+                    dataTypes = currentDataTypeCandidates
+                    comment = "期待[${currentOptValueCandidates.joinToString(", ")}]常量"
+                })
+            }
+        }
+        return super.visitConstant(ctx)
     }
 
     override fun visitMathExpression(ctx: MathExpressionContext): StatementInfo {
