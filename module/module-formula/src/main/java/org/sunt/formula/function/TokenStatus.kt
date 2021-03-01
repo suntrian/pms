@@ -2,9 +2,6 @@ package org.sunt.formula.function
 
 enum class TokenStatus(val privilege: Int) : Comparable<TokenStatus> {
 
-    //正常
-    NORMAL(1),
-
     //错误(语法错误）
     ERROR(5),
 
@@ -16,6 +13,9 @@ enum class TokenStatus(val privilege: Int) : Comparable<TokenStatus> {
 
     //提示
     INFO(2),
+
+    //正常
+    NORMAL(1),
 
     //无
     NONE(0);

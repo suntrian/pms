@@ -192,10 +192,39 @@ class FunctionDefinition(val funcName: String) {
             }
         }
 
+        fun getOrNull(index: Int): FunctionArgument? {
+            return try {
+                get(index)
+            } catch (e: IndexOutOfBoundsException) {
+                return null
+            }
+        }
+
+        fun getOrElse(index: Int, defaultValue: (Int) -> FunctionArgument?): FunctionArgument? {
+            return getOrNull(index) ?: defaultValue(index)
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is FunctionArgumentList) return false
+            if (arguments.size != other.arguments.size) return false
+            val thisIter = arguments.iterator()
+            val otherIter = other.arguments.iterator()
+            while (thisIter.hasNext() && otherIter.hasNext()) {
+                if (thisIter.next() != otherIter.next()) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return arguments.hashCode()
+        }
+
         companion object {
             val emptyList = FunctionArgumentList(emptyList())
         }
-
     }
 
     class FunctionImplement(private val funcName: String, private val implement: String) : FunctionTranslator {

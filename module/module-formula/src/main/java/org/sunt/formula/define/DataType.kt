@@ -4,9 +4,9 @@ import java.io.Serializable
 import java.util.regex.Pattern
 
 class DataType private constructor(
-    private val name: String,
-    private val parentType: DataType? = ANY,
-    private val genericType: List<DataType> = emptyList()
+    val name: String,
+    val parentType: DataType? = ANY,
+    val genericType: List<DataType> = emptyList()
 ) : Serializable {
 
     fun name(): String = name

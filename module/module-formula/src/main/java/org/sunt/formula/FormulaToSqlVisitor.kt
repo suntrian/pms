@@ -1,11 +1,11 @@
 package org.sunt.formula
 
+import org.antlr.v4.runtime.TokenStreamRewriter
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.exception.*
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.function.StatementInfo
-import org.sunt.formula.function.TokenStatus
 import org.sunt.formula.parser.FormulaParser.*
 import java.util.*
 import kotlin.Comparator
@@ -14,8 +14,9 @@ import kotlin.collections.HashMap
 
 class FormulaToSqlVisitor(
     product: SqlDialect,
-    columnInterface: ColumnInterface
-) : AbstractFormulaVisitor(product, columnInterface) {
+    columnInterface: ColumnInterface,
+    rewriter: TokenStreamRewriter
+) : AbstractFormulaVisitor(product, columnInterface, rewriter) {
 
     override fun visitFormula(ctx: FormulaContext): StatementInfo {
         return visitStatement(ctx.statement())
@@ -80,10 +81,6 @@ class FormulaToSqlVisitor(
         inStmt.dataType = DataType.BOOLEAN
         inStmt.status = status
         return inStmt
-    }
-
-    override fun visitCaseExpression(ctx: CaseExpressionContext): StatementInfo {
-        return visitCaseStatement(ctx.caseStatement())
     }
 
     override fun visitMathExpression(ctx: MathExpressionContext): StatementInfo {
@@ -172,10 +169,6 @@ class FormulaToSqlVisitor(
         return stmt
     }
 
-    override fun visitIfExpression(ctx: IfExpressionContext): StatementInfo {
-        return visitIfSpecial(ctx.ifSpecial())
-    }
-
     override fun visitIfnullExpression(ctx: IfnullExpressionContext): StatementInfo {
         checkArgSize(ctx.statement(), 2)
         val left = visitStatement(ctx.statement(0))
@@ -183,16 +176,10 @@ class FormulaToSqlVisitor(
         val stmt = StatementInfo(ctx)
         stmt.dataType = left.dataType
         stmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
-        val exprBuilder = StringBuilder()
-        if (ctx.statement(0) !is IfnullExpressionContext) {
-            exprBuilder.append("COALESCE(").append(left.expression).append(", ").append(right.expression)
-        } else {
-            exprBuilder.append(left.expression).append(", ").append(right.expression)
-        }
+        stmt.expression = left.expression + ", " + right.expression
         if (ctx.parent !is IfnullExpressionContext) {
-            exprBuilder.append(")")
+            stmt.expression = "COALESCE(${stmt.expression})"
         }
-        stmt.expression = exprBuilder.toString()
         return stmt
     }
 
@@ -209,30 +196,11 @@ class FormulaToSqlVisitor(
         return likeStmt
     }
 
-    override fun visitSquareExpression(ctx: SquareExpressionContext): StatementInfo {
-        val statements = ctx.statements()?.let { visitStatements(it) } ?: emptyList()
-        val result = StatementInfo(ctx)
-        with(result) {
-            expression = statements.joinToString(", ") { it.expression }
-            status = statements.map { it.status }.maxByOrNull { it.privilege } ?: TokenStatus.NORMAL
-            val commonDataType = DataType.commonType(statements.map { it.dataType })
-            dataType = DataType.of("List<${commonDataType}>")
-        }
-        return result
-    }
-
-    override fun visitStatements(ctx: StatementsContext): List<StatementInfo> {
-        return ctx.statement().map { visitStatement(it) }
-    }
-
-    override fun visitFunctionExpression(ctx: FunctionExpressionContext): StatementInfo {
-        return visitFunctionStatement(ctx.functionStatement())
-    }
-
     override fun visitFunctionStatement(ctx: FunctionStatementContext): StatementInfo {
-        val funcName = ctx.IDENTITY().text
-        val functionDefines = this.functionMap[funcName] ?: this.functionMap[this.aliasFunctionNameMap[funcName]]
-        ?: throw IllegalStateException("函数${funcName}不存在")
+        val funcName = ctx.identity().text
+        val functionDefines = (this.functionMap[funcName]
+            ?: this.aliasFunctionNameMap[funcName]?.let { this.functionMap[it] })?.toMutableList()
+            ?: throw IllegalStateException("函数${funcName}不存在")
 
         val params =
             recordCurrent(functionDefines, functionDefines.flatMap { it.arguments }.flatMap { it.reserved }.toSet()) {
@@ -286,7 +254,7 @@ class FormulaToSqlVisitor(
         }
         exprBuilder.append(" END ")
         if (stmts.map { it.dataType }.distinct().count() > 1) {
-            logger.warn("CASE表达式多个条件返回的数据类型不一致")
+            log.warn("CASE表达式多个条件返回的数据类型不一致")
         }
         val caseStmt = StatementInfo(ctx)
         caseStmt.expression = exprBuilder.toString()
@@ -317,7 +285,7 @@ class FormulaToSqlVisitor(
         }
         exprBuilder.append(" END ")
         if (stmts.map { it.dataType }.distinct().count() > 1) {
-            logger.warn("CASE表达式多个条件返回的数据类型不一致")
+            log.warn("IF表达式多个条件返回的数据类型不一致")
         }
         val ifStmt = StatementInfo(ctx)
         ifStmt.dataType = stmts[0].dataType

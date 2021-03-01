@@ -1,19 +1,21 @@
 package org.sunt.formula.suggestion
 
+import org.antlr.v4.runtime.ParserRuleContext
+import org.antlr.v4.runtime.Token
+import org.antlr.v4.runtime.tree.TerminalNode
 import org.sunt.formula.define.DataType
 import org.sunt.formula.function.TokenItem
 import org.sunt.formula.function.TokenStatus
 
-class TokenSuggestion(
+class TokenSuggestion constructor(
     val text: String,
+    val tokenIndex: Int,
     val start: Int,
-    stop: Int
+    val stop: Int
 ) {
-    val stop = stop + 1;
-
     var comment: String = ""
     var status: TokenStatus = TokenStatus.NORMAL
-    var leftPart: String = ""
+    var leftPart: String? = null
     var scopes: Set<TokenItem> = emptySet()
     var dataTypes: Set<DataType> = emptySet()
 
@@ -33,5 +35,40 @@ class TokenSuggestion(
         this.dataTypes = dataTypes.toSet()
     }
 
+    override fun toString(): String {
+        return "TokenSuggestion(text='$text', tokenIndex=$tokenIndex, start=$start, stop=$stop, comment='$comment', status=$status, leftPart=$leftPart, scopes=$scopes, dataTypes=$dataTypes)"
+    }
+
+
+    companion object {
+
+        @JvmStatic
+        internal fun ofThis(token: Token): TokenSuggestion {
+            return TokenSuggestion(token.text, token.tokenIndex, token.startIndex, token.stopIndex + 1)
+        }
+
+        @JvmStatic
+        internal fun ofThis(node: TerminalNode): TokenSuggestion {
+            return ofThis(node.symbol)
+        }
+
+        @JvmStatic
+        internal fun ofThis(ctx: ParserRuleContext): TokenSuggestion {
+            return TokenSuggestion(ctx.text, ctx.start.tokenIndex, ctx.start.startIndex, ctx.stop.stopIndex + 1)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        internal fun ofNext(node: TerminalNode, text: String = ""): TokenSuggestion {
+            return ofNext(node.symbol, text)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        internal fun ofNext(token: Token, text: String = ""): TokenSuggestion {
+            return TokenSuggestion(text, token.tokenIndex, token.stopIndex + 1, token.stopIndex + 1)
+        }
+
+    }
 
 }

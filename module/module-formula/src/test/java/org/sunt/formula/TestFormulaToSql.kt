@@ -4,19 +4,15 @@ import org.junit.jupiter.api.Test
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
 import org.sunt.formula.define.SqlDialect
-import org.sunt.formula.support.TestColumn
+import org.sunt.formula.support.AllMatchColumn
 
 class TestFormulaToSql {
 
-    private fun getColumnByName(id: String, dataType: DataType): IColumn {
-        println("请求字段NAME:${id}")
-        return TestColumn(id, dataType)
-    }
+    private fun getColumnByName(id: String, dataType: DataType): IColumn? =
+        AllMatchColumn(mapOf(id to dataType)).getColumnByName(id)
 
-    private fun getColumnById(id: String, dataType: DataType): IColumn? {
-        println("请求字段ID:${id}")
-        return TestColumn(id, dataType)
-    }
+    private fun getColumnById(id: String, dataType: DataType): IColumn? =
+        AllMatchColumn(mapOf(id to dataType)).getColumnById(id)
 
 
     @Test

@@ -1,6 +1,9 @@
 package org.sunt.formula.function;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class TokenItem {
 
@@ -53,6 +56,7 @@ public class TokenItem {
     }
 
     public static TokenItem PARENTHESES(String text) {
+        //checkText(text, "(", ")");
         return new TokenItem(TokenScope.PARENTHESES, text);
     }
 
@@ -60,7 +64,12 @@ public class TokenItem {
         return new TokenItem(TokenScope.BRACE, text);
     }
 
+    public static TokenItem SQUARE(String text) {
+        return new TokenItem(TokenScope.SQUARE, text);
+    }
+
     public static TokenItem CAL_OPERATOR(String text) {
+        //checkText(text, "+", "-", "*", "/", "%");
         return new TokenItem(TokenScope.CAL_OPERATOR, text);
     }
 
@@ -114,6 +123,16 @@ public class TokenItem {
 
     public String getText() {
         return text;
+    }
+
+    private static void checkText(String text, Set<String> options) {
+        if (!options.contains(text)) {
+            throw new IllegalArgumentException("错误的文本内容[" + text + "],要求为[" + String.join(",", options) + "]");
+        }
+    }
+
+    private static void checkText(String text, String... options) {
+        checkText(text, new HashSet<>(Arrays.asList(options)));
     }
 
     @Override

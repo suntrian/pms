@@ -7,12 +7,12 @@ import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.misc.IntervalSet
 
 class SyntaxError(
-    val recognizer: Recognizer<*, *>?,
+    val recognizer: Recognizer<*, *>,
     offendingSymbols: Token?,
     val line: Int,
     val charPositionInLine: Int,
     val message: String?,
-    val expectTokens: IntervalSet?,
+    val expectTokens: IntervalSet,
     val e: RecognitionException?
 ) {
 

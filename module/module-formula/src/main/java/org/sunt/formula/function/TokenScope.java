@@ -11,5 +11,6 @@ public enum TokenScope {
     LOG_OPERATOR,   //逻辑运算符
     PARENTHESES,    //括号
     BRACE,        //大括号
+    SQUARE,         //中括号
     COMMA;          //逗号
 }

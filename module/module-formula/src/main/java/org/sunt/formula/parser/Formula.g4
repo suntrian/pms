@@ -30,7 +30,7 @@ statement
     ;
 
 functionStatement
-    : IDENTITY
+    : identity
     L_PARENTHESES
     functionParams?
     R_PARENTHESES
@@ -42,7 +42,7 @@ functionParams
 
 functionParam
     : statement
-    | IDENTITY EQUAL statement
+    | identity EQUAL statement
     ;
 
 statements
@@ -99,7 +99,11 @@ constant
 column
     : COLUMN_ID         # columnId
     | COLUMN_NAME       # columnName
-    | IDENTITY          # identity
+    | identity          # columnIdentity
+    ;
+
+identity
+    : IDENTITY
     ;
 
 L_PARENTHESES: '(';
@@ -158,6 +162,7 @@ BLOCK_COMMENT: '/*' .*? '*/'    -> channel(HIDDEN);
 fragment DOT:               '.';
 fragment BACK_QUOTE:        '`';
 fragment SHARP:             '#';
+fragment AT:                '@';
 fragment SIGN:              [+-];
 fragment ESC_DQUOTE:        '\\"' | '\\\\';
 fragment ESC_SQUOTE:        '\\\'' | '\\\\';
