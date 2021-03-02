@@ -212,7 +212,7 @@ class FormulaToSqlVisitor(
         funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege }!!
         funcStmt.dataType =
             if (finalFunctionDefine.typeParamIndex != null) filledParams[finalFunctionDefine.typeParamIndex!!]!!.dataType else finalFunctionDefine.dataType
-        funcStmt.expression = finalFunctionDefine.translate(filledParams)
+        funcStmt.expression = finalFunctionDefine.translate(this.dialect, filledParams)
 
         return funcStmt
     }

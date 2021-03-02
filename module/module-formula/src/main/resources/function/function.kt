@@ -311,7 +311,7 @@ YEAR
     """
     )
     @Category("时间函数")
-    @Translate("YEAR($1)")
+    @Translate("", DateFunctionTranslator::class, "YEAR")
     fun YEAR(date: Any): Int
 
     @Description(
@@ -327,7 +327,7 @@ QUARTER
     """
     )
     @Category("时间函数")
-    @Translate("QUARTER($1)")
+    @Translate("", DateFunctionTranslator::class, "QUARTER")
     fun QUARTER(date: Any): Int
 
     @Description(
@@ -343,7 +343,7 @@ MONTH
     """
     )
     @Category("时间函数")
-    @Translate("MONTH($1)")
+    @Translate("", DateFunctionTranslator::class, "MONTH")
     fun MONTH(date: Any): Int
 
     @Description(
@@ -359,7 +359,7 @@ WEEK
     """
     )
     @Category("时间函数")
-    @Translate("WEEKOFYEAR($1)")
+    @Translate("", DateFunctionTranslator::class, "WEEK")
     @Alias("WEEKOFYEAR")
     fun WEEK(date: Any): Int
 
@@ -376,7 +376,7 @@ DAY
     """
     )
     @Category("时间函数")
-    @Translate("DAY($1)")
+    @Translate("", DateFunctionTranslator::class, "DAY")
     @Alias("DAYOFMONTH")
     fun DAY(date: Any): Int
 
@@ -430,6 +430,20 @@ TO_DATE
     @Category("时间函数")
     @Translate("FROM_TIMESTAMP(CAST($1 as timestamp), $2)")
     fun TO_DATE(text: String, format: String): Date
+
+    @Description(
+        """
+DATE_FORMAT
+    1. 用法： DATE_FORMAT(field: Date, format: String)
+    2. 说明： 把field时间字段按format格式化输出
+    3. 示例： DATE_FORMAT('1999-12-31’, 'yyyy-MM') = '1999-12'
+    4. 参数： field: Date/DateTime类型参数，含format的String和Int类型
+             format: 文本类型时间格式，如 yyyy-MM-dd HH:mm:ss 
+    """
+    )
+    @Category("时间函数")
+    @Translate("", DateFunctionTranslator::class, "DATE_FORMAT")
+    fun DATE_FORMAT(field: Any, format: String): String
 
     @Description(
         """

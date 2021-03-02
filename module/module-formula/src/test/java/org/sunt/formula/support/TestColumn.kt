@@ -13,11 +13,15 @@ class TestColumn : IColumn {
 
     private val dataType: DataType
 
-    constructor(id: String, name: String, expression: String, dataType: DataType) {
+    private val format: String
+
+    @JvmOverloads
+    constructor(id: String, name: String, expression: String, dataType: DataType, format: String = "") {
         this.id = id
         this.name = name
         this.expression = expression
         this.dataType = dataType
+        this.format = format
     }
 
     override fun getId(): String {
@@ -34,5 +38,9 @@ class TestColumn : IColumn {
 
     override fun getDataType(): DataType {
         return this.dataType
+    }
+
+    override fun getFormat(): String {
+        return this.format
     }
 }

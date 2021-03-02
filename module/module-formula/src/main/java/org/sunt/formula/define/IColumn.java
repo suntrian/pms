@@ -10,4 +10,6 @@ public interface IColumn {
 
     DataType getDataType();
 
+    String getFormat();
+
 }

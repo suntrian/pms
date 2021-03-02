@@ -3,6 +3,7 @@ package org.sunt.formula.function
 import bsh.EvalError
 import bsh.Interpreter
 import org.sunt.formula.define.DataType
+import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.function.parser.FunctionTranslator
 import java.util.regex.Pattern
 
@@ -41,8 +42,8 @@ class FunctionDefinition(val funcName: String) {
         this.functionImplement = FunctionImplement(this.funcName, translatorClass, constructArgs)
     }
 
-    fun translate(params: List<StatementInfo?>): String {
-        return this.functionImplement?.translate(this.arguments, params) ?: ""
+    fun translate(dialect: SqlDialect, params: List<StatementInfo?>): String {
+        return this.functionImplement?.translate(dialect, this.arguments, params) ?: ""
     }
 
     override fun equals(other: Any?): Boolean {
@@ -237,17 +238,18 @@ class FunctionDefinition(val funcName: String) {
 
         override fun translate(
             funcName: String,
+            dialect: SqlDialect,
             expectArgs: List<FunctionArgument>,
             actualArgs: List<StatementInfo?>
         ): String {
             return Companion.translate(this.funcName, this.implement, expectArgs, actualArgs.map { it?.expression })
         }
 
-        fun translate(expectArgs: List<FunctionArgument>, actualArgs: List<StatementInfo?>): String {
+        fun translate(dialect: SqlDialect, expectArgs: List<FunctionArgument>, actualArgs: List<StatementInfo?>): String {
             return if (this.implement.isNotBlank()) {
                 Companion.translate(funcName, implement, expectArgs, actualArgs.map { it?.expression })
             } else if (this.translator != null) {
-                this.translator!!.translate(funcName, expectArgs, actualArgs)
+                this.translator!!.translate(funcName, dialect, expectArgs, actualArgs)
             } else throw IllegalStateException("${funcName}未提供转换SQL方法")
         }
 

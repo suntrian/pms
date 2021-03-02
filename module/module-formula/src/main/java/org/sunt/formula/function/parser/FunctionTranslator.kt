@@ -1,5 +1,9 @@
 package org.sunt.formula.function.parser
 
+import org.sunt.formula.FormulaHelper
+import org.sunt.formula.define.DataType
+import org.sunt.formula.define.IColumn
+import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.function.StatementInfo
 import java.util.regex.Pattern
@@ -14,6 +18,7 @@ interface FunctionTranslator {
      */
     fun translate(
         funcName: String,
+        dialect: SqlDialect,
         expectArgs: List<FunctionDefinition.FunctionArgument>,
         actualArgs: List<StatementInfo?>
     ): String
@@ -56,6 +61,7 @@ interface FunctionTranslator {
 object EmptyTranslator : FunctionTranslator {
     override fun translate(
         funcName: String,
+        dialect: SqlDialect,
         expectArgs: List<FunctionDefinition.FunctionArgument>,
         actualArgs: List<StatementInfo?>
     ): String {
@@ -67,6 +73,7 @@ data class PartitionOrderTranslator(val funcName: String) : FunctionTranslator {
 
     override fun translate(
         funcName: String,
+        dialect: SqlDialect,
         expectArgs: List<FunctionDefinition.FunctionArgument>,
         actualArgs: List<StatementInfo?>
     ): String {
@@ -86,6 +93,7 @@ data class PreDefinedPartitionOrderTranslator(val expression: String, val partit
 
     override fun translate(
         funcName: String,
+        dialect: SqlDialect,
         expectArgs: List<FunctionDefinition.FunctionArgument>,
         actualArgs: List<StatementInfo?>
     ): String {
@@ -113,6 +121,7 @@ data class PreDefinedPartitionOrderFrameTranslator(
 ) : FunctionTranslator {
     override fun translate(
         funcName: String,
+        dialect: SqlDialect,
         expectArgs: List<FunctionDefinition.FunctionArgument>,
         actualArgs: List<StatementInfo?>
     ): String {
@@ -177,6 +186,7 @@ data class LagLeadTranslator(val funcName: String) : FunctionTranslator {
 
     override fun translate(
         funcName: String,
+        dialect: SqlDialect,
         expectArgs: List<FunctionDefinition.FunctionArgument>,
         actualArgs: List<StatementInfo?>
     ): String {
@@ -209,6 +219,93 @@ data class LagLeadTranslator(val funcName: String) : FunctionTranslator {
 
 }
 
+class DateFunctionTranslator(funcName: String) : FunctionTranslator {
+    private val function = funcName.toUpperCase()
+
+    override fun translate(funcName: String, dialect: SqlDialect, expectArgs: List<FunctionDefinition.FunctionArgument>, actualArgs: List<StatementInfo?>): String {
+        if ("DATE_FORMAT" == function && (actualArgs.size != 2 || actualArgs.any { it == null })) {
+            throw IllegalStateException("${function}要求两个参数")
+        } else if (actualArgs.size != 1 || actualArgs[0] == null) {
+            throw IllegalStateException("${function}要求一个参数")
+        }
+        val field = actualArgs[0]!!
+        var expression = field.expression
+        if (field.dataType == DataType.DATE || field.dataType == DataType.DATETIME) {
+            return when (this.function) {
+                "YEAR" -> "YEAR(${expression})"
+                "QUARTER" -> "QUARTER(${expression})"
+                "MONTH" -> "MONTH(${expression})"
+                "WEEK" -> "WEEKOFYEAR(${expression})"
+                "DAY" -> "DAY(${expression})"
+                "DATE_FORMAT" -> {
+                    val format = actualArgs[1]!!.expression
+                    //TODO
+                    ""
+                }
+                else -> throw IllegalStateException("不支持的函数${this.function}")
+            }
+        } else if (field.dataType != DataType.INTEGER && field.dataType != DataType.STRING) {
+            throw IllegalStateException("${field.dataType}不是有效的时间字段")
+        }
+        var format: String = ""
+        if (field.payload !is IColumn || (field.payload as IColumn).format?.also { format = it }?.isBlank() != false) {
+            throw IllegalStateException("${expression}未配置时间格式")
+        }
+        if (field.dataType == DataType.INTEGER) {
+            expression = "TO_STRING(${expression})"
+        }
+        var start: Int = 0
+        val transform = when (this.function) {
+            "YEAR" -> {
+                if (format.indexOf('y').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${format.indexOf('y') + 1}, ${format.count { it == 'y' }}))"
+                } else {
+                    throw IllegalStateException("${format}无法转换为年")
+                }
+            }
+            "QUARTER" -> {
+                if (format.indexOf('q').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'q' }}))"
+                } else if (format.indexOf('M').also { start = it } >= 0) {
+                    "CEILING(TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'M' }}))/3)"
+                } else {
+                    throw IllegalStateException("${format}无法转换为季度")
+                }
+            }
+            "MONTH" -> {
+                if (format.indexOf('M').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'M' }}))"
+                } else {
+                    throw IllegalStateException("${format}无法转换为月")
+                }
+            }
+            "WEEK" -> {
+                if (format.indexOf('w').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'w' }}))"
+                } else if (format.contains('y') && format.contains('M') && format.contains('d')) {
+                    "WEEK(TO_DATE(${expression}, ${format}))"
+                } else {
+                    throw IllegalStateException("${format}无法转换为周")
+                }
+            }
+            "DAY" -> {
+                if (format.indexOf('d').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'd' }}))"
+                } else {
+                    throw IllegalStateException("${format}无法转换为天")
+                }
+            }
+            "DATE_FORMAT" -> {
+                //TODO
+                ""
+            }
+            else -> throw IllegalStateException("不支持的函数${this.function}")
+        }
+        return FormulaHelper.ofCurrent().toSql(transform, dialect).expression
+    }
+
+}
+
 object RawSqlTranslator : FunctionTranslator {
 
     private const val MaxArgSize = 10
@@ -216,6 +313,7 @@ object RawSqlTranslator : FunctionTranslator {
 
     override fun translate(
         funcName: String,
+        dialect: SqlDialect,
         expectArgs: List<FunctionDefinition.FunctionArgument>,
         actualArgs: List<StatementInfo?>
     ): String {

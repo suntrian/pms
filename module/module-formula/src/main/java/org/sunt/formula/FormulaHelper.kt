@@ -14,28 +14,41 @@ import org.sunt.formula.suggestion.SuggestErrorStrategy
 class FormulaHelper private constructor(private val columnInterface: ColumnInterface) {
 
     fun toSql(expression: String, vendor: SqlDialect): StatementInfo {
-        val lexer = FormulaLexer(CharStreams.fromString(expression))
-        val tokens = CommonTokenStream(lexer)
-        val rewriter = TokenStreamRewriter(tokens)
-        val parser = FormulaParser(tokens)
-        val toSqlVisitor = FormulaToSqlVisitor(vendor, columnInterface, rewriter)
-        return toSqlVisitor.visitFormula(parser.formula())
+        try {
+            CurrentContainer.set(this)
+            val lexer = FormulaLexer(CharStreams.fromString(expression))
+            val tokens = CommonTokenStream(lexer)
+            val rewriter = TokenStreamRewriter(tokens)
+            val parser = FormulaParser(tokens)
+            val toSqlVisitor = FormulaToSqlVisitor(vendor, columnInterface, rewriter)
+            return toSqlVisitor.visitFormula(parser.formula())
+        } finally {
+            CurrentContainer.remove()
+        }
     }
 
     fun suggest(expression: String, cursor: Int, vendor: SqlDialect): FormulaSuggestion {
-        val lexer = FormulaLexer(CharStreams.fromString(expression))
-        val tokens = CommonTokenStream(lexer)
-        val rewriter = TokenStreamRewriter(tokens)
-        val parser = FormulaParser(tokens)
-        val correctCursor = if (cursor < 0 || cursor > expression.length) expression.length else cursor
-        val suggestVisitor = FormulaSuggestVisitor(vendor, columnInterface, rewriter, correctCursor)
-        parser.removeErrorListeners()
-        parser.addErrorListener(suggestVisitor)
-        parser.errorHandler = SuggestErrorStrategy()
-        return suggestVisitor.visitFormula(parser.formula())
+        try {
+            CurrentContainer.set(this)
+            val lexer = FormulaLexer(CharStreams.fromString(expression))
+            val tokens = CommonTokenStream(lexer)
+            val rewriter = TokenStreamRewriter(tokens)
+            val parser = FormulaParser(tokens)
+            val correctCursor = if (cursor < 0 || cursor > expression.length) expression.length else cursor
+            val suggestVisitor = FormulaSuggestVisitor(vendor, columnInterface, rewriter, correctCursor)
+            parser.removeErrorListeners()
+            parser.addErrorListener(suggestVisitor)
+            parser.errorHandler = SuggestErrorStrategy()
+            return suggestVisitor.visitFormula(parser.formula())
+        } finally {
+            CurrentContainer.remove()
+        }
+
     }
 
     companion object {
+
+        private val CurrentContainer = ThreadLocal<FormulaHelper>()
 
         @JvmStatic
         fun of(getColumnById: (String) -> IColumn?, getColumnByName: (String) -> IColumn?): FormulaHelper {
@@ -49,6 +62,10 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
         @JvmStatic
         fun of(columnInterface: ColumnInterface): FormulaHelper {
             return FormulaHelper(columnInterface)
+        }
+
+        internal fun ofCurrent(): FormulaHelper {
+            return CurrentContainer.get()
         }
 
     }
