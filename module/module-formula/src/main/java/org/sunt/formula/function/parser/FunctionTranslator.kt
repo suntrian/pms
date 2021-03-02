@@ -2,6 +2,7 @@ package org.sunt.formula.function.parser
 
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.function.StatementInfo
+import java.util.regex.Pattern
 
 
 interface FunctionTranslator {
@@ -41,6 +42,9 @@ interface FunctionTranslator {
                 }
                 LagLeadTranslator::class.simpleName -> {
                     LagLeadTranslator(args[0])
+                }
+                RawSqlTranslator::class.simpleName -> {
+                    RawSqlTranslator
                 }
                 else -> EmptyTranslator
             }
@@ -201,6 +205,60 @@ data class LagLeadTranslator(val funcName: String) : FunctionTranslator {
             orderBy = actualArgStrs.getOrNull(argSize - 1)
         )
         return builder.append(")").toString()
+    }
+
+}
+
+object RawSqlTranslator : FunctionTranslator {
+
+    private const val MaxArgSize = 10
+    private val ParamPattern = Pattern.compile("(?:,\\s*)?\\{\\s*(\\d+)\\s*}")
+
+    override fun translate(
+        funcName: String,
+        expectArgs: List<FunctionDefinition.FunctionArgument>,
+        actualArgs: List<StatementInfo?>
+    ): String {
+        val argSize = actualArgs.size
+        if (argSize == 0) {
+            throw IllegalStateException("函数RAW_SQL未提供数据库SQL方法参数")
+        }
+        val rawSql = actualArgs[0]?.expression?.trim('"', '\'')
+            ?: throw IllegalStateException("函数RAW_SQL未提供数据库SQL方法参数")
+        val matcher = ParamPattern.matcher(rawSql)
+        var lastArgIndex = 0
+        while (matcher.find()) {
+            val index = matcher.group(1).toInt()
+            if (index < 0 || index >= MaxArgSize) {
+                throw IllegalStateException("参数索引应在[0-${MaxArgSize - 1}]之间")
+            }
+            if (index + 1 > actualArgs.size) {
+                throw IllegalStateException("未提供{$index}参数")
+            }
+            if (index > lastArgIndex) lastArgIndex = index
+        }
+        matcher.reset()
+        val sqlBuffer = StringBuffer()
+        while (matcher.find()) {
+            val hasComma = matcher.group(0).startsWith(",")
+            val index = matcher.group(1).toInt()
+            var expression = try {
+                if (index == 0) {
+                    actualArgs.subList(lastArgIndex + 1, actualArgs.size).filterNotNull()
+                        .joinToString(", ") { it.expression }
+                } else {
+                    actualArgs[index]?.expression ?: ""
+                }
+            } catch (e: IndexOutOfBoundsException) {
+                throw IllegalStateException("未提供${index}参数")
+            }
+            if (hasComma && expression.isNotBlank()) {
+                expression = ", $expression"
+            }
+            matcher.appendReplacement(sqlBuffer, expression)
+        }
+        matcher.appendTail(sqlBuffer)
+        return sqlBuffer.toString()
     }
 
 }

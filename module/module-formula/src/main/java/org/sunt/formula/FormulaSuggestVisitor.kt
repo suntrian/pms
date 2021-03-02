@@ -576,7 +576,7 @@ class FormulaSuggestVisitor(
         val right = ctx.statement(1)?.let { visitStatement(it) }
         return StatementInfo(ctx).apply {
             dataType = left.dataType
-            status = if (right == null) TokenStatus.EXPECTED else minOf(left.status, right.status)
+            status = if (right == null) TokenStatus.EXPECTED else maxOf(left.status, right.status)
             expression = left.expression + ", " + (right?.expression ?: "")
             if (ctx.parent !is IfnullExpressionContext) {
                 expression = "COALESCE($expression)"

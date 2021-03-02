@@ -111,4 +111,41 @@ class TestFormulaToSql {
 
     }
 
+    @Test
+    fun testRawSql() {
+        val helper = FormulaHelper.of(AllMatchColumn(emptyMap()))
+
+        val map = mapOf(
+            "RAW_SQL('CONCAT({0})', abcd, bbbb, ccc, dddd)" to "CONCAT(abcd, bbbb, ccc, dddd)",
+            "RAW_SQL('CONCAT({1}, {2}, {3}, {0})', abcd, bbbb, ccc)" to "CONCAT(abcd, bbbb, ccc)",
+            "RAW_SQL(\"DATEDIFF({1}, {2}, {3})\", abcd, bcde, 'year')" to "DATEDIFF(abcd, bcde, 'year')"
+        )
+
+        for ((f, e) in map) {
+            println("FUNCTION: $f")
+            val stmt = helper.toSql(f, SqlDialect.HIVE)
+            println(stmt)
+            println("EXPECT: $e")
+            println("ACTUAL: " + stmt.expression)
+        }
+    }
+
+    @Test
+    fun testErrorRawSql() {
+        val helper = FormulaHelper.of(AllMatchColumn(emptyMap()))
+
+        val map = mapOf(
+            "RAW_SQL('CONCAT({    2     })', abcd, bbbb, ccc, dddd)" to "CONCAT(bbbb)",
+            "RAW_SQL('CONCAT({1}, {2}, {4}, {0})', abcd, bbbb, ccc)" to "CONCAT(abcd, bbbb, ccc)",
+            "RAW_SQL(\"DATEDIFF({1}, {2}, {4})\", abcd, bcde, 'year')" to "DATEDIFF(abcd, bcde, 'year')"
+        )
+
+        for ((f, e) in map) {
+            println("FUNCTION: $f")
+            val stmt = helper.toSql(f, SqlDialect.HIVE)
+            println(stmt)
+            println("EXPECT: $e")
+            println("ACTUAL: " + stmt.expression)
+        }
+    }
 }

@@ -8,6 +8,7 @@ import java.time.LocalTime
 typealias Date = LocalDate
 typealias Time = LocalTime
 typealias DateTime = LocalDateTime
+typealias None = Unit
 
 interface Common {
 
@@ -519,6 +520,23 @@ COALESCE
     @Category("其他函数")
     @Translate("COALESCE($0)")
     fun <T> COALESCE(one: T, vararg remain: T): T
+
+    @Description(
+        """
+RAW_SQL
+       1. 用法： RAW_SQL("raw_sql_funcion({1}, {2}, {3}, {0})", field1, field2, field3, field4, field5)
+                受限于使用的数据库函数参数，本函数不保证能正确推荐和使用
+       2. 说明： 返回第一个参数代表的数据库函数， {x}表示第x个参数(从1开始,0代表剩余的参数-用于变长参数情形)
+       3. 示例:  RAW_SQL("CONCAT({1}, {2}, {3}, {0})", field1, field2, field3, field4, field5) 
+                        = CONCAT(field1, field2, field3, field4, field5) 
+       4. 参数类型： param1: 字符串类型
+                   paramN: 任意类型
+    """
+    )
+    @Category("其他函数")
+    @Translate("", RawSqlTranslator::class)
+    fun RAW_SQL(sql: String, vararg args: Any): None
+
 
     @Description(
         """
