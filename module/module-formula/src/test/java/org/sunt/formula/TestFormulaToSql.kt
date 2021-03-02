@@ -1,5 +1,6 @@
 package org.sunt.formula
 
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
@@ -135,9 +136,41 @@ class TestFormulaToSql {
         val helper = FormulaHelper.of(AllMatchColumn(emptyMap()))
 
         val map = mapOf(
-            "RAW_SQL('CONCAT({    2     })', abcd, bbbb, ccc, dddd)" to "CONCAT(bbbb)",
+            "RAW_SQL('CONCAT({    100     })', abcd, bbbb, ccc, dddd)" to "CONCAT(bbbb)",
             "RAW_SQL('CONCAT({1}, {2}, {4}, {0})', abcd, bbbb, ccc)" to "CONCAT(abcd, bbbb, ccc)",
             "RAW_SQL(\"DATEDIFF({1}, {2}, {4})\", abcd, bcde, 'year')" to "DATEDIFF(abcd, bcde, 'year')"
+        )
+
+        for ((f, e) in map) {
+            println("FUNCTION: $f")
+            Assertions.assertThrows(IllegalStateException::class.java) {
+                val stmt = helper.toSql(f, SqlDialect.HIVE)
+                println(stmt)
+                println("EXPECT: $e")
+                println("ACTUAL: " + stmt.expression)
+            }
+        }
+    }
+
+    @Test
+    fun testDefaultArgFunction() {
+        val helper = FormulaHelper.of(
+            AllMatchColumn(
+                mapOf(
+                    "abcd" to DataType.DATETIME,
+                    "bcde" to DataType.DATETIME,
+                    "cdef" to DataType.STRING
+                )
+            )
+        )
+
+        val map = mapOf(
+            "TO_DOUBLE(cdef)" to "CAST(abcd as DECIMAL(38, 2))",
+            "DATEDIFF(abcd, bcde)" to "DATEDIFF(abcd, bcde)",
+            "DATEDIFF(abcd, bcde, 'day')" to "DATEDIFF(abcd, bcde)",
+            "DATEDIFF(abcd, bcde, 'year')" to "YEAR(abcd) - YEAR(bcde)",
+//            "DATEDIFF(abcd, bcde, \"year\")" to "YEAR(abcd) - YEAR(bcde)",
+//            "DATEDIFF(abcd, bcde, \"day\")" to "DATEDIFF(abcd, bcde)",
         )
 
         for ((f, e) in map) {
@@ -147,5 +180,29 @@ class TestFormulaToSql {
             println("EXPECT: $e")
             println("ACTUAL: " + stmt.expression)
         }
+
+        //TIMESTAMPDIFF({"$3".substring(1, "$3".length()-1)},  $1, $2)
+    }
+
+    @Test
+    fun testAmbiguousFunction() {
+        val helper = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.INTEGER)))
+        val formula = "STDDEV_OVER(abcd, [], [bcde])"
+        val stmt = helper.toSql(formula, SqlDialect.HIVE)
+        println(stmt.expression)
+
+    }
+
+    @Test
+    fun testGroupConcat() {
+        val helper = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.STRING)))
+        val stmt1 = helper.toSql("GROUP_CONCAT(abcd, ',', bcde, cdef)", SqlDialect.HIVE);
+        println(stmt1.expression)
+        Assertions.assertEquals("GROUP_CONCAT(abcd, ',')", stmt1.expression)
+
+        val stmt2 = helper.toSql("GROUP_CONCAT(abcd, bcde, cdef, defg)", SqlDialect.HIVE);
+        println(stmt2.expression)
+        Assertions.assertEquals("GROUP_CONCAT(abcd)", stmt2.expression)
+
     }
 }

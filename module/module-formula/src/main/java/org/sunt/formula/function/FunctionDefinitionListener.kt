@@ -47,7 +47,7 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
 
     override fun exitFunctionDefine(ctx: FunctionParser.FunctionDefineContext) {
         val functionName = ctx.simpleIdentifier().text
-        val dataType = ctx.dataTypeNull().dataType().text
+        val dataType = ctx.dataTypeNull()?.dataType()?.text ?: "NONE"
         val functionDefinition = FunctionDefinition(functionName, DataType.of(dataType))
         functionDefinition.arguments = FunctionDefinition.FunctionArgumentList(this.functionArguments)
         if (ctx.functionModifierList() != null) {
@@ -153,7 +153,9 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
                 }
                 if (ctx.expression() != null) {
                     val defaultValue = ctx.expression().text
-                    functionArgument.defaultValue = defaultValue
+                    functionArgument.defaultValue = if (functionArgument.dataType == DataType.STRING)
+                        defaultValue.trim('"')
+                    else defaultValue
                 }
                 this.functionArguments.add(functionArgument)
             }

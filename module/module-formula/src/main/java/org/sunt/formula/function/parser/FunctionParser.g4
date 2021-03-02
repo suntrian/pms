@@ -3,7 +3,8 @@ parser grammar FunctionParser;
 options { tokenVocab=FunctionLexer; }
 
 root
-    : packageDeclare
+    : annotation*
+    packageDeclare
     importDeclare*
     (typeAliasDelare
     | classDeclare
@@ -20,7 +21,7 @@ importDeclare
     ;
 
 dialectInterface
-    : INTERFACE simpleIdentifier (COLON identifier)? (LCURL functionDefine* RCURL)?
+    : annotation* INTERFACE simpleIdentifier (COLON identifier)? (LCURL functionDefine* RCURL)?
     ;
 
 typeAliasDelare
@@ -28,11 +29,11 @@ typeAliasDelare
     ;
 
 classDeclare
-    :  CLASS identifier (COLON identifier)? (LCURL RCURL)?
+    : annotation* CLASS identifier (COLON identifier)? (LCURL RCURL)?
     ;
 
 functionDefine
-    : functionModifierList? FUN typeParameters? simpleIdentifier LPAREN functionParamDefines? RPAREN COLON dataTypeNull  functionImplement?
+    : functionModifierList? FUN typeParameters? simpleIdentifier LPAREN functionParamDefines? RPAREN (COLON dataTypeNull)? functionImplement?
     ;
 
 functionModifierList
@@ -40,7 +41,11 @@ functionModifierList
     ;
 
 annotation
-    : AT identifier (LPAREN functionParams? RPAREN)?
+    : AT annotationNS? identifier (LPAREN functionParams? RPAREN)?
+    ;
+
+annotationNS
+    : identifier COLON
     ;
 
 functionModifier

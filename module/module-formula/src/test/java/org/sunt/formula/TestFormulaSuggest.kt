@@ -452,7 +452,28 @@ class TestFormulaSuggest {
 
     @Test
     fun testDefaultArgFunction() {
+        var suggestion: FormulaSuggestion
+//        suggestion = FormulaHelper.of(AllMatchColumn(emptyMap()))
+//            .suggest("TO_DOUBLE(abcd", "TO_DOUBLE(abcd".length, SqlDialect.HIVE)
+//        log.info("{}", suggestion)
+//        Assertions.assertEquals(3, suggestion.suggestions.size)
+//        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.COMMA()))
+//        Assertions.assertTrue(suggestion.suggestions[1].scopes.contains(TokenItem.PARENTHESES(")")))
+//        Assertions.assertTrue(suggestion.suggestions[2].leftPart == "abcd")
 
+        suggestion = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.INTEGER)))
+            .suggest("STDDEV_OVER(abcd, [], [bcde]", "STDDEV_OVER(abcd, [], [bcde]".length, SqlDialect.HIVE)
+        log.info("{}", suggestion)
+        Assertions.assertEquals(2, suggestion.suggestions.size)
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.COMMA()))
+        Assertions.assertTrue(suggestion.suggestions[1].scopes.contains(TokenItem.PARENTHESES(")")))
+
+        suggestion = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.INTEGER)))
+            .suggest("STDDEV_OVER(abcd, [], [bcde],", "STDDEV_OVER(abcd, [], [bcde],".length, SqlDialect.HIVE)
+        log.info("{}", suggestion)
+        Assertions.assertEquals(1, suggestion.suggestions.size)
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.RESERVED("ROWS")))
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.RESERVED("RANGE")))
     }
 
     @Test

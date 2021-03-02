@@ -303,10 +303,10 @@ class FunctionDefinition(val funcName: String) {
                     val rawCode = matcher.group(1)
                     try {
                         val result: Any = CODE_INTERPRETER.eval(rawCode)
-                            ?: throw IllegalStateException("函数${funcName}转换方法${implement}返回为空")
+                            ?: throw IllegalStateException("函数${funcName}转换方法${rawCode}返回为空")
                         matcher.appendReplacement(sqlBuffer2, result.toString())
                     } catch (e: EvalError) {
-                        throw IllegalStateException("函数${funcName}转换方法${implement}执行错误", e)
+                        throw IllegalStateException("函数${funcName}转换方法${rawCode}执行错误", e)
                     }
                 }
                 matcher.appendTail(sqlBuffer2)

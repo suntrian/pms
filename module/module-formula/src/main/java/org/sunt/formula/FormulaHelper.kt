@@ -27,7 +27,8 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
         val tokens = CommonTokenStream(lexer)
         val rewriter = TokenStreamRewriter(tokens)
         val parser = FormulaParser(tokens)
-        val suggestVisitor = FormulaSuggestVisitor(vendor, columnInterface, rewriter, cursor)
+        val correctCursor = if (cursor < 0 || cursor > expression.length) expression.length else cursor
+        val suggestVisitor = FormulaSuggestVisitor(vendor, columnInterface, rewriter, correctCursor)
         parser.removeErrorListeners()
         parser.addErrorListener(suggestVisitor)
         parser.errorHandler = SuggestErrorStrategy()

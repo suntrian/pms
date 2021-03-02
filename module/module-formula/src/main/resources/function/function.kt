@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package function
 
 import org.sunt.formula.function.parser.*
@@ -10,6 +12,11 @@ typealias Time = LocalTime
 typealias DateTime = LocalDateTime
 typealias None = Unit
 
+/**
+ * kotlin supress warning
+ * @see <href>https://github.com/JetBrains/kotlin/blob/master/compiler/frontend/src/org/jetbrains/kotlin/diagnostics/rendering/DefaultErrorMessages.java</href>
+ */
+@Suppress("REDUNDANT_MODIFIER", "UNUSED_EXPRESSION", "UNUSED_PARAMETER")
 interface Common {
 
     @Description(
@@ -55,6 +62,19 @@ REVERSE
     @Category("文本函数")
     @Translate("REVERSE($1)")
     fun REVERSE(text: String): String
+
+    @Description(
+        """
+REPLACE
+    1. 用法： REPLACE(text, from, to)
+    2. 说明： 把text中的from替换为to
+    3. 示例： REPLACE('abcde', 'bc', 'kk') = 'akkde'
+    4. 参数： 文本类型参数
+    """
+    )
+    @Category("文本函数")
+    @Translate("REPLACE($1, $2, $3)")
+    fun REPLACE(text: String, fromStr: String, toStr: String): String
 
     @Description(
         """
@@ -205,9 +225,6 @@ ABS
     @Translate("ABS($1)")
     @Category("数值函数")
     fun ABS(num: Double): Double
-
-    @Overload
-    fun ABS(num: Int): Int
 
     @Description(
         """
@@ -581,9 +598,6 @@ GROUP_MAX
     @Translate("MAX($1)")
     fun GROUP_MAX(agg: Double, vararg group: Any): Double
 
-    @Overload
-    fun GROUP_MAX(agg: Int, vararg group: Any): Int
-
     @Description(
         """
 GROUP_MIN
@@ -598,9 +612,6 @@ GROUP_MIN
     @Category("聚合函数")
     @Translate("MIN($1)")
     fun GROUP_MIN(agg: Double, vararg group: Any): Double
-
-    @Overload
-    fun GROUP_MIN(agg: Int, vararg group: Any): Int
 
     @Description(
         """
@@ -617,9 +628,6 @@ GROUP_AVG
     @Translate("AVG($1)")
     fun GROUP_AVG(agg: Double, vararg group: Any): Double
 
-    @Overload
-    fun GROUP_AVG(agg: Int, vararg group: Any): Double
-
     @Description(
         """
 GROUP_SUM
@@ -634,9 +642,6 @@ GROUP_SUM
     @Category("聚合函数")
     @Translate("SUM($1)")
     fun GROUP_SUM(agg: Double, vararg group: Any): Double
-
-    @Overload
-    fun GROUP_SUM(agg: Int, vararg group: Any): Int
 
     @Description("")
     @Category("聚合函数")
@@ -845,17 +850,6 @@ RANK_OVER
     ): Double
 
     @Category("分析函数")
-    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "AVG($1)", "1", "2", "3", "4", "5")
-    fun AVG_OVER(
-        field: Int,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
-        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
-        @Constant from: Int? = 0,
-        @Constant end: Int? = 0
-    ): Double
-
-    @Category("分析函数")
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "SUM($1)", "1", "2", "3", "4", "5")
     fun SUM_OVER(
         field: Double,
@@ -867,31 +861,9 @@ RANK_OVER
     ): Double
 
     @Category("分析函数")
-    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "SUM($1)", "1", "2", "3", "4", "5")
-    fun SUM_OVER(
-        field: Int,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
-        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
-        @Constant from: Int? = 0,
-        @Constant end: Int? = 0
-    ): Int
-
-    @Category("分析函数")
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "STDDEV($1)", "1", "2", "3", "4", "5")
     fun STDDEV_OVER(
         field: Double,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
-        @Reserved("ROWS", "RANGE") unit: String = "ROWS",
-        @Constant from: Int? = 0,
-        @Constant end: Int? = 0
-    ): Double
-
-    @Category("分析函数")
-    @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "STDDEV($1)", "1", "2", "3", "4", "5")
-    fun STDDEV_OVER(
-        field: Int,
         @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
         @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
@@ -946,7 +918,7 @@ interface Hive : Common {
     @Translate("""TO_DATE( DATE_ADD(cast($1 as timestamp), interval $2 {"$3".substring(1, "$3".length()-1)}))""")
     override fun DATEADD(date: Date, delta: Int, datepart: String): Date
 
-    @Translate("""TO_DATE( DATE_ADD(cast($1 as timestamp), interval $2 {"$3".substring(1, "$3".length()-1)}))""")
+    @Overload
     override fun DATEADD(date: DateTime, delta: Int, datepart: String): DateTime
 
     @Translate("TO_TIMESTAMP($1, $2)")
@@ -982,28 +954,7 @@ interface Hive : Common {
     )
     override fun DATEDIFF(fromDate: Date, toDate: Date, unit: String): Int
 
-    @Translate(
-        """{
-        if ("'day'".equalsIgnoreCase("$3")) {
-            //天差
-            return "DATEDIFF($1, $2)";
-        } else if ("'week'".equalsIgnoreCase("$3")) {
-            //周差
-            return "FLOOR(DATEDIFF($1, $2)/7)";
-        } else if ("'month'".equalsIgnoreCase("$3")) {
-            //月差
-            return "INT_MONTHS_BETWEEN($1, $2)";
-        } else if ("'quarter'".equalsIgnoreCase("$3")) {
-            //季差
-            return "FLOOR(INT_MONTHS_BETWEEN($1, $2)/3)";
-        } else if("'year'".equalsIgnoreCase("$3")){
-            //年差
-            return "YEAR($1)-YEAR($2)";
-        } else {
-            return "DATEDIFF($1, $2)";
-        }
-    }"""
-    )
+    @Overload
     override fun DATEDIFF(fromDate: DateTime, toDate: DateTime, unit: String): Int
 }
 
@@ -1017,7 +968,7 @@ interface Mysql : Common {
     @Translate("""TIMESTAMPDIFF({"$3".substring(1, "$3".length()-1)},  $1, $2)""")
     override fun DATEDIFF(fromDate: Date, toDate: Date, unit: String): Int
 
-    @Translate("""TIMESTAMPDIFF({"$3".substring(1, "$3".length()-1)},  $1, $2)""")
+    @Overload
     override fun DATEDIFF(fromDate: DateTime, toDate: DateTime, unit: String): Int
 
 

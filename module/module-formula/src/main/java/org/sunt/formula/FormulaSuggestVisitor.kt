@@ -252,14 +252,22 @@ class FormulaSuggestVisitor(
         val expectArgMap = candidateArguments(lastUnVisitedArg)
         if (expectArgMap.isNotEmpty()) {
             val expectArgs = expectArgMap.values.flatten()
+            //有逗号
             val hasComma = ctx.COMMA(lastUnVisitedArg - 1) != null
+            //无变长参数
             val noneVararg = expectArgs.none { it.vararg }
+            //剩下的都有默认值
+            val remainDefault =
+                expectArgMap.any { kv -> kv.value.size == 1 && kv.value.iterator().next().defaultValue != null }
             if (!hasComma) {
                 //推荐,的情况
                 //0,前面的参数无错误，如 CONCAT(TO_STRING(abc
                 //1,存在非可变参数
                 //2,可变参数，且光标处于当前位置
-                if ((result.last().status.privilege < TokenStatus.EXPECTED.privilege) && (noneVararg || isCursorTokenEnd(ctx.functionParam(lastUnVisitedArg - 1).stop))) {
+                if ((result.last().status.privilege < TokenStatus.EXPECTED.privilege) && (noneVararg || isCursorTokenEnd(
+                        ctx.functionParam(lastUnVisitedArg - 1).stop
+                    ))
+                ) {
                     tokenSuggestions.add(TokenSuggestion.ofNext(ctx.functionParam(lastUnVisitedArg - 1).stop).apply {
                         status = TokenStatus.EXPECTED
                         scopes = setOf(TokenItem.COMMA())
@@ -294,6 +302,10 @@ class FormulaSuggestVisitor(
                 })
             }
 
+            //如果剩下的参数都有默认值, 返回正常参数，上层推荐)
+            if (!hasComma && (remainDefault || !noneVararg)) {
+                return result
+            }
             //如果剩余参数中不是可变参数
             //则将缺少的参数也作为错误信息加入参数列表返回
             //否则返回正常的参数列表，用于上层推荐)
@@ -536,18 +548,20 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitSquareExpression(ctx: SquareExpressionContext): StatementInfo {
-        val lastToken = if (ctx.statements()?.isEmpty == true) {
-            this.tokenSuggestions.add(TokenSuggestion.ofNext(ctx.L_SQUARE()).apply {
-                scopes = functionAndColumn
-                status = TokenStatus.EXPECTED
-                dataTypes = setOf(DataType.ANY)
-                for (candidate in currentDataTypeCandidates) {
-                    if (candidate.genericType.isNotEmpty()) {
-                        dataTypes = candidate.genericType.toSet()
-                        break
+        val lastToken = if (ctx.statements()?.isEmpty != false) {
+            if (isCursorTokenEnd(ctx.L_SQUARE())) {
+                this.tokenSuggestions.add(TokenSuggestion.ofNext(ctx.L_SQUARE()).apply {
+                    scopes = functionAndColumn
+                    status = TokenStatus.EXPECTED
+                    dataTypes = setOf(DataType.ANY)
+                    for (candidate in currentDataTypeCandidates) {
+                        if (candidate.genericType.isNotEmpty()) {
+                            dataTypes = candidate.genericType.toSet()
+                            break
+                        }
                     }
-                }
-            })
+                })
+            }
             ctx.L_SQUARE().symbol
         } else ctx.statements().stop
         if (ctx.R_SQUARE()?.isNotValid() == true) {

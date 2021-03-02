@@ -343,9 +343,10 @@ class FormulaToSqlVisitor(
         actualArgs: MutableList<StatementInfo?>
     ): FunctionDefinition {
         val matched = ArrayList<FunctionDefinition>(functionDefines.size)
-        val errorInfos = ArrayList<List<AbstractFormulaException>>(functionDefines.size)
+        val errorInfos = HashMap<Int, List<AbstractFormulaException>>(functionDefines.size)
+        val matchedArgMap = HashMap<Int, Int>(functionDefines.size)
 
-        outer@ for (funcDefine in functionDefines) {
+        outer@ for ((funcIndex, funcDefine) in functionDefines.withIndex()) {
             val errors = LinkedList<AbstractFormulaException>()
             val expectArgSize = funcDefine.arguments.size
             val actualArgSize = actualArgs.size
@@ -363,7 +364,7 @@ class FormulaToSqlVisitor(
                         actualArgs.size
                     )
                 );
-                errorInfos.add(errors)
+                errorInfos[funcIndex] = errors
                 continue
             }
 
@@ -379,7 +380,6 @@ class FormulaToSqlVisitor(
             var expectArg: FunctionDefinition.FunctionArgument = expectIter.next()
             var actualArg: StatementInfo = actualIter.next()!!
             var firstNoMatchArgType: DataType? = null
-            var matchedArg = 0
             while (true) {
                 //泛型实际类型
                 val genericRealType: DataType? = expectArg.genericType?.let { genericTypeMap[it] }
@@ -389,7 +389,7 @@ class FormulaToSqlVisitor(
                     if (expectArg.genericType != null && genericRealType == null) {
                         genericTypeMap[expectArg.genericType!!] = actualArg.dataType
                     }
-                    matchedArg++
+                    matchedArgMap.compute(funcIndex) { _, v -> if (v == null) 1 else v + 1 }
                 }
                 //参数不匹配
                 else {
@@ -405,7 +405,7 @@ class FormulaToSqlVisitor(
                                 actualArg.dataType
                             )
                         )
-                        errorInfos.add(errors)
+                        errorInfos[funcIndex] = errors
                         continue@outer
                     }
                     //有缺省参数
@@ -423,7 +423,7 @@ class FormulaToSqlVisitor(
                         //无缺省值
                         if (expectArg.defaultValue == null && !expectArg.vararg) {
                             errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
-                            errorInfos.add(errors)
+                            errorInfos[funcIndex] = errors
                             continue@outer
                         }
                     }
@@ -434,7 +434,7 @@ class FormulaToSqlVisitor(
                     //此处必然还有实参，那么如果不是可变参数，则不匹配
                     if (!expectArg.vararg) {
                         errors.add(ParamsSizeMismatchException(funcDefine.funcName, expectArgSize, actualArgSize))
-                        errorInfos.add(errors)
+                        errorInfos[funcIndex] = errors
                         continue@outer
                     } else {
                         actualArg = actualIter.next()!!
@@ -448,13 +448,14 @@ class FormulaToSqlVisitor(
             matched.add(funcDefine)
         }
         if (matched.isNotEmpty()) {
-            if (matched.size > 1) {
-                throw AmbiguousFunctionException(matched)
-            }
+//            if (matched.size > 1) {
+//                throw AmbiguousFunctionException(matched)
+//            }
             return matched[0]
         }
         if (errorInfos.isNotEmpty()) {
-            throw errorInfos[0][0]
+            val mostMatchErrorIndex = matchedArgMap.maxByOrNull { it.value }?.key ?: 0
+            throw errorInfos[mostMatchErrorIndex]?.getOrNull(0) ?: errorInfos.iterator().next().value[0]
         }
         throw WillNeverHappenException("不应该来这里")
     }

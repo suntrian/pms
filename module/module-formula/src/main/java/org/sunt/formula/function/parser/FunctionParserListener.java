@@ -134,6 +134,20 @@ public interface FunctionParserListener extends ParseTreeListener {
     void exitAnnotation(FunctionParser.AnnotationContext ctx);
 
     /**
+     * Enter a parse tree produced by {@link FunctionParser#annotationNS}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterAnnotationNS(FunctionParser.AnnotationNSContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link FunctionParser#annotationNS}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitAnnotationNS(FunctionParser.AnnotationNSContext ctx);
+
+    /**
      * Enter a parse tree produced by {@link FunctionParser#functionModifier}.
      *
      * @param ctx the parse tree
