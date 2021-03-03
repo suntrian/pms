@@ -540,7 +540,7 @@ class TestFormulaSuggest {
                 SqlDialect.HIVE
             )
         log.info("{}", suggestion)
-        Assertions.assertEquals(1, suggestion.suggestions.size)
+        Assertions.assertEquals(2, suggestion.suggestions.size)
         Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.COMMA()))
 
     }

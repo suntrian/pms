@@ -4,6 +4,7 @@ import bsh.EvalError
 import bsh.Interpreter
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.SqlDialect
+import org.sunt.formula.exception.ParamTypeMismatchException
 import org.sunt.formula.function.parser.FunctionTranslator
 import java.util.regex.Pattern
 
@@ -116,28 +117,29 @@ class FunctionDefinition(val funcName: String) {
         var reserved: List<String> = emptyList()
         var suggest: TokenItem = TokenItem.NONE()
 
+        @Throws(ParamTypeMismatchException::class)
         @JvmOverloads
         fun match(expr: String, dataType: DataType, tokenItem: TokenItem?, genericRealType: DataType? = null): Boolean {
             if (!this.dataType.isAssignableFrom(dataType)) {
-                return false
+                throw ParamTypeMismatchException(expr, this.dataType, dataType)
             }
             if (genericType != null && genericRealType?.isAssignableFrom(dataType) == false) {
-                return false
+                throw ParamTypeMismatchException(expr, genericRealType, dataType)
             }
             if (this.reserved.isNotEmpty() && !reserved.contains(expr.toUpperCase())) {
-                return false
+                throw ParamTypeMismatchException("${expr}应为关键字[${optionValues.joinToString(", ")}]之一")
             }
             if (this.reserved.isEmpty() && tokenItem?.scope?.equals(TokenScope.RESERVED) == true) {
-                return false
+                throw ParamTypeMismatchException("${expr}不可为关键字${tokenItem.text}")
             }
             if (optionValues.isNotEmpty() && !optionValues.contains(expr)) {
-                return false
+                throw ParamTypeMismatchException("${expr}应为选项[${optionValues.joinToString(", ")}]之一")
             }
             if (constant && !(numberRegex.matches(expr) || stringRegex.matches(expr))) {
-                return false
+                throw ParamTypeMismatchException("${expr}要求为常量")
             }
             if (!nullable && "null".equals(expr, true)) {
-                return false
+                throw ParamTypeMismatchException("${expr}不可为null")
             }
             return true
         }

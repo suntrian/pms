@@ -435,15 +435,28 @@ TO_DATE
         """
 DATE_FORMAT
     1. 用法： DATE_FORMAT(field: Date, format: String)
-    2. 说明： 把field时间字段按format格式化输出
+    2. 说明： 把field时间字段按format格式化输出，格式化字符与数据库相关
     3. 示例： DATE_FORMAT('1999-12-31’, 'yyyy-MM') = '1999-12'
-    4. 参数： field: Date/DateTime类型参数，含format的String和Int类型
-             format: 文本类型时间格式，如 yyyy-MM-dd HH:mm:ss 
+    4. 参数： field: Date/DateTime类型参数
+             format: 文本类型时间格式，如HIVE: yyyy-MM-dd HH:mm:ss, MYSQL: %Y-%M-d %H:%i:%s
     """
     )
     @Category("时间函数")
-    @Translate("", DateFunctionTranslator::class, "DATE_FORMAT")
-    fun DATE_FORMAT(field: Any, format: String): String
+    @Translate("DATE_FORMAT($1, $2)")
+    fun DATE_FORMAT(field: Date, @Constant format: String): String
+
+    @Overload
+    fun DATE_FORMAT(field: DateTime, @Constant format: String): String
+
+    @Description(
+        """
+DATE_ROLLUP
+    
+    """
+    )
+    @Category("时间函数")
+    @Translate("", DateFunctionTranslator::class, "DATE_ROLLUP")
+    fun DATE_ROLLUP(field: Any, @Reserved("YEAR", "SEASON", "MONTH", "WEEK", "DAY") unit: String): String
 
     @Description(
         """
@@ -970,6 +983,12 @@ interface Hive : Common {
 
     @Overload
     override fun DATEDIFF(fromDate: DateTime, toDate: DateTime, unit: String): Int
+
+    @Translate("FROM_TIMESTAMP($1, $2)")
+    override fun DATE_FORMAT(field: Date, format: String): String
+
+    @Overload
+    override fun DATE_FORMAT(field: DateTime, format: String): String
 }
 
 interface Impala : Hive

@@ -2,7 +2,7 @@ package org.sunt.formula.exception;
 
 import org.sunt.formula.define.DataType;
 
-public class DataTypeMismatchException extends AbstractFormulaException {
+public class ParamTypeMismatchException extends AbstractFormulaException {
 
     private static final long serialVersionUID = 3648211597650156219L;
 
@@ -12,11 +12,11 @@ public class DataTypeMismatchException extends AbstractFormulaException {
 
     private String expression;
 
-    public DataTypeMismatchException(String message) {
+    public ParamTypeMismatchException(String message) {
         super(message);
     }
 
-    public DataTypeMismatchException(String expression, DataType expected, DataType actually) {
+    public ParamTypeMismatchException(String expression, DataType expected, DataType actually) {
         super(String.format("表达式%s期待%s类型，实际%s类型", expression, expected.name(), actually.name()));
         this.expression = expression;
         this.expected = expected;

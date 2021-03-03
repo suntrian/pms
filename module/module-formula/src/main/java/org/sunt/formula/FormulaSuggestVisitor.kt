@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
 import org.sunt.formula.define.SqlDialect
+import org.sunt.formula.exception.ParamTypeMismatchException
 import org.sunt.formula.function.*
 import org.sunt.formula.parser.FormulaParser.*
 import org.sunt.formula.suggestion.FormulaSuggestion
@@ -223,18 +224,21 @@ class FormulaSuggestVisitor(
                 val expectArg = candidate.arguments.getOrNull(index) ?: continue
                 val expectDataType = expectArg.genericType
                     ?.let { genericTypeMap[candidate]?.get(expectArg.genericType) }
-                if (expectArg.match(paramStmt.expression, paramStmt.dataType, paramStmt.token, expectDataType)) {
-                    if (expectArg.genericType != null && expectDataType == null) {
-                        genericTypeMap.putIfAbsent(candidate, mutableMapOf())
-                        genericTypeMap[candidate]!![expectArg.genericType!!] = paramStmt.dataType
+                try {
+                    if (expectArg.match(paramStmt.expression, paramStmt.dataType, paramStmt.token, expectDataType)) {
+                        if (expectArg.genericType != null && expectDataType == null) {
+                            genericTypeMap.putIfAbsent(candidate, mutableMapOf())
+                            genericTypeMap[candidate]!![expectArg.genericType!!] = paramStmt.dataType
+                        }
                     }
-                } else {
+                } catch (e: ParamTypeMismatchException) {
                     tempSuggestions.putIfAbsent(candidate, mutableListOf())
                     tempSuggestions[candidate]!!.add(TokenSuggestion.ofThis(paramCtx)
                         .apply {
                             status = TokenStatus.ERROR
                             dataTypes = setOf(expectDataType ?: expectArg.dataType)
                             scopes = functionAndColumn
+                            comment = e.message ?: ""
                         })
                     currentFunctionsIter.remove()
                 }
@@ -413,7 +417,7 @@ class FormulaSuggestVisitor(
                     expression = text.toUpperCase()
                     token = TokenItem.RESERVED(expression)
                     status = TokenStatus.NORMAL
-                    dataType = DataType.ANY
+                    dataType = DataType.NONE
                     payload = expression
                 }
                 isFuncName -> {

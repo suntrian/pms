@@ -19,6 +19,9 @@ class FormulaToSqlVisitor(
     rewriter: TokenStreamRewriter
 ) : AbstractFormulaVisitor(product, columnInterface, rewriter) {
 
+    var formulaType = FormulaType.NORMAL
+    val groupBys = mutableListOf<StatementInfo>()
+
     override fun visitFormula(ctx: FormulaContext): StatementInfo {
         return visitStatement(ctx.statement())
     }
@@ -101,11 +104,11 @@ class FormulaToSqlVisitor(
                 mathStmt.dataType = DataType.STRING
                 return mathStmt
             } else {
-                throw DataTypeMismatchException(ctx.text, DataType.DECIMAL, DataType.STRING)
+                throw ParamTypeMismatchException(ctx.text, DataType.DECIMAL, DataType.STRING)
             }
         } else {
             if (!left.dataType.isNumeric() || !right.dataType.isNumeric()) {
-                throw DataTypeMismatchException("数据类型错误")
+                throw ParamTypeMismatchException("数据类型错误")
             }
         }
 
@@ -209,6 +212,22 @@ class FormulaToSqlVisitor(
         }
         val filledParams: MutableList<StatementInfo?> = params.toMutableList()
         val finalFunctionDefine: FunctionDefinition = figureFunctionDefine(functionDefines, filledParams)
+        kotlin.run {
+            val isRoot = ctx.parent.parent is FormulaContext
+            val uFuncName = funcName.toUpperCase()
+            this.formulaType = when {
+                uFuncName.startsWith("GROUP_") -> {
+                    if (!isRoot) throw IllegalStateException("聚合函数不可嵌套使用")
+                    this.groupBys.addAll(params.drop(finalFunctionDefine.arguments.indexOfFirst { it.vararg }))
+                    FormulaType.AGGREGATE
+                }
+                uFuncName.endsWith("_OVER") -> {
+                    if (!isRoot) throw IllegalStateException("窗口函数不可嵌套使用")
+                    FormulaType.WINDOW
+                }
+                else -> FormulaType.NORMAL
+            }
+        }
         val funcStmt = StatementInfo(ctx)
         funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege } ?: TokenStatus.NORMAL
         funcStmt.dataType =
@@ -386,26 +405,21 @@ class FormulaToSqlVisitor(
                 val genericRealType: DataType? = expectArg.genericType?.let { genericTypeMap[it] }
 
                 //参数匹配
-                if (expectArg.match(actualArg.expression, actualArg.dataType, actualArg.token, genericRealType)) {
-                    if (expectArg.genericType != null && genericRealType == null) {
-                        genericTypeMap[expectArg.genericType!!] = actualArg.dataType
+                try {
+                    if (expectArg.match(actualArg.expression, actualArg.dataType, actualArg.token, genericRealType)) {
+                        if (expectArg.genericType != null && genericRealType == null) {
+                            genericTypeMap[expectArg.genericType!!] = actualArg.dataType
+                        }
+                        matchedArgMap.compute(funcIndex) { _, v -> if (v == null) 1 else v + 1 }
                     }
-                    matchedArgMap.compute(funcIndex) { _, v -> if (v == null) 1 else v + 1 }
-                }
-                //参数不匹配
-                else {
+                } catch (e: ParamTypeMismatchException) {
+                    //参数不匹配
                     if (firstNoMatchArgType == null) {
                         firstNoMatchArgType = genericRealType ?: expectArg.dataType
                     }
                     //无缺省参数或无下一形参
                     if (expectArg.defaultValue == null || !expectIter.hasNext()) {
-                        errors.add(
-                            DataTypeMismatchException(
-                                actualArg.expression,
-                                firstNoMatchArgType,
-                                actualArg.dataType
-                            )
-                        )
+                        errors.add(e)
                         errorInfos[funcIndex] = errors
                         continue@outer
                     }

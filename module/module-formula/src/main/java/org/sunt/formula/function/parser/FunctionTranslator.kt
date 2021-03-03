@@ -223,11 +223,11 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
     private val function = funcName.toUpperCase()
 
     override fun translate(funcName: String, dialect: SqlDialect, expectArgs: List<FunctionDefinition.FunctionArgument>, actualArgs: List<StatementInfo?>): String {
-        val transFormat = if ("DATE_FORMAT" == function) {
+        val dateUnit = if ("DATE_ROLLUP" == function) {
             if ((actualArgs.size != 2 || actualArgs.any { it == null })) {
                 throw IllegalStateException("${function}要求两个参数")
             }
-            actualArgs[1]!!.expression.trim('"', '\'')
+            actualArgs[1]!!.expression.toUpperCase()
         } else if (actualArgs.size != 1 || actualArgs[0] == null) {
             throw IllegalStateException("${function}要求一个参数")
         } else ""
@@ -240,12 +240,9 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
                 "MONTH" -> "MONTH(${expression})"
                 "WEEK" -> "WEEKOFYEAR(${expression})"
                 "DAY" -> "DAY(${expression})"
-                "DATE_FORMAT" -> {
-                    when (dialect) {
-                        SqlDialect.MYSQL, SqlDialect.MARIADB -> ""
-                        else -> ""
-                    }
-                }
+                "DATE_ROLLUP" -> functionMap[dialect]?.let {
+                    it.first.invoke(expression, it.second[dateUnit]?.takeIf { u -> u.isNotBlank() } ?: throw IllegalStateException("不支持的时间维度:${dateUnit}"))
+                } ?: throw IllegalStateException("")
                 else -> throw IllegalStateException("不支持的函数${this.function}")
             }
         } else if (field.dataType != DataType.INTEGER && field.dataType != DataType.STRING) {
@@ -300,13 +297,69 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
                     throw IllegalStateException("${fieldFormat}无法转换为天")
                 }
             }
-            "DATE_FORMAT" -> {
-                //TODO
-                ""
+            "DATE_ROLLUP" -> {
+                //此处假设时间字段格式为年月日或者日月年格式，如月日年不好处理
+                return when (dateUnit) {
+                    "YEAR" -> {
+                        if (fieldFormat.indexOf('y').also { start = it } >= 0) {
+                            "SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'y' }})"
+                        } else throw IllegalStateException("${fieldFormat}无法转换为年")
+                    }
+                    "QUARTER" -> {
+                        if (fieldFormat.indexOf('y').also { start = it } >= 0) {
+                            if (fieldFormat.contains('Q') || fieldFormat.contains('q')) {
+                                "SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.lastIndexOf('Q') - start}"
+                            } else if (fieldFormat.contains('M')) {
+                                ""
+                            }
+                        }
+                        throw IllegalStateException("${fieldFormat}无法转换为年季")
+                    }
+                    "MONTH" -> {
+                        "SUBSTRING(${expression}, ${fieldFormat.indexOf('y') + 1}, ${fieldFormat.lastIndexOf('M') - fieldFormat.indexOf('y')})"
+                    }
+                    "WEEK" -> {
+                        ""
+                    }
+                    "DAY" -> {
+                        expression
+                    }
+                    else -> throw IllegalStateException("不支持的时间维度:${dateUnit}")
+                }
             }
             else -> throw IllegalStateException("不支持的函数${this.function}")
         }
         return FormulaHelper.ofCurrent().toSql(transform, dialect).expression
+    }
+
+    companion object {
+        private val functionMap = mapOf(
+            SqlDialect.MYSQL to
+                    ({ field: String, format: String -> "DATE_FORMAT(${field}, '${format}')" } to mapOf(
+                        "YEAR" to "%Y",
+                        "SEASON" to "",
+                        "MONTH" to "%Y-%m",
+                        "WEEK" to "%Y-%u",
+                        "DAY" to "%Y-%m-%d"
+                    )),
+            SqlDialect.HIVE to
+                    ({ field: String, format: String -> "FROM_TIMESTAMP(${field}, '${format}')" } to mapOf(
+                        "YEAR" to "yyyy",
+                        "SEASON" to "yyyy-QQ",
+                        "MONTH" to "yyyy-MM",
+                        "WEEK" to "yyyy-WW",
+                        "DAY" to "yyyy-MM-dd"
+                    )),
+            SqlDialect.IMPALA to
+                    ({ field: String, format: String -> "FROM_TIMESTAMP(${field}, '${format}')" } to mapOf(
+                        "YEAR" to "yyyy",
+                        "SEASON" to "yyyy-QQ",
+                        "MONTH" to "yyyy-MM",
+                        "WEEK" to "yyyy-WW",
+                        "DAY" to "yyyy-MM-dd"
+                    )),
+        )
+
     }
 
 }

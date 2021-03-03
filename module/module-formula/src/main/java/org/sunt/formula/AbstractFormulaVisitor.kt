@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
 import org.sunt.formula.define.SqlDialect
-import org.sunt.formula.exception.DataTypeMismatchException
+import org.sunt.formula.exception.ParamTypeMismatchException
 import org.sunt.formula.exception.ParamsSizeMismatchException
 import org.sunt.formula.exception.WillNeverHappenException
 import org.sunt.formula.function.FunctionDefinition
@@ -297,7 +297,7 @@ abstract class AbstractFormulaVisitor(
             if (expectedType === stmt.dataType) {
                 return true
             }
-            throw DataTypeMismatchException(stmt.expression, expectedType, stmt.dataType)
+            throw ParamTypeMismatchException(stmt.expression, expectedType, stmt.dataType)
         }
 
         @JvmStatic
