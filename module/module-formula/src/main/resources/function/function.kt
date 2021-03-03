@@ -157,7 +157,7 @@ CONTAINS
     """
     )
     @Translate("$1 LIKE '%$2%'")
-    @Category("文本函数", "布尔函数")
+    @Category("文本函数")
     fun CONTAINS(text: String, subStr: String): Boolean
 
     @Description(
@@ -536,7 +536,7 @@ IF
     )
     @Category("其他函数")
     @Translate("IF($1, $2, $3)")
-    fun <T> IF(condition: Boolean, ifTrueVal: T, ifFalseOrNullVal: T): T
+    fun <T> IF(condition: Boolean, ifTrueVal: T, ifFalseOrNullVal: Any): T
 
     @Description(
         """

@@ -32,7 +32,7 @@ class FormulaSuggestVisitor(
 
     override fun visitFormula(ctx: FormulaContext): FormulaSuggestion {
         visitStatement(ctx.statement())
-        if (this.syntaxErrors.isNotEmpty() && tokenSuggestions.isEmpty()) {
+        if (this.syntaxErrors.isNotEmpty() && tokenSuggestions.none { it.status.privilege >= TokenStatus.EXPECTED.privilege }) {
             this.tokenSuggestions.addAll(this.syntaxErrors.map { suggestFromSyntaxError(it, this.cursor) })
         }
         return FormulaSuggestion().also {
@@ -68,7 +68,7 @@ class FormulaSuggestVisitor(
                 //存在无参函数或者单可变参数函数,且无右括号时，推荐右括号
                 if (firstArg == null || firstArg.vararg) {
                     //无右括号时
-                    if (ctx.R_PARENTHESES()?.isNotValid() == true || isCursorTokenEnd(ctx.L_PARENTHESES())) {
+                    if (ctx.R_PARENTHESES()?.isNotValid() != false /*|| ( isCursorTokenEnd(ctx.L_PARENTHESES()))*/) {
                         val tokenSuggestion = TokenSuggestion.ofNext(ctx.L_PARENTHESES())
                             .apply {
                                 status = TokenStatus.EXPECTED
@@ -119,7 +119,7 @@ class FormulaSuggestVisitor(
         }
         //参数匹配
         if (functionDefines.isNotEmpty() && actualParams.all { it.status.privilege <= TokenStatus.INFO.privilege }) {
-            if (ctx.R_PARENTHESES()?.isNotValid() == true) {
+            if (ctx.R_PARENTHESES()?.isNotValid() != false) {
                 this.tokenSuggestions.add(
                     TokenSuggestion.ofNext(ctx.stop)
                         .apply {
@@ -254,8 +254,8 @@ class FormulaSuggestVisitor(
             val expectArgs = expectArgMap.values.flatten()
             //有逗号
             val hasComma = ctx.COMMA(lastUnVisitedArg - 1) != null
-            //无变长参数
-            val noneVararg = expectArgs.none { it.vararg }
+            //有变长参数
+            val anyVararg = expectArgs.any { it.vararg }
             //剩下的都有默认值
             val remainDefault =
                 expectArgMap.any { kv -> kv.value.size == 1 && kv.value.iterator().next().defaultValue != null }
@@ -264,7 +264,7 @@ class FormulaSuggestVisitor(
                 //0,前面的参数无错误，如 CONCAT(TO_STRING(abc
                 //1,存在非可变参数
                 //2,可变参数，且光标处于当前位置
-                if ((result.last().status.privilege < TokenStatus.EXPECTED.privilege) && (noneVararg || isCursorTokenEnd(
+                if ((result.last().status.privilege < TokenStatus.EXPECTED.privilege) && ((!anyVararg && !remainDefault) || isCursorTokenEnd(
                         ctx.functionParam(lastUnVisitedArg - 1).stop
                     ))
                 ) {
@@ -273,6 +273,10 @@ class FormulaSuggestVisitor(
                         scopes = setOf(TokenItem.COMMA())
                         comment = "期待','"
                     })
+                }
+                //如果剩下的参数都有默认值或者为变长参数, 返回正常参数，上层推荐)
+                if (remainDefault || anyVararg) {
+                    return result
                 }
             } else {
                 val expectArgTypes = expectArgMap.flatMap { map ->
@@ -302,19 +306,21 @@ class FormulaSuggestVisitor(
                 })
             }
 
-            //如果剩下的参数都有默认值, 返回正常参数，上层推荐)
-            if (!hasComma && (remainDefault || !noneVararg)) {
-                return result
-            }
             //如果剩余参数中不是可变参数
             //则将缺少的参数也作为错误信息加入参数列表返回
             //否则返回正常的参数列表，用于上层推荐)
-            if (hasComma || noneVararg) {
+            if (hasComma || !anyVararg) {
                 result.add(StatementInfo("", -1, -1, -1, -1).apply {
                     status = TokenStatus.EXPECTED
                 })
             }
 
+        } else if (ctx.COMMA(lastUnVisitedArg - 1) != null) {
+            //多余的,
+            this.tokenSuggestions.add(TokenSuggestion.ofThis(ctx.COMMA(lastUnVisitedArg - 1)).apply {
+                status = TokenStatus.ERROR
+                comment = "多余的,"
+            })
         }
 
         return result
@@ -342,7 +348,7 @@ class FormulaSuggestVisitor(
                 })
             }
             val tokenSuggestion = TokenSuggestion.ofThis(identity).apply {
-                scopes = if (ctx.parent is FunctionStatementContext) setOf(TokenItem.FUNCTION(text)) else functionAndColumn
+                scopes = if (ctx.parent is FunctionStatementContext) setOf(TokenItem.FUNCTION()) else functionAndColumn
                 dataTypes = currentDataTypeCandidates
                 status = TokenStatus.UNKNOWN
                 comment = "未识别的内容:$text"
@@ -382,8 +388,8 @@ class FormulaSuggestVisitor(
                 })
             }
             if (isFuncName && isCursorTokenEnd(identity)) {
-                if (ctx.parent !is FunctionStatementContext || (ctx.parent as FunctionStatementContext).L_PARENTHESES()
-                        ?.isNotValid() == true
+                if (ctx.parent !is FunctionStatementContext
+                    || (ctx.parent as FunctionStatementContext).L_PARENTHESES()?.isNotValid() != false
                 ) {
                     //光标位置函数名称结尾时，且下一token非(时，推荐左括号
                     this.tokenSuggestions.add(TokenSuggestion.ofNext(identity).apply {
@@ -509,7 +515,7 @@ class FormulaSuggestVisitor(
 
     override fun visitParenthesesExpression(ctx: ParenthesesExpressionContext): StatementInfo {
         var expStatus = TokenStatus.NORMAL
-        if (ctx.R_PARENTHESES()?.isNotValid() == true) {
+        if (ctx.R_PARENTHESES()?.isNotValid() != false) {
             this.tokenSuggestions.add(TokenSuggestion.ofNext(ctx.statement().stop)
                 .apply {
                     this.status = TokenStatus.EXPECTED
@@ -528,7 +534,7 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitNotPredicate(ctx: NotPredicateContext): StatementInfo {
-        val pred = if (ctx.statement()?.isValid() == false) {
+        val pred = if (ctx.statement()?.isValid() != true) {
             this.tokenSuggestions.add(TokenSuggestion.ofNext(ctx.NOT())
                 .apply {
                     dataTypes = setOf(DataType.BOOLEAN)
@@ -564,7 +570,7 @@ class FormulaSuggestVisitor(
             }
             ctx.L_SQUARE().symbol
         } else ctx.statements().stop
-        if (ctx.R_SQUARE()?.isNotValid() == true) {
+        if (ctx.R_SQUARE()?.isNotValid() != false) {
             this.tokenSuggestions.add(TokenSuggestion.ofNext(lastToken).apply {
                 scopes = setOf(TokenItem.SQUARE("]"))
                 status = TokenStatus.EXPECTED
@@ -579,7 +585,7 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitIfnullExpression(ctx: IfnullExpressionContext): StatementInfo {
-        if (ctx.statement(1)?.isValid() == false) {
+        if (ctx.statement(1)?.isValid() != true) {
             tokenSuggestions.add(TokenSuggestion.ofNext(ctx.IFNULL()).apply {
                 status = TokenStatus.EXPECTED
                 dataTypes = currentDataTypeCandidates

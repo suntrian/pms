@@ -70,11 +70,27 @@ class TestFormulaSuggest {
         Assertions.assertTrue(suggestion9.suggestions[0].dataTypes.contains(DataType.DECIMAL))
         Assertions.assertTrue(suggestion9.suggestions[1].scopes.contains(TokenItem.FUNCTION()) && suggestion9.suggestions[1].leftPart == "CEiL")
 
-        val suggestion10 = FormulaHelper.of(RestrictColumn(mapOf("dddd" to DataType.STRING))).suggest("abcd(dddd)", "abcd".length, SqlDialect.HIVE)
+        val suggestion10 = FormulaHelper.of(RestrictColumn(mapOf("dddd" to DataType.STRING)))
+            .suggest("abcd(dddd)", "abcd".length, SqlDialect.HIVE)
         log.info("{}", suggestion10)
         Assertions.assertEquals(1, suggestion10.suggestions.size)
         Assertions.assertTrue(suggestion10.suggestions[0].status == TokenStatus.UNKNOWN)
-        Assertions.assertTrue(suggestion10.suggestions[0].scopes == setOf(TokenItem.FUNCTION("abcd")))
+        Assertions.assertTrue(suggestion10.suggestions[0].scopes == setOf(TokenItem.FUNCTION()))
+
+        val suggestion11 = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.DECIMAL)))
+            .suggest("CEIL(abcd, )", "CEIL(abcd,".length, SqlDialect.HIVE)
+        log.info("{}", suggestion11)
+        Assertions.assertEquals(1, suggestion11.suggestions.size)
+        Assertions.assertTrue(suggestion11.suggestions[0].status == TokenStatus.ERROR)
+        Assertions.assertTrue(suggestion11.suggestions[0].comment == "多余的,")
+
+        val suggestion12 = FormulaHelper.of(RestrictColumn(mapOf("abcd" to DataType.STRING)))
+            .suggest("TO_INEGER(abcd", "TO_IN".length, SqlDialect.HIVE)
+        log.info("{}", suggestion12)
+        Assertions.assertEquals(1, suggestion12.suggestions.size)
+        Assertions.assertEquals(TokenStatus.UNKNOWN, suggestion12.suggestions[0].status)
+        Assertions.assertTrue(suggestion12.suggestions[0].scopes == setOf(TokenItem.FUNCTION()))
+
     }
 
     @Test
@@ -319,6 +335,15 @@ class TestFormulaSuggest {
 
     @Test
     fun testAdvancedTypeFunction() {
+        var suggestion = FormulaHelper.of(AllMatchColumn(emptyMap()))
+            .suggest(
+                "RANK_OVER(PARTITION_BY(),ORDER_BY())",
+                "RANK_OVER(PARTITION_BY(),ORDER_BY(".length,
+                SqlDialect.HIVE
+            )
+        log.info("{}", suggestion)
+        Assertions.assertEquals(1, suggestion.suggestions.size)
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.FUNCTION("ORDER_ITEM")))
 
     }
 
@@ -453,13 +478,13 @@ class TestFormulaSuggest {
     @Test
     fun testDefaultArgFunction() {
         var suggestion: FormulaSuggestion
-//        suggestion = FormulaHelper.of(AllMatchColumn(emptyMap()))
-//            .suggest("TO_DOUBLE(abcd", "TO_DOUBLE(abcd".length, SqlDialect.HIVE)
-//        log.info("{}", suggestion)
-//        Assertions.assertEquals(3, suggestion.suggestions.size)
-//        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.COMMA()))
-//        Assertions.assertTrue(suggestion.suggestions[1].scopes.contains(TokenItem.PARENTHESES(")")))
-//        Assertions.assertTrue(suggestion.suggestions[2].leftPart == "abcd")
+        suggestion = FormulaHelper.of(AllMatchColumn(emptyMap()))
+            .suggest("TO_DOUBLE(abcd", "TO_DOUBLE(abcd".length, SqlDialect.HIVE)
+        log.info("{}", suggestion)
+        Assertions.assertEquals(3, suggestion.suggestions.size)
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.COMMA()))
+        Assertions.assertTrue(suggestion.suggestions[1].scopes.contains(TokenItem.PARENTHESES(")")))
+        Assertions.assertTrue(suggestion.suggestions[2].leftPart == "abcd")
 
         suggestion = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.INTEGER)))
             .suggest("STDDEV_OVER(abcd, [], [bcde]", "STDDEV_OVER(abcd, [], [bcde]".length, SqlDialect.HIVE)
@@ -478,6 +503,45 @@ class TestFormulaSuggest {
 
     @Test
     fun testEmbedFunction() {
+        var suggestion: FormulaSuggestion
+        suggestion = FormulaHelper.of(AllMatchColumn(emptyMap()))
+            .suggest("max_over(abcd, partition_by(bcde)", "max_over(abcd, partition_by(bcde".length, SqlDialect.HIVE)
+        log.info("{}", suggestion)
+        Assertions.assertEquals(3, suggestion.suggestions.size)
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.COMMA()))
+        Assertions.assertTrue(suggestion.suggestions[0].start == "max_over(abcd, partition_by(bcde".length)
+        Assertions.assertTrue(suggestion.suggestions[1].scopes.contains(TokenItem.COMMA()))
+        Assertions.assertTrue(suggestion.suggestions[1].start == "max_over(abcd, partition_by(bcde)".length)
+
+        suggestion = FormulaHelper.of(AllMatchColumn(emptyMap()))
+            .suggest(
+                "max_over(abcd, partition_by(bcde),order_by())",
+                "max_over(abcd, partition_by(bcde),order_by())".length,
+                SqlDialect.HIVE
+            )
+        log.info("{}", suggestion)
+        Assertions.assertEquals(0, suggestion.suggestions.size)
+
+        suggestion = FormulaHelper.of(AllMatchColumn(emptyMap()))
+            .suggest(
+                "max_over(abcd, partition_by(bcde),order_by(),)",
+                "max_over(abcd, partition_by(bcde),order_by(),".length,
+                SqlDialect.HIVE
+            )
+        log.info("{}", suggestion)
+        Assertions.assertEquals(1, suggestion.suggestions.size)
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.RESERVED("ROWS")))
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.RESERVED("RANGE")))
+
+        suggestion = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.DECIMAL)))
+            .suggest(
+                "max_over(abcd, partition_by(bcde),order_by(),ROWS)",
+                "max_over(abcd, partition_by(bcde),order_by(),ROWS".length,
+                SqlDialect.HIVE
+            )
+        log.info("{}", suggestion)
+        Assertions.assertEquals(1, suggestion.suggestions.size)
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.COMMA()))
 
     }
 

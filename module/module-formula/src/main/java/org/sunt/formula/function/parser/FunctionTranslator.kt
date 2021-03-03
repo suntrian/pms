@@ -223,11 +223,14 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
     private val function = funcName.toUpperCase()
 
     override fun translate(funcName: String, dialect: SqlDialect, expectArgs: List<FunctionDefinition.FunctionArgument>, actualArgs: List<StatementInfo?>): String {
-        if ("DATE_FORMAT" == function && (actualArgs.size != 2 || actualArgs.any { it == null })) {
-            throw IllegalStateException("${function}要求两个参数")
+        val transFormat = if ("DATE_FORMAT" == function) {
+            if ((actualArgs.size != 2 || actualArgs.any { it == null })) {
+                throw IllegalStateException("${function}要求两个参数")
+            }
+            actualArgs[1]!!.expression.trim('"', '\'')
         } else if (actualArgs.size != 1 || actualArgs[0] == null) {
             throw IllegalStateException("${function}要求一个参数")
-        }
+        } else ""
         val field = actualArgs[0]!!
         var expression = field.expression
         if (field.dataType == DataType.DATE || field.dataType == DataType.DATETIME) {
@@ -238,17 +241,19 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
                 "WEEK" -> "WEEKOFYEAR(${expression})"
                 "DAY" -> "DAY(${expression})"
                 "DATE_FORMAT" -> {
-                    val format = actualArgs[1]!!.expression
-                    //TODO
-                    ""
+                    when (dialect) {
+                        SqlDialect.MYSQL, SqlDialect.MARIADB -> ""
+                        else -> ""
+                    }
                 }
                 else -> throw IllegalStateException("不支持的函数${this.function}")
             }
         } else if (field.dataType != DataType.INTEGER && field.dataType != DataType.STRING) {
             throw IllegalStateException("${field.dataType}不是有效的时间字段")
         }
-        var format: String = ""
-        if (field.payload !is IColumn || (field.payload as IColumn).format?.also { format = it }?.isBlank() != false) {
+        var fieldFormat: String = ""
+        if (field.payload !is IColumn || (field.payload as IColumn).format?.also { fieldFormat = it }
+                ?.isBlank() != false) {
             throw IllegalStateException("${expression}未配置时间格式")
         }
         if (field.dataType == DataType.INTEGER) {
@@ -257,42 +262,42 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
         var start: Int = 0
         val transform = when (this.function) {
             "YEAR" -> {
-                if (format.indexOf('y').also { start = it } >= 0) {
-                    "TO_INTEGER(SUBSTRING(${expression}, ${format.indexOf('y') + 1}, ${format.count { it == 'y' }}))"
+                if (fieldFormat.indexOf('y').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${fieldFormat.indexOf('y') + 1}, ${fieldFormat.count { it == 'y' }}))"
                 } else {
-                    throw IllegalStateException("${format}无法转换为年")
+                    throw IllegalStateException("${fieldFormat}无法转换为年")
                 }
             }
             "QUARTER" -> {
-                if (format.indexOf('q').also { start = it } >= 0) {
-                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'q' }}))"
-                } else if (format.indexOf('M').also { start = it } >= 0) {
-                    "CEILING(TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'M' }}))/3)"
+                if (fieldFormat.indexOf('q').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'q' }}))"
+                } else if (fieldFormat.indexOf('M').also { start = it } >= 0) {
+                    "CEILING(TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'M' }}))/3)"
                 } else {
-                    throw IllegalStateException("${format}无法转换为季度")
+                    throw IllegalStateException("${fieldFormat}无法转换为季度")
                 }
             }
             "MONTH" -> {
-                if (format.indexOf('M').also { start = it } >= 0) {
-                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'M' }}))"
+                if (fieldFormat.indexOf('M').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'M' }}))"
                 } else {
-                    throw IllegalStateException("${format}无法转换为月")
+                    throw IllegalStateException("${fieldFormat}无法转换为月")
                 }
             }
             "WEEK" -> {
-                if (format.indexOf('w').also { start = it } >= 0) {
-                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'w' }}))"
-                } else if (format.contains('y') && format.contains('M') && format.contains('d')) {
-                    "WEEK(TO_DATE(${expression}, ${format}))"
+                if (fieldFormat.indexOf('w').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'w' }}))"
+                } else if (fieldFormat.contains('y') && fieldFormat.contains('M') && fieldFormat.contains('d')) {
+                    "WEEK(TO_DATE(${expression}, ${fieldFormat}))"
                 } else {
-                    throw IllegalStateException("${format}无法转换为周")
+                    throw IllegalStateException("${fieldFormat}无法转换为周")
                 }
             }
             "DAY" -> {
-                if (format.indexOf('d').also { start = it } >= 0) {
-                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${format.count { it == 'd' }}))"
+                if (fieldFormat.indexOf('d').also { start = it } >= 0) {
+                    "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'd' }}))"
                 } else {
-                    throw IllegalStateException("${format}无法转换为天")
+                    throw IllegalStateException("${fieldFormat}无法转换为天")
                 }
             }
             "DATE_FORMAT" -> {

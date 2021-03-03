@@ -6,6 +6,7 @@ import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.exception.*
 import org.sunt.formula.function.FunctionDefinition
 import org.sunt.formula.function.StatementInfo
+import org.sunt.formula.function.TokenStatus
 import org.sunt.formula.parser.FormulaParser.*
 import java.util.*
 import kotlin.Comparator
@@ -202,14 +203,14 @@ class FormulaToSqlVisitor(
             ?: this.aliasFunctionNameMap[funcName]?.let { this.functionMap[it] })?.toMutableList()
             ?: throw IllegalStateException("函数${funcName}不存在")
 
-        val params =
-            recordCurrent(functionDefines, functionDefines.flatMap { it.arguments }.flatMap { it.reserved }.toSet()) {
-                visitFunctionParams(ctx.functionParams())
-            }
+        val params = if (ctx.functionParams() == null) emptyList()
+        else recordCurrent(functionDefines, functionDefines.flatMap { it.arguments }.flatMap { it.reserved }.toSet()) {
+            visitFunctionParams(ctx.functionParams())
+        }
         val filledParams: MutableList<StatementInfo?> = params.toMutableList()
         val finalFunctionDefine: FunctionDefinition = figureFunctionDefine(functionDefines, filledParams)
         val funcStmt = StatementInfo(ctx)
-        funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege }!!
+        funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege } ?: TokenStatus.NORMAL
         funcStmt.dataType =
             if (finalFunctionDefine.typeParamIndex != null) filledParams[finalFunctionDefine.typeParamIndex!!]!!.dataType else finalFunctionDefine.dataType
         funcStmt.expression = finalFunctionDefine.translate(this.dialect, filledParams)

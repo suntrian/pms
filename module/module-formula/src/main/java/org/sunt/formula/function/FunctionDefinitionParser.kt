@@ -57,7 +57,14 @@ object FunctionDefinitionParser {
 
     private fun _loadFunctions(uri: URI): Map<String, FunctionGroup> {
         val inputStream = when (uri.scheme) {
-            "classpath" -> this.javaClass.getResourceAsStream("/${uri.host}/${uri.path}")
+            "classpath" -> FunctionDefinitionParser.javaClass.getResourceAsStream(
+                "/${uri.host}${
+                    if (uri.path.startsWith(
+                            '/'
+                        )
+                    ) uri.path else '/' + uri.path
+                }"
+            )
             else -> uri.toURL().openStream()
         }
         val functionLexer = FunctionLexer(CharStreams.fromStream(inputStream))

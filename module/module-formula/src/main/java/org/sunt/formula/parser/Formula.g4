@@ -103,7 +103,7 @@ column
     ;
 
 identity
-    : IDENTITY
+    : IDENTITY | IF | LIKE | NOT
     ;
 
 L_PARENTHESES: '(';

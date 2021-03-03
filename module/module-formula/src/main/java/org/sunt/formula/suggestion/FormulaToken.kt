@@ -18,7 +18,7 @@ class FormulaToken private constructor(
 
     var id: String? = null
     var status: TokenStatus = TokenStatus.NORMAL
-    lateinit var scope: TokenItem
+    var scope: TokenItem = TokenItem.NONE()
     var comment: String = ""
 
 
