@@ -225,11 +225,10 @@ class FormulaSuggestVisitor(
                 val expectDataType = expectArg.genericType
                     ?.let { genericTypeMap[candidate]?.get(expectArg.genericType) }
                 try {
-                    if (expectArg.match(paramStmt.expression, paramStmt.dataType, paramStmt.token, expectDataType)) {
-                        if (expectArg.genericType != null && expectDataType == null) {
-                            genericTypeMap.putIfAbsent(candidate, mutableMapOf())
-                            genericTypeMap[candidate]!![expectArg.genericType!!] = paramStmt.dataType
-                        }
+                    expectArg.match(paramStmt.expression, paramStmt.dataType, paramStmt.token, expectDataType)
+                    if (expectArg.genericType != null && expectDataType == null) {
+                        genericTypeMap.putIfAbsent(candidate, mutableMapOf())
+                        genericTypeMap[candidate]!![expectArg.genericType!!] = paramStmt.dataType
                     }
                 } catch (e: ParamTypeMismatchException) {
                     tempSuggestions.putIfAbsent(candidate, mutableListOf())

@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test
 import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
 import org.sunt.formula.define.SqlDialect
+import org.sunt.formula.function.StatementInfo
 import org.sunt.formula.support.AllMatchColumn
+import org.sunt.formula.support.ExactColumn
+import org.sunt.formula.support.TestColumn
 
 class TestFormulaToSql {
 
@@ -203,6 +206,50 @@ class TestFormulaToSql {
         val stmt2 = helper.toSql("GROUP_CONCAT(abcd, bcde, cdef, defg)", SqlDialect.HIVE);
         println(stmt2.expression)
         Assertions.assertEquals("GROUP_CONCAT(abcd)", stmt2.expression)
+
+    }
+
+    @Test
+    fun testDateConvert() {
+        val helper = FormulaHelper.of(
+            ExactColumn(
+                mapOf(
+                    "abcd" to TestColumn("1234", "abcd", "abcd", DataType.DATE),
+                    "bcde" to TestColumn("2345", "bcde", "bcde", DataType.DATETIME),
+                    "cdef" to TestColumn("3456", "cdef", "cdef", DataType.STRING, "yyyy-MM-dd"),
+                    "defg" to TestColumn("4567", "defg", "defg", DataType.STRING, "yyyyMMdd"),
+                    "efgh" to TestColumn("5678", "efgh", "efgh", DataType.INTEGER, "yyyyMMdd"),
+                )
+            )
+        )
+        var stmt: StatementInfo
+        stmt = helper.toSql("YEAR(abcd)", SqlDialect.HIVE)
+        println(stmt.expression)
+        Assertions.assertEquals("YEAR(abcd)", stmt.expression)
+
+        stmt = helper.toSql("QUARTER(bcde)", SqlDialect.HIVE)
+        println(stmt.expression)
+        Assertions.assertEquals("CEILING(MONTH(bcde)/3)", stmt.expression)
+
+        stmt = helper.toSql("QUARTER(bcde)", SqlDialect.MYSQL)
+        println(stmt.expression)
+        Assertions.assertEquals("QUARTER(bcde)", stmt.expression)
+
+        stmt = helper.toSql("QUARTER(defg)", SqlDialect.HIVE)
+        println(stmt.expression)
+        Assertions.assertEquals(
+            "CEIL(CAST(SUBSTRING(defg, 5, 2) AS DECIMAL) / 3)".replace("\\s+".toRegex(), ""),
+            stmt.expression.replace("\\s+".toRegex(), "")
+        )
+
+        stmt = helper.toSql("DATE_ROLLUP(cdef, 'WEEK')", SqlDialect.HIVE)
+        println(stmt.expression)
+        Assertions.assertEquals(
+            "CONCAT(SUBSTRING(cdef, 1, 4), '-', WEEKOFYEAR(TO_TIMESTAMP(cdef, 'yyyy-MM-dd')))".replace(
+                "\\s+".toRegex(),
+                ""
+            ), stmt.expression.replace("\\s+".toRegex(), "")
+        )
 
     }
 }

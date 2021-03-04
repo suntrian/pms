@@ -232,7 +232,7 @@ class FormulaToSqlVisitor(
         funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege } ?: TokenStatus.NORMAL
         funcStmt.dataType =
             if (finalFunctionDefine.typeParamIndex != null) filledParams[finalFunctionDefine.typeParamIndex!!]!!.dataType else finalFunctionDefine.dataType
-        funcStmt.expression = finalFunctionDefine.translate(this.dialect, filledParams)
+        funcStmt.expression = finalFunctionDefine.translate(filledParams)
 
         return funcStmt
     }
@@ -362,7 +362,7 @@ class FormulaToSqlVisitor(
         functionDefines: List<FunctionDefinition>,
         actualArgs: MutableList<StatementInfo?>
     ): FunctionDefinition {
-        val matched = ArrayList<FunctionDefinition>(functionDefines.size)
+        val matched = HashMap<Int, FunctionDefinition>(functionDefines.size)
         val errorInfos = HashMap<Int, List<AbstractFormulaException>>(functionDefines.size)
         val matchedArgMap = HashMap<Int, Int>(functionDefines.size)
 
@@ -374,7 +374,7 @@ class FormulaToSqlVisitor(
 
             //无参函数
             if (actualArgSize == 0 && (expectArgSize == 0 || (expectArgSize == 1 && lastVararg))) {
-                matched.add(funcDefine)
+                matched[funcIndex] = funcDefine
                 continue
             } else if ((expectArgSize == 0 && actualArgSize > 0) || (actualArgSize == 0 && expectArgSize > 0)) {
                 errors.add(
@@ -406,12 +406,12 @@ class FormulaToSqlVisitor(
 
                 //参数匹配
                 try {
-                    if (expectArg.match(actualArg.expression, actualArg.dataType, actualArg.token, genericRealType)) {
-                        if (expectArg.genericType != null && genericRealType == null) {
-                            genericTypeMap[expectArg.genericType!!] = actualArg.dataType
-                        }
-                        matchedArgMap.compute(funcIndex) { _, v -> if (v == null) 1 else v + 1 }
+                    val score =
+                        expectArg.match(actualArg.expression, actualArg.dataType, actualArg.token, genericRealType)
+                    if (expectArg.genericType != null && genericRealType == null) {
+                        genericTypeMap[expectArg.genericType!!] = actualArg.dataType
                     }
+                    matchedArgMap.compute(funcIndex) { _, v -> if (v == null) score else v + score }
                 } catch (e: ParamTypeMismatchException) {
                     //参数不匹配
                     if (firstNoMatchArgType == null) {
@@ -460,13 +460,11 @@ class FormulaToSqlVisitor(
                 expectArg = expectIter.next()
                 actualArg = actualIter.next()!!
             }
-            matched.add(funcDefine)
+            matched[funcIndex] = funcDefine
         }
         if (matched.isNotEmpty()) {
-//            if (matched.size > 1) {
-//                throw AmbiguousFunctionException(matched)
-//            }
-            return matched[0]
+            val mostMatchFuncIndex = matchedArgMap.maxByOrNull { it.value }?.key ?: 0
+            return matched[mostMatchFuncIndex] ?: matched.iterator().next().value
         }
         if (errorInfos.isNotEmpty()) {
             val mostMatchErrorIndex = matchedArgMap.maxByOrNull { it.value }?.key ?: 0

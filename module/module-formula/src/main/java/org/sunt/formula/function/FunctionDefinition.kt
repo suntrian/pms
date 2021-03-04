@@ -43,8 +43,13 @@ class FunctionDefinition(val funcName: String) {
         this.functionImplement = FunctionImplement(this.funcName, translatorClass, constructArgs)
     }
 
-    fun translate(dialect: SqlDialect, params: List<StatementInfo?>): String {
-        return this.functionImplement?.translate(dialect, this.arguments, params) ?: ""
+    internal fun setDialect(dialect: SqlDialect) {
+        if (this.functionImplement == null) throw IllegalStateException("方法${funcName}未初始化转换SQL方法")
+        this.functionImplement!!.dialect = dialect
+    }
+
+    fun translate(params: List<StatementInfo?>): String {
+        return this.functionImplement?.translate(this.arguments, params) ?: ""
     }
 
     override fun equals(other: Any?): Boolean {
@@ -119,7 +124,7 @@ class FunctionDefinition(val funcName: String) {
 
         @Throws(ParamTypeMismatchException::class)
         @JvmOverloads
-        fun match(expr: String, dataType: DataType, tokenItem: TokenItem?, genericRealType: DataType? = null): Boolean {
+        fun match(expr: String, dataType: DataType, tokenItem: TokenItem?, genericRealType: DataType? = null): Int {
             if (!this.dataType.isAssignableFrom(dataType)) {
                 throw ParamTypeMismatchException(expr, this.dataType, dataType)
             }
@@ -132,7 +137,7 @@ class FunctionDefinition(val funcName: String) {
             if (this.reserved.isEmpty() && tokenItem?.scope?.equals(TokenScope.RESERVED) == true) {
                 throw ParamTypeMismatchException("${expr}不可为关键字${tokenItem.text}")
             }
-            if (optionValues.isNotEmpty() && !optionValues.contains(expr)) {
+            if (optionValues.isNotEmpty() && !optionValues.contains(expr.trim('"', '\'').toUpperCase())) {
                 throw ParamTypeMismatchException("${expr}应为选项[${optionValues.joinToString(", ")}]之一")
             }
             if (constant && !(numberRegex.matches(expr) || stringRegex.matches(expr))) {
@@ -141,7 +146,8 @@ class FunctionDefinition(val funcName: String) {
             if (!nullable && "null".equals(expr, true)) {
                 throw ParamTypeMismatchException("${expr}不可为null")
             }
-            return true
+            if (genericRealType ?: this.dataType == dataType) return 14
+            return 10
         }
 
         override fun equals(other: Any?): Boolean {
@@ -232,6 +238,7 @@ class FunctionDefinition(val funcName: String) {
 
     class FunctionImplement(private val funcName: String, private val implement: String) : FunctionTranslator {
 
+        internal var dialect = SqlDialect.DEFALUT
         private var translator: FunctionTranslator? = null
 
         constructor(funcName: String, translatorClass: String, constructArgs: Array<String>) : this(funcName, "") {
@@ -247,7 +254,7 @@ class FunctionDefinition(val funcName: String) {
             return Companion.translate(this.funcName, this.implement, expectArgs, actualArgs.map { it?.expression })
         }
 
-        fun translate(dialect: SqlDialect, expectArgs: List<FunctionArgument>, actualArgs: List<StatementInfo?>): String {
+        fun translate(expectArgs: List<FunctionArgument>, actualArgs: List<StatementInfo?>): String {
             return if (this.implement.isNotBlank()) {
                 Companion.translate(funcName, implement, expectArgs, actualArgs.map { it?.expression })
             } else if (this.translator != null) {

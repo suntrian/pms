@@ -32,6 +32,7 @@ object FunctionDefinitionParser {
                     val functionGroup = _loadFunctions(functionDefUri)[dialectName]
                         ?: throw IllegalStateException("未找到${dialectName}的函数定义")
                     dialectFunctions = mergeFunction(functionGroup)
+                    dialectFunctions!!.forEach { (_, defs) -> defs.forEach { it.setDialect(dialect) } }
                     dialectCache[dialect] = dialectFunctions!!
                 }
             }

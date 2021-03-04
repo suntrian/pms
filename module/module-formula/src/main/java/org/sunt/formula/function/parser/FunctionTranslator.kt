@@ -23,7 +23,22 @@ interface FunctionTranslator {
         actualArgs: List<StatementInfo?>
     ): String
 
-    //fun translate(args: Map<String, String>): String
+    fun translate(
+        funcName: String,
+        dialect: SqlDialect,
+        expectArgs: List<FunctionDefinition.FunctionArgument>,
+        vararg actualArgs: String?
+    ): String {
+        return translate(funcName, dialect, expectArgs,
+            actualArgs.map {
+                if (it == null)
+                    null
+                else StatementInfo("", -1, -1, -1, -1).apply {
+                    expression = it
+                    dataType = DataType.NONE
+                }
+            })
+    }
 
     companion object {
         @JvmStatic
@@ -47,6 +62,9 @@ interface FunctionTranslator {
                 }
                 LagLeadTranslator::class.simpleName -> {
                     LagLeadTranslator(args[0])
+                }
+                DateFunctionTranslator::class.simpleName -> {
+                    DateFunctionTranslator(args[0])
                 }
                 RawSqlTranslator::class.simpleName -> {
                     RawSqlTranslator
@@ -220,49 +238,53 @@ data class LagLeadTranslator(val funcName: String) : FunctionTranslator {
 }
 
 class DateFunctionTranslator(funcName: String) : FunctionTranslator {
-    private val function = funcName.toUpperCase()
 
     override fun translate(funcName: String, dialect: SqlDialect, expectArgs: List<FunctionDefinition.FunctionArgument>, actualArgs: List<StatementInfo?>): String {
+        val function = funcName.toUpperCase()
         val dateUnit = if ("DATE_ROLLUP" == function) {
             if ((actualArgs.size != 2 || actualArgs.any { it == null })) {
                 throw IllegalStateException("${function}要求两个参数")
             }
-            actualArgs[1]!!.expression.toUpperCase()
+            actualArgs[1]!!.expression.trim('"', '\'').toUpperCase()
         } else if (actualArgs.size != 1 || actualArgs[0] == null) {
             throw IllegalStateException("${function}要求一个参数")
         } else ""
         val field = actualArgs[0]!!
         var expression = field.expression
         if (field.dataType == DataType.DATE || field.dataType == DataType.DATETIME) {
-            return when (this.function) {
+            return when (function) {
                 "YEAR" -> "YEAR(${expression})"
                 "QUARTER" -> "QUARTER(${expression})"
                 "MONTH" -> "MONTH(${expression})"
                 "WEEK" -> "WEEKOFYEAR(${expression})"
                 "DAY" -> "DAY(${expression})"
                 "DATE_ROLLUP" -> functionMap[dialect]?.let {
-                    it.first.invoke(expression, it.second[dateUnit]?.takeIf { u -> u.isNotBlank() } ?: throw IllegalStateException("不支持的时间维度:${dateUnit}"))
+                    it.first.invoke(
+                        expression,
+                        it.second[dateUnit]?.takeIf { u -> u.isNotBlank() }
+                            ?: throw IllegalStateException("不支持的时间维度:${dateUnit}"))
                 } ?: throw IllegalStateException("")
-                else -> throw IllegalStateException("不支持的函数${this.function}")
+                else -> throw IllegalStateException("不支持的函数${function}")
             }
         } else if (field.dataType != DataType.INTEGER && field.dataType != DataType.STRING) {
             throw IllegalStateException("${field.dataType}不是有效的时间字段")
         }
         var fieldFormat: String = ""
-        if (field.payload !is IColumn || (field.payload as IColumn).format?.also { fieldFormat = it }
-                ?.isBlank() != false) {
+        val column = if (field.payload !is IColumn
+            || (field.payload as IColumn).format?.also { fieldFormat = it.trim() }?.isBlank() != false
+        ) {
             throw IllegalStateException("${expression}未配置时间格式")
-        }
+        } else field.payload as IColumn
         if (field.dataType == DataType.INTEGER) {
             expression = "TO_STRING(${expression})"
         }
         var start: Int = 0
-        val transform = when (this.function) {
+        val transform = when (function) {
             "YEAR" -> {
                 if (fieldFormat.indexOf('y').also { start = it } >= 0) {
                     "TO_INTEGER(SUBSTRING(${expression}, ${fieldFormat.indexOf('y') + 1}, ${fieldFormat.count { it == 'y' }}))"
                 } else {
-                    throw IllegalStateException("${fieldFormat}无法转换为年")
+                    throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换为年")
                 }
             }
             "QUARTER" -> {
@@ -271,30 +293,30 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
                 } else if (fieldFormat.indexOf('M').also { start = it } >= 0) {
                     "CEILING(TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'M' }}))/3)"
                 } else {
-                    throw IllegalStateException("${fieldFormat}无法转换为季度")
+                    throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换为季度")
                 }
             }
             "MONTH" -> {
                 if (fieldFormat.indexOf('M').also { start = it } >= 0) {
                     "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'M' }}))"
                 } else {
-                    throw IllegalStateException("${fieldFormat}无法转换为月")
+                    throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换为月")
                 }
             }
             "WEEK" -> {
                 if (fieldFormat.indexOf('w').also { start = it } >= 0) {
                     "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'w' }}))"
                 } else if (fieldFormat.contains('y') && fieldFormat.contains('M') && fieldFormat.contains('d')) {
-                    "WEEK(TO_DATE(${expression}, ${fieldFormat}))"
+                    "WEEK(TO_DATE(${expression}, '${fieldFormat}'))"
                 } else {
-                    throw IllegalStateException("${fieldFormat}无法转换为周")
+                    throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换为周")
                 }
             }
             "DAY" -> {
                 if (fieldFormat.indexOf('d').also { start = it } >= 0) {
                     "TO_INTEGER(SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'd' }}))"
                 } else {
-                    throw IllegalStateException("${fieldFormat}无法转换为天")
+                    throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换为天")
                 }
             }
             "DATE_ROLLUP" -> {
@@ -303,31 +325,58 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
                     "YEAR" -> {
                         if (fieldFormat.indexOf('y').also { start = it } >= 0) {
                             "SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.count { it == 'y' }})"
-                        } else throw IllegalStateException("${fieldFormat}无法转换为年")
+                        } else throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换到年")
                     }
                     "QUARTER" -> {
                         if (fieldFormat.indexOf('y').also { start = it } >= 0) {
                             if (fieldFormat.contains('Q') || fieldFormat.contains('q')) {
-                                "SUBSTRING(${expression}, ${start + 1}, ${fieldFormat.lastIndexOf('Q') - start}"
+                                fieldFormat = fieldFormat.replace("[^yQq]".toRegex(), " ")
+                                "SUBSTRING(${expression}, ${fieldFormat.indexOfFirst { it != ' ' }}, ${fieldFormat.trim().length}"
                             } else if (fieldFormat.contains('M')) {
-                                ""
+                                "CONCAT(".plus(
+                                    translate(
+                                        function,
+                                        dialect,
+                                        expectArgs,
+                                        actualArgs.also { it[1]!!.expression = "YEAR" })
+                                )
+                                    .plus(", '-', ")
+                                    .plus(translate("QUARTER", dialect, expectArgs, listOf(actualArgs[0])))
+                                    .plus(")")
                             }
                         }
-                        throw IllegalStateException("${fieldFormat}无法转换为年季")
+                        throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换到季")
                     }
                     "MONTH" -> {
-                        "SUBSTRING(${expression}, ${fieldFormat.indexOf('y') + 1}, ${fieldFormat.lastIndexOf('M') - fieldFormat.indexOf('y')})"
+                        fieldFormat = fieldFormat.takeIf { it.contains('M') }?.replace("[^yM]".toRegex(), " ")
+                            ?: throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换到月")
+                        "SUBSTRING(${expression}, ${fieldFormat.indexOfFirst { it != ' ' } + 1}, ${fieldFormat.trim().length})"
                     }
                     "WEEK" -> {
-                        ""
+                        fieldFormat = fieldFormat.takeIf { it.contains('d') }?.replace("[^yMd]".toRegex(), " ")
+                            ?: throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换到周")
+                        "CONCAT(".plus(
+                            this.translate(
+                                function,
+                                dialect,
+                                expectArgs,
+                                actualArgs.also { it[1]!!.expression = "YEAR" })
+                        )
+                            .plus(", '-', ")
+                            .plus(translate("WEEK", dialect, expectArgs, listOf(actualArgs[0])))
+                            .plus(")")
                     }
                     "DAY" -> {
-                        expression
+                        fieldFormat = fieldFormat.takeIf { it.contains('d') }?.replace("[^yMd]".toRegex(), " ")
+                            ?: throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换到天")
+                        if (fieldFormat.startsWith(' ') || fieldFormat.endsWith(' ')) {
+                            "SUBSTRING(${expression}, ${fieldFormat.indexOfFirst { it != ' ' } + 1}, ${fieldFormat.trim().length})"
+                        } else expression
                     }
                     else -> throw IllegalStateException("不支持的时间维度:${dateUnit}")
                 }
             }
-            else -> throw IllegalStateException("不支持的函数${this.function}")
+            else -> throw IllegalStateException("不支持的函数${function}")
         }
         return FormulaHelper.ofCurrent().toSql(transform, dialect).expression
     }

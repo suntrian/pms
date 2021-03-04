@@ -456,7 +456,7 @@ DATE_ROLLUP
     )
     @Category("时间函数")
     @Translate("", DateFunctionTranslator::class, "DATE_ROLLUP")
-    fun DATE_ROLLUP(field: Any, @Reserved("YEAR", "SEASON", "MONTH", "WEEK", "DAY") unit: String): String
+    fun DATE_ROLLUP(field: Any, @Option("'year'", "'quarter'", "'month'", "'week'", "'day'") unit: String): String
 
     @Description(
         """
@@ -940,7 +940,10 @@ interface Hive : Common {
     override fun RIGHT(text: String, length: Int): String
 
     @Translate("CEILING(MONTH($1)/3)")
-    override fun QUARTER(date: Any): Int
+    fun QUARTER(date: Date): Int
+
+    @Overload
+    fun QUARTER(date: DateTime): Int
 
     @Translate("""TO_DATE( DATE_ADD(cast($1 as timestamp), interval $2 {"$3".substring(1, "$3".length()-1)}))""")
     override fun DATEADD(date: Date, delta: Int, datepart: String): Date

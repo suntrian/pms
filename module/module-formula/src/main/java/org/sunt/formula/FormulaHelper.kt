@@ -14,8 +14,11 @@ import org.sunt.formula.suggestion.SuggestErrorStrategy
 class FormulaHelper private constructor(private val columnInterface: ColumnInterface) {
 
     fun toSql(expression: String, vendor: SqlDialect): StatementInfo {
-        try {
+        val set = if (CurrentContainer.get() == null) {
             CurrentContainer.set(this)
+            true
+        } else false
+        try {
             val lexer = FormulaLexer(CharStreams.fromString(expression))
             val tokens = CommonTokenStream(lexer)
             val rewriter = TokenStreamRewriter(tokens)
@@ -23,13 +26,18 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
             val toSqlVisitor = FormulaToSqlVisitor(vendor, columnInterface, rewriter)
             return toSqlVisitor.visitFormula(parser.formula())
         } finally {
-            CurrentContainer.remove()
+            if (set) {
+                CurrentContainer.remove()
+            }
         }
     }
 
     fun suggest(expression: String, cursor: Int, vendor: SqlDialect): FormulaSuggestion {
-        try {
+        val set = if (CurrentContainer.get() == null) {
             CurrentContainer.set(this)
+            true
+        } else false
+        try {
             val lexer = FormulaLexer(CharStreams.fromString(expression))
             val tokens = CommonTokenStream(lexer)
             val rewriter = TokenStreamRewriter(tokens)
@@ -41,7 +49,9 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
             parser.errorHandler = SuggestErrorStrategy()
             return suggestVisitor.visitFormula(parser.formula())
         } finally {
-            CurrentContainer.remove()
+            if (set) {
+                CurrentContainer.remove()
+            }
         }
 
     }
@@ -65,7 +75,7 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
         }
 
         internal fun ofCurrent(): FormulaHelper {
-            return CurrentContainer.get()
+            return CurrentContainer.get() ?: throw IllegalStateException("ofCurrent方法仅限内部使用")
         }
 
     }

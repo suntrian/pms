@@ -39,3 +39,14 @@ class RestrictColumn(private val map: Map<String, DataType>) : ColumnInterface {
     }
 
 }
+
+class ExactColumn(private val map: Map<String, IColumn?>) : ColumnInterface {
+    override fun getColumnById(id: String): IColumn? {
+        return map[id]
+    }
+
+    override fun getColumnByName(name: String): IColumn? {
+        return map[name]
+    }
+
+}

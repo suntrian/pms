@@ -1,15 +1,9 @@
-package org.sunt.formula.define;
+package org.sunt.formula.define
 
-public interface IColumn {
-
-    String getId();
-
-    String getName();
-
-    String getExpression();
-
-    DataType getDataType();
-
-    String getFormat();
-
+interface IColumn {
+    val id: String
+    val name: String
+    val expression: String
+    val dataType: DataType
+    val format: String?
 }
