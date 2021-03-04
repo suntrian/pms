@@ -91,6 +91,20 @@ class TestFormulaSuggest {
         Assertions.assertEquals(TokenStatus.UNKNOWN, suggestion12.suggestions[0].status)
         Assertions.assertTrue(suggestion12.suggestions[0].scopes == setOf(TokenItem.FUNCTION()))
 
+        val suggestion13 = FormulaHelper.of(RestrictColumn(mapOf("abcd" to DataType.STRING)))
+            .suggest("TO_INtEGER((", "TO_INtEGER((".length, SqlDialect.HIVE)
+        log.info("{}", suggestion13)
+        Assertions.assertEquals(1, suggestion13.suggestions.size)
+        Assertions.assertEquals(TokenStatus.EXPECTED, suggestion13.suggestions[0].status)
+        Assertions.assertTrue(suggestion13.suggestions[0].scopes == setOf(TokenItem.COLUMN(), TokenItem.FUNCTION()))
+
+        val suggestion14 = FormulaHelper.of(RestrictColumn(mapOf("abcd" to DataType.STRING)))
+            .suggest("TO_INtEGER((abcd + abcd", "TO_INtEGER((abcd + abcd".length, SqlDialect.HIVE)
+        log.info("{}", suggestion14)
+        Assertions.assertEquals(2, suggestion14.suggestions.size)
+        Assertions.assertEquals(TokenStatus.EXPECTED, suggestion14.suggestions[0].status)
+        Assertions.assertEquals(setOf(TokenItem.PARENTHESES(")")), suggestion14.suggestions[0].scopes)
+        Assertions.assertEquals("TO_INtEGER((abcd + abcd".length, suggestion14.suggestions[0].start)
     }
 
     @Test

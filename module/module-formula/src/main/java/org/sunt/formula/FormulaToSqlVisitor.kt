@@ -52,8 +52,6 @@ class FormulaToSqlVisitor(
                 predStmt.status = left.status
                 return predStmt
             }
-        } else {
-            checkDataType(right, left.dataType)
         }
 
         predStmt.expression = left.expression + operatorMap[ctx.op.type] + right.expression
@@ -107,8 +105,10 @@ class FormulaToSqlVisitor(
                 throw ParamTypeMismatchException(ctx.text, DataType.DECIMAL, DataType.STRING)
             }
         } else {
-            if (!left.dataType.isNumeric() || !right.dataType.isNumeric()) {
-                throw ParamTypeMismatchException("数据类型错误")
+            if (!left.dataType.isNumeric()) {
+                throw ParamTypeMismatchException("${left.expression}要求为数字类型")
+            } else if (!right.dataType.isNumeric()) {
+                throw ParamTypeMismatchException("${right.expression}要求为数字类型")
             }
         }
 

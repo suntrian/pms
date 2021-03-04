@@ -137,7 +137,9 @@ class FunctionDefinition(val funcName: String) {
             if (this.reserved.isEmpty() && tokenItem?.scope?.equals(TokenScope.RESERVED) == true) {
                 throw ParamTypeMismatchException("${expr}不可为关键字${tokenItem.text}")
             }
-            if (optionValues.isNotEmpty() && !optionValues.contains(expr.trim('"', '\'').toUpperCase())) {
+            if (optionValues.isNotEmpty() && optionValues.indexOfFirst {
+                    it.toString().trim('"', '\'').equals(expr.trim('"', '\''), true)
+                } < 0) {
                 throw ParamTypeMismatchException("${expr}应为选项[${optionValues.joinToString(", ")}]之一")
             }
             if (constant && !(numberRegex.matches(expr) || stringRegex.matches(expr))) {

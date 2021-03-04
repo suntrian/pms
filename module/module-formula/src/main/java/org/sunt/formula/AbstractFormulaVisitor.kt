@@ -293,11 +293,11 @@ abstract class AbstractFormulaVisitor(
         val log = LoggerFactory.getLogger(AbstractFormulaVisitor::class.java)!!
 
         @JvmStatic
-        fun checkDataType(stmt: StatementInfo, expectedType: DataType): Boolean {
-            if (expectedType === stmt.dataType) {
+        fun checkDataType(stmt: StatementInfo, vararg expectedType: DataType): Boolean {
+            if (expectedType.any { it == stmt.dataType }) {
                 return true
             }
-            throw ParamTypeMismatchException(stmt.expression, expectedType, stmt.dataType)
+            throw ParamTypeMismatchException(stmt.expression, expectedType[0], stmt.dataType)
         }
 
         @JvmStatic

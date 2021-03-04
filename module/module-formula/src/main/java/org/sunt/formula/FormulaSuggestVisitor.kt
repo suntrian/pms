@@ -231,14 +231,16 @@ class FormulaSuggestVisitor(
                         genericTypeMap[candidate]!![expectArg.genericType!!] = paramStmt.dataType
                     }
                 } catch (e: ParamTypeMismatchException) {
-                    tempSuggestions.putIfAbsent(candidate, mutableListOf())
-                    tempSuggestions[candidate]!!.add(TokenSuggestion.ofThis(paramCtx)
-                        .apply {
-                            status = TokenStatus.ERROR
-                            dataTypes = setOf(expectDataType ?: expectArg.dataType)
-                            scopes = functionAndColumn
-                            comment = e.message ?: ""
-                        })
+                    if (paramStmt.status.privilege < TokenStatus.EXPECTED.privilege) {
+                        tempSuggestions.putIfAbsent(candidate, mutableListOf())
+                        tempSuggestions[candidate]!!.add(TokenSuggestion.ofThis(paramCtx)
+                            .apply {
+                                status = TokenStatus.ERROR
+                                dataTypes = setOf(expectDataType ?: expectArg.dataType)
+                                scopes = functionAndColumn
+                                comment = e.message ?: ""
+                            })
+                    }
                     currentFunctionsIter.remove()
                 }
             }
@@ -518,21 +520,33 @@ class FormulaSuggestVisitor(
 
     override fun visitParenthesesExpression(ctx: ParenthesesExpressionContext): StatementInfo {
         var expStatus = TokenStatus.NORMAL
-        if (ctx.R_PARENTHESES()?.isNotValid() != false) {
-            this.tokenSuggestions.add(TokenSuggestion.ofNext(ctx.statement().stop)
-                .apply {
-                    this.status = TokenStatus.EXPECTED
-                    this.scopes = setOf(TokenItem.PARENTHESES(")"))
-                    this.comment = "期待')'"
+        val stmt = if (ctx.statement()?.isValid() == true) visitStatement(ctx.statement())
+        else {
+            if (isCursorTokenEnd(ctx.L_PARENTHESES())) {
+                this.tokenSuggestions.add(TokenSuggestion.ofNext(ctx.L_PARENTHESES()).apply {
+                    status = TokenStatus.EXPECTED
+                    scopes = functionAndColumn
+                    dataTypes = currentDataTypeCandidates
                 })
+            }
+            expStatus = TokenStatus.EXPECTED
+            null
+        }
+        if (stmt != null && ctx.R_PARENTHESES()?.isNotValid() != false) {
+            this.tokenSuggestions.add(
+                TokenSuggestion.ofNext(ctx.statement()?.takeIf { it.isValid() }?.stop ?: ctx.L_PARENTHESES().symbol)
+                    .apply {
+                        this.status = TokenStatus.EXPECTED
+                        this.scopes = setOf(TokenItem.PARENTHESES(")"))
+                        this.comment = "期待')'"
+                    })
             expStatus = TokenStatus.EXPECTED
         }
-        val stmt = visitStatement(ctx.statement())
         return StatementInfo(ctx).apply {
-            expression = "(" + stmt.expression + (ctx.R_PARENTHESES()?.text ?: "")
-            status = maxOf(expStatus, stmt.status, Comparator.comparingInt { it.privilege })
-            dataType = stmt.dataType
-            token = stmt.token
+            expression = "(" + (stmt?.expression ?: "") + (ctx.R_PARENTHESES()?.text ?: "")
+            status = maxOf(expStatus, (stmt?.status ?: TokenStatus.NORMAL), Comparator.comparingInt { it.privilege })
+            dataType = stmt?.dataType ?: DataType.ANY
+            token = stmt?.token ?: TokenItem.NONE()
         }
     }
 

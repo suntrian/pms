@@ -127,7 +127,7 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
                             annotationContext.functionParams()?.expression()?.map { it.text.trim('"') } ?: emptyList()
                         when (annotationType) {
                             Option::class.simpleName, Option::class.qualifiedName -> {
-                                functionArgument.optionValues = annotationParams.map { it.trim('\'').toUpperCase() }
+                                functionArgument.optionValues = annotationParams
                             }
                             Constant::class.simpleName, Constant::class.qualifiedName -> {
                                 functionArgument.constant = true
