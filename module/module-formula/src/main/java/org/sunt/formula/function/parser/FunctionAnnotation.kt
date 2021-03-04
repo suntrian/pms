@@ -44,4 +44,4 @@ annotation class Reserved(vararg val value: String)
 @Retention(AnnotationRetention.SOURCE)
 @Repeatable
 @Target(AnnotationTarget.VALUE_PARAMETER)
-annotation class Suggest(val value: String, val scope: String)
+annotation class Suggest(val scope: String, val value: String = "")

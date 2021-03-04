@@ -95,8 +95,8 @@ class FormulaSuggestVisitor(
                         } else if (firstArg.constant) {
                             scopes = setOf(TokenItem.NONE())
                             comment = "期待${firstArg.dataType}类型常量"
-                        } else if (firstArg.suggest != TokenItem.NONE()) {
-                            scopes = setOf(firstArg.suggest)
+                        } else if (firstArg.suggest.isNotEmpty()) {
+                            scopes = firstArg.suggest.toSet()
                         } else {
                             scopes = setOf(TokenItem.FUNCTION(), TokenItem.COLUMN())
                         }
@@ -301,8 +301,8 @@ class FormulaSuggestVisitor(
                         scopes =
                             expectArgs.first { it.optionValues.isNotEmpty() }.optionValues.map { TokenItem.CONSTANT(it.toString()) }
                                 .toSet()
-                    } else if (expectArgs.any { it.suggest != TokenItem.NONE() }) {
-                        scopes = setOf(expectArgs.first { it.suggest != TokenItem.NONE() }.suggest)
+                    } else if (expectArgs.any { it.suggest.isNotEmpty() }) {
+                        scopes = expectArgs.map { it.suggest }.first { it.isNotEmpty() }.toSet()
                     } else if (expectArgs.any { it.constant }) {
                         comment = "期待${expectArgs[0]}类型常量"
                     } else {

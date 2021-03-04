@@ -358,6 +358,7 @@ class TestFormulaSuggest {
         log.info("{}", suggestion)
         Assertions.assertEquals(1, suggestion.suggestions.size)
         Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.FUNCTION("ORDER_ITEM")))
+        Assertions.assertTrue(suggestion.suggestions[0].scopes.contains(TokenItem.COLUMN()))
 
     }
 

@@ -136,10 +136,9 @@ class FunctionDefinitionListener : FunctionParserBaseListener() {
                                 functionArgument.reserved = annotationParams.map { it.toUpperCase() }
                             }
                             Suggest::class.simpleName, Suggest::class.qualifiedName -> {
-                                if (annotationParams.size == 2) {
-                                    functionArgument.suggest =
-                                        TokenItem.of(annotationParams[1], annotationParams[0])
-                                }
+                                functionArgument.suggest.add(
+                                    TokenItem.of(annotationParams[0], annotationParams.getOrNull(1) ?: "")
+                                )
                             }
                         }
                     }

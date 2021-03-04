@@ -25,11 +25,11 @@ public class TokenItem {
         TokenScope tokenScope = TokenScope.valueOf(scope.toUpperCase());
         switch (tokenScope) {
             case COLUMN:
-                return COLUMN(text);
+                return text.isEmpty() ? COLUMN() : COLUMN(text);
             case CONSTANT:
                 return CONSTANT(text);
             case FUNCTION:
-                return FUNCTION(text);
+                return text.isEmpty() ? FUNCTION() : FUNCTION(text);
             case NONE:
                 return NONE();
             case COMMA:

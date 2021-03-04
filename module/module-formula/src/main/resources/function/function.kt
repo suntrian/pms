@@ -700,8 +700,8 @@ RANK_OVER
     @Category("分析函数")
     @Translate("", PartitionOrderTranslator::class, "RANK")
     fun RANK_OVER(
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): Int
 
     @Description(
@@ -712,8 +712,8 @@ RANK_OVER
     @Category("分析函数")
     @Translate("", PartitionOrderTranslator::class, "DENSE_RANK")
     fun DENSE_RANK_OVER(
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): Int
 
     @Description(
@@ -724,8 +724,8 @@ RANK_OVER
     @Category("分析函数")
     @Translate("", PartitionOrderTranslator::class, "PERCENT_RANK")
     fun PERCENT_RANK_OVER(
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): Int
 
     @Description("")
@@ -733,16 +733,16 @@ RANK_OVER
     @Translate("", PreDefinedPartitionOrderTranslator::class, "NTILE($1)", "1", "2")
     fun NTILE_OVER(
         bucket: Int,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): Int
 
     @Description("")
     @Category("分析函数")
     @Translate("", PartitionOrderTranslator::class, "ROW_NUMBER")
     fun ROW_NUM_OVER(
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): Int
 
     @Category("分析函数")
@@ -751,23 +751,23 @@ RANK_OVER
         field: T,
         offset: Int?,
         defaultVal: T?,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): T
 
     @Overload
     fun <T> LAG_OVER(
         field: T,
         offset: Int?,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): T
 
     @Overload
     fun <T> LAG_OVER(
         field: T,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): T
 
     @Category("分析函数")
@@ -776,31 +776,31 @@ RANK_OVER
         field: T,
         offset: Int?,
         defaultVal: T?,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): T
 
     @Overload
     fun <T> LEAD_OVER(
         field: T,
         offset: Int?,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): T
 
     @Overload
     fun <T> LEAD_OVER(
         field: T,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>
     ): T
 
     @Category("分析函数")
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "FIRST_VALUE($1)", "1", "2", "3", "4", "5")
     fun <T> FIRST_VALUE_OVER(
         field: T,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
@@ -810,22 +810,22 @@ RANK_OVER
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "LAST_VALUE($1)", "1", "2", "3", "4", "5")
     fun <T> LAST_VALUE_OVER(
         field: T,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
     ): T
 
 //    @Category("分析函数")
-//    fun <T> NTH_VALUE_OVER(field: T, offset: Int, @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?, @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>, @Reserved("ROWS", "RANGE") unit: String="ROWS",  @Constant from: Int?=0, @Constant end: Int?=0): T
+//    fun <T> NTH_VALUE_OVER(field: T, offset: Int, @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?, @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>, @Reserved("ROWS", "RANGE") unit: String="ROWS",  @Constant from: Int?=0, @Constant end: Int?=0): T
 
     @Category("分析函数")
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "COUNT($1)", "1", "2", "3", "4", "5")
     fun COUNT_OVER(
         field: Any,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
@@ -836,8 +836,8 @@ RANK_OVER
     fun COUNT_OVER(
         @Reserved("DISTINCT", "ALL") dist: Unit,
         field: Any,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
@@ -847,8 +847,8 @@ RANK_OVER
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "MAX($1)", "1", "2", "3", "4", "5")
     fun <T> MAX_OVER(
         field: T,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
@@ -858,8 +858,8 @@ RANK_OVER
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "MIN($1)", "1", "2", "3", "4", "5")
     fun <T> MIN_OVER(
         field: T,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
@@ -869,8 +869,8 @@ RANK_OVER
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "AVG($1)", "1", "2", "3", "4", "5")
     fun AVG_OVER(
         field: Double,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
@@ -880,8 +880,8 @@ RANK_OVER
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "SUM($1)", "1", "2", "3", "4", "5")
     fun SUM_OVER(
         field: Double,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
@@ -891,8 +891,8 @@ RANK_OVER
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "STDDEV($1)", "1", "2", "3", "4", "5")
     fun STDDEV_OVER(
         field: Double,
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
@@ -908,8 +908,8 @@ CUME_DIST_OVER
     )
     @Translate("", PreDefinedPartitionOrderFrameTranslator::class, "CUME_DIST()", "0", "1", "2", "3", "4")
     fun CUME_DIST_OVER(
-        @Suggest("PARTITION_BY", "FUNCTION") partitionBy: List<Any>?,
-        @Suggest("ORDER_BY", "FUNCTION") orderBy: List<Any>?,
+        @Suggest("FUNCTION", "PARTITION_BY") partitionBy: List<Any>?,
+        @Suggest("FUNCTION", "ORDER_BY") orderBy: List<Any>?,
         @Reserved("ROWS", "RANGE") unit: String = "ROWS",
         @Constant from: Int? = 0,
         @Constant end: Int? = 0
@@ -922,7 +922,10 @@ CUME_DIST_OVER
     private fun PARTITION_BY(vararg item: Any): List<Any> = emptyList()
 
     @Translate("$0")
-    private fun ORDER_BY(@Suggest("ORDER_ITEM", "FUNCTION") vararg item: Any): List<Any> = emptyList()
+    private fun ORDER_BY(
+        @Suggest("COLUMN")
+        @Suggest("FUNCTION", "ORDER_ITEM") vararg item: Any
+    ): List<Any> = emptyList()
 
     @Translate("$1 $2")
     private fun <T> ORDER_ITEM(item: T, @Reserved("ASC", "DESC") order: Unit): T? = null

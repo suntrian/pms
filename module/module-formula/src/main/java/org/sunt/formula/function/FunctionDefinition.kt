@@ -120,7 +120,7 @@ class FunctionDefinition(val funcName: String) {
         var nullable: Boolean = false
         var constant: Boolean = false
         var reserved: List<String> = emptyList()
-        var suggest: TokenItem = TokenItem.NONE()
+        var suggest: MutableList<TokenItem> = mutableListOf()
 
         @Throws(ParamTypeMismatchException::class)
         @JvmOverloads
