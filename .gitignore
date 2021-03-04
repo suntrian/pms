@@ -37,3 +37,5 @@ gradle-app.setting
 .idea/
 
 gen/
+out/
+generated/
