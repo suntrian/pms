@@ -35,7 +35,7 @@ class TestFormulaSuggest {
         val suggestion4 = FormulaHelper.of(AllMatchColumn(emptyMap())).suggest("CEil(", "ceil(".length, SqlDialect.HIVE)
         log.info("{}", suggestion4)
         Assertions.assertTrue(suggestion4.suggestions.any { it.dataTypes.contains(DataType.DECIMAL) })
-        Assertions.assertTrue(suggestion4.suggestions.size == 1 && suggestion4.suggestions[0].dataTypes.size == 1)
+        Assertions.assertTrue(suggestion4.suggestions.size == 1 && suggestion4.suggestions[0].dataTypes.size == 2)
 
         val suggestion5 =
             FormulaHelper.of(AllMatchColumn(emptyMap())).suggest("CEiL()", "ceil(".length, SqlDialect.HIVE)
@@ -46,14 +46,14 @@ class TestFormulaSuggest {
             .suggest("CEiL(abcd", "CEiL(abcd".length, SqlDialect.HIVE)
         log.info("{}", suggestion6)
         Assertions.assertTrue(suggestion6.suggestions.size == 2)
-        Assertions.assertTrue(suggestion6.suggestions.any { it.dataTypes.size == 1 && it.dataTypes.contains(DataType.DECIMAL) && it.leftPart == "abcd" })
+        Assertions.assertTrue(suggestion6.suggestions.any { it.dataTypes.size == 2 && it.dataTypes.contains(DataType.INTEGER) && it.leftPart == "abcd" })
         Assertions.assertTrue(suggestion6.suggestions.any { it.scopes.contains(TokenItem.PARENTHESES(")")) })
 
         val suggestion7 = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.DECIMAL)))
             .suggest("CEiL(abcd)", "CEiL(abcd".length, SqlDialect.HIVE)
         log.info("suggestion7: {}", suggestion7)
         Assertions.assertTrue(suggestion7.suggestions.size == 1)
-        Assertions.assertTrue(suggestion7.suggestions.any { it.dataTypes.size == 1 && it.dataTypes.contains(DataType.DECIMAL) && it.leftPart == "abcd" })
+        Assertions.assertTrue(suggestion7.suggestions.any { it.dataTypes.size == 2 && it.dataTypes.contains(DataType.INTEGER) && it.leftPart == "abcd" })
 
         val suggestion8 = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.DECIMAL)))
             .suggest("CEiL(abcd", "CEi".length, SqlDialect.HIVE)

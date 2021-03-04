@@ -18,6 +18,15 @@ class TokenSuggestion constructor(
     var leftPart: String? = null
     var scopes: Set<TokenItem> = emptySet()
     var dataTypes: Set<DataType> = emptySet()
+        set(value) {
+            if (value.contains(DataType.DECIMAL)) {
+                if (!value.contains(DataType.INTEGER)) {
+                    field = value.toMutableSet().also { it.add(DataType.INTEGER) }
+                    return
+                }
+            }
+            field = value
+        }
 
     fun setScopes(vararg scopes: TokenItem) {
         this.scopes = scopes.toSet()
