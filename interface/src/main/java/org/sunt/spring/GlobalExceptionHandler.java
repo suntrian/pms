@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.sunt.common.R;
+import org.sunt.common.mvc.R;
 import org.sunt.exception.NotExistsException;
 
 @Slf4j

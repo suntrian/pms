@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.sunt.storage.LocalStorage;
+import org.sunt.storage.repo.impl.LocalStorage;
 
 import java.io.File;
 import java.io.IOException;

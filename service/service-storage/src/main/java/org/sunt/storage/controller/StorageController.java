@@ -7,8 +7,9 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.sunt.common.R;
-import org.sunt.storage.entity.FileInfoDTO;
+import org.sunt.api.storage.controller.StorageApi;
+import org.sunt.api.storage.entity.FileInfoDTO;
+import org.sunt.common.mvc.R;
 import org.sunt.storage.entity.UploadFile;
 import org.sunt.storage.service.FileService;
 

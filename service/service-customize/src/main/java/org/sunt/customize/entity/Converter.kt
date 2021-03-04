@@ -1,7 +1,9 @@
 package org.sunt.customize.entity
 
 import org.springframework.beans.BeanUtils
-import org.sunt.customize.meta.DataType
+import org.sunt.api.customize.dictionary.DataType
+import org.sunt.api.customize.entity.EntityDTO
+import org.sunt.api.customize.entity.FieldDTO
 
 object Converter {
 

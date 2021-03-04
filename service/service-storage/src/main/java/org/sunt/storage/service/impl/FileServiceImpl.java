@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.sunt.exception.NotExistsException;
 import org.sunt.spring.I18n;
-import org.sunt.storage.IStorage;
 import org.sunt.storage.entity.UploadFile;
+import org.sunt.storage.repo.IStorage;
 import org.sunt.storage.service.FileService;
 
 @Slf4j

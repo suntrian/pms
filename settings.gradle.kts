@@ -7,6 +7,7 @@ include("module:module-storage")
 include("module:module-sqlanalysis")
 include("module:module-multitenant")
 include("module:module-formula")
+include("module:module-keyword")
 
 include("service")
 include("service:service-storage")

@@ -5,8 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.sunt.identity.TestIdentityApplication;
+import org.sunt.identity.dao.MenuDao;
 import org.sunt.identity.entity.Menu;
-import org.sunt.identity.repository.MenuRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,7 +18,7 @@ public class TestMenuService extends TestIdentityApplication {
     @Autowired
     private MenuService menuService;
     @Autowired
-    private MenuRepository menuRepository;
+    private MenuDao menuRepository;
 
     @BeforeEach
     public void setUp() {

@@ -8,7 +8,10 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAut
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @EnableDiscoveryClient()
-@SpringBootApplication(scanBasePackages = {"org.sunt"}, exclude = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class})
+@SpringBootApplication(
+        scanBasePackages = {"org.sunt"},
+        exclude = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class}
+)
 public class IdentityApplication {
 
     public static void main(String[] args) {

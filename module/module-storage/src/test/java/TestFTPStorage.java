@@ -8,7 +8,7 @@ import org.apache.ftpserver.usermanager.impl.WritePermission;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.sunt.storage.FTPStorage;
+import org.sunt.storage.repo.impl.FTPStorage;
 
 import java.io.IOException;
 import java.util.ArrayList;

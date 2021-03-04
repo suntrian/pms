@@ -3,10 +3,11 @@ package org.sunt.identity.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.sunt.common.R;
+import org.sunt.api.identity.controller.MenuApi;
+import org.sunt.api.identity.entity.MenuNode;
+import org.sunt.common.mvc.R;
 import org.sunt.identity.entity.Converter;
 import org.sunt.identity.entity.Menu;
-import org.sunt.identity.entity.MenuNode;
 import org.sunt.identity.service.MenuService;
 
 import java.util.List;

@@ -13,7 +13,6 @@ subprojects {
         //implementation("org.apache.rocketmq:rocketmq-spring-boot-starter:2.1.1")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
         //testImplementation("org.springframework.boot:spring-boot-test")
-        testImplementation("org.mockito:mockito-core")
         testImplementation("com.h2database:h2:1.4.200")
         //有些是内部依赖的服务，并不需要对外开放，因此swagger放到各子项目中具体添加
         //implementation("io.springfox:springfox-swagger2:3.0.0")

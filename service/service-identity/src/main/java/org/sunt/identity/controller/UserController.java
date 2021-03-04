@@ -3,9 +3,10 @@ package org.sunt.identity.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.sunt.common.R;
+import org.sunt.api.identity.controller.UserApi;
+import org.sunt.api.identity.entity.UserVo;
+import org.sunt.common.mvc.R;
 import org.sunt.identity.entity.Converter;
-import org.sunt.identity.entity.UserVo;
 import org.sunt.identity.service.UserService;
 
 @RestController

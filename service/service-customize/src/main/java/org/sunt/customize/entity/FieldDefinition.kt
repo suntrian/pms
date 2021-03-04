@@ -1,6 +1,6 @@
 package org.sunt.customize.entity
 
-import org.sunt.customize.meta.DataType
+import org.sunt.api.customize.dictionary.DataType
 
 data class FieldDefinition(val id: Int,
                            val name: String,

@@ -3,18 +3,18 @@ package org.sunt.identity.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
+import org.sunt.identity.dao.MenuDao;
 import org.sunt.identity.entity.Menu;
-import org.sunt.identity.repository.MenuRepository;
 
 import java.util.List;
 
 @Service
 public class MenuService {
 
-    private final MenuRepository menuRepository;
+    private final MenuDao menuRepository;
 
     @Autowired
-    public MenuService(MenuRepository menuRepository) {
+    public MenuService(MenuDao menuRepository) {
         this.menuRepository = menuRepository;
     }
 
