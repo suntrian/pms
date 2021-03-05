@@ -48,8 +48,8 @@ class FunctionDefinition(val funcName: String) {
         this.functionImplement!!.dialect = dialect
     }
 
-    fun translate(params: List<StatementInfo?>): String {
-        return this.functionImplement?.translate(this.arguments, params) ?: ""
+    fun translate(paramsRoot: StatementInfo): String {
+        return this.functionImplement?.translate(this, paramsRoot) ?: ""
     }
 
     override fun equals(other: Any?): Boolean {
@@ -248,19 +248,18 @@ class FunctionDefinition(val funcName: String) {
         }
 
         override fun translate(
-            funcName: String,
             dialect: SqlDialect,
-            expectArgs: List<FunctionArgument>,
-            actualArgs: List<StatementInfo?>
+            function: FunctionDefinition,
+            actualArgRoot: StatementInfo
         ): String {
-            return Companion.translate(this.funcName, this.implement, expectArgs, actualArgs.map { it?.expression })
+            return Companion.translate(this.funcName, this.implement, function, actualArgRoot.children.map { it.expression })
         }
 
-        fun translate(expectArgs: List<FunctionArgument>, actualArgs: List<StatementInfo?>): String {
+        fun translate(function: FunctionDefinition, actualArgRoot: StatementInfo): String {
             return if (this.implement.isNotBlank()) {
-                Companion.translate(funcName, implement, expectArgs, actualArgs.map { it?.expression })
+                Companion.translate(funcName, implement, function, actualArgRoot.children.map { it.expression })
             } else if (this.translator != null) {
-                this.translator!!.translate(funcName, dialect, expectArgs, actualArgs)
+                this.translator!!.translate(dialect, function, actualArgRoot)
             } else throw IllegalStateException("${funcName}未提供转换SQL方法")
         }
 
@@ -273,10 +272,11 @@ class FunctionDefinition(val funcName: String) {
             fun translate(
                 funcName: String,
                 implement: String,
-                arguments: List<FunctionArgument>,
+                function: FunctionDefinition,
                 idxParams: List<String?>,
                 namedParams: Map<String, String?> = emptyMap()
             ): String {
+                val arguments = function.arguments
                 var matcher = PARAM_PATTERN.matcher(implement)
                 val sqlBuffer = StringBuffer()
                 var lastMatchedIndex = 0

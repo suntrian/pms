@@ -5,6 +5,7 @@ import org.sunt.formula.define.DataType
 import org.sunt.formula.define.IColumn
 import org.sunt.formula.define.SqlDialect
 import org.sunt.formula.function.FunctionDefinition
+import org.sunt.formula.function.FunctionDefinitionParser
 import org.sunt.formula.function.StatementInfo
 import java.util.regex.Pattern
 
@@ -12,31 +13,25 @@ import java.util.regex.Pattern
 interface FunctionTranslator {
 
     /**
-     * @param funcName 待转换的函数的名称，非SQL函数
-     * @param expectArgs 待转换的函数的参数定义
-     * @param actualArgs 实际的参数
+     * @param dialect 数据库方言
+     * @param function 调用的函数
+     * @param actualArgRoot 实际的参数根节点
      */
     fun translate(
-        funcName: String,
         dialect: SqlDialect,
-        expectArgs: List<FunctionDefinition.FunctionArgument>,
-        actualArgs: List<StatementInfo?>
+        function: FunctionDefinition,
+        actualArgRoot: StatementInfo
     ): String
 
     fun translate(
-        funcName: String,
         dialect: SqlDialect,
-        expectArgs: List<FunctionDefinition.FunctionArgument>,
+        function: String,
         vararg actualArgs: String?
     ): String {
-        return translate(funcName, dialect, expectArgs,
-            actualArgs.map {
-                if (it == null)
-                    null
-                else StatementInfo("", -1, -1, -1, -1).apply {
-                    expression = it
-                    dataType = DataType.NONE
-                }
+        return translate(dialect,
+            FunctionDefinitionParser.loadFunctions(dialect)[function]?.get(0) ?: throw IllegalStateException("函数${function}不存在"),
+            StatementInfo.empty().apply {
+                children = actualArgs.map { it?.let { StatementInfo.empty().apply { expression = it } } ?: StatementInfo.Empty }
             })
     }
 
@@ -64,7 +59,7 @@ interface FunctionTranslator {
                     LagLeadTranslator(args[0])
                 }
                 DateFunctionTranslator::class.simpleName -> {
-                    DateFunctionTranslator(args[0])
+                    DateFunctionTranslator
                 }
                 RawSqlTranslator::class.simpleName -> {
                     RawSqlTranslator
@@ -78,10 +73,9 @@ interface FunctionTranslator {
 
 object EmptyTranslator : FunctionTranslator {
     override fun translate(
-        funcName: String,
         dialect: SqlDialect,
-        expectArgs: List<FunctionDefinition.FunctionArgument>,
-        actualArgs: List<StatementInfo?>
+        function: FunctionDefinition,
+        actualArgRoot: StatementInfo
     ): String {
         throw IllegalAccessException("not supported")
     }
@@ -90,11 +84,11 @@ object EmptyTranslator : FunctionTranslator {
 data class PartitionOrderTranslator(val funcName: String) : FunctionTranslator {
 
     override fun translate(
-        funcName: String,
         dialect: SqlDialect,
-        expectArgs: List<FunctionDefinition.FunctionArgument>,
-        actualArgs: List<StatementInfo?>
+        function: FunctionDefinition,
+        actualArgRoot: StatementInfo
     ): String {
+        val actualArgs = actualArgRoot.children
         val builder = StringBuilder(this.funcName).append("() OVER (")
         renderPartitionAndOrderBy(
             builder,
@@ -110,14 +104,14 @@ data class PreDefinedPartitionOrderTranslator(val expression: String, val partit
     FunctionTranslator {
 
     override fun translate(
-        funcName: String,
         dialect: SqlDialect,
-        expectArgs: List<FunctionDefinition.FunctionArgument>,
-        actualArgs: List<StatementInfo?>
+        function: FunctionDefinition,
+        actualArgRoot: StatementInfo
     ): String {
-        val actualArgStrs = actualArgs.map { it?.expression }
+        val actualArgs = actualArgRoot.children
+        val actualArgStrs = actualArgs.map { it.expression }
         val translatedExpr =
-            FunctionDefinition.FunctionImplement.translate(funcName, expression, expectArgs, actualArgStrs)
+            FunctionDefinition.FunctionImplement.translate(function.funcName, expression, function, actualArgStrs)
         val builder = StringBuilder(translatedExpr).append(" OVER (")
         renderPartitionAndOrderBy(
             builder,
@@ -138,21 +132,15 @@ data class PreDefinedPartitionOrderFrameTranslator(
     val frameEndIndex: Int
 ) : FunctionTranslator {
     override fun translate(
-        funcName: String,
         dialect: SqlDialect,
-        expectArgs: List<FunctionDefinition.FunctionArgument>,
-        actualArgs: List<StatementInfo?>
+        function: FunctionDefinition,
+        actualArgRoot: StatementInfo
     ): String {
-        val actualArgStrs = actualArgs.map { it?.expression }
+        val expectArgs = function.arguments
+        val actualArgs = actualArgRoot.children
+        val actualArgStrs = actualArgs.map { it.expression }
         val builder =
-            StringBuilder(
-                FunctionDefinition.FunctionImplement.translate(
-                    funcName,
-                    expression,
-                    expectArgs,
-                    actualArgStrs
-                )
-            )
+            StringBuilder(FunctionDefinition.FunctionImplement.translate(function.funcName, expression, function, actualArgStrs))
                 .append(" OVER (")
         renderPartitionAndOrderBy(
             builder,
@@ -203,12 +191,13 @@ data class PreDefinedPartitionOrderFrameTranslator(
 data class LagLeadTranslator(val funcName: String) : FunctionTranslator {
 
     override fun translate(
-        funcName: String,
         dialect: SqlDialect,
-        expectArgs: List<FunctionDefinition.FunctionArgument>,
-        actualArgs: List<StatementInfo?>
+        function: FunctionDefinition,
+        actualArgRoot: StatementInfo
     ): String {
-        val actualArgStrs = actualArgs.map { it?.expression }
+        val expectArgs = function.arguments
+        val actualArgs = actualArgRoot.children
+        val actualArgStrs = actualArgs.map { it.expression }
         val argSize = actualArgStrs.size
         if (argSize > 5) {
             throw IllegalStateException("函数${this.funcName}调用参数过多")
@@ -237,22 +226,23 @@ data class LagLeadTranslator(val funcName: String) : FunctionTranslator {
 
 }
 
-class DateFunctionTranslator(funcName: String) : FunctionTranslator {
+object DateFunctionTranslator : FunctionTranslator {
 
-    override fun translate(funcName: String, dialect: SqlDialect, expectArgs: List<FunctionDefinition.FunctionArgument>, actualArgs: List<StatementInfo?>): String {
-        val function = funcName.toUpperCase()
-        val dateUnit = if ("DATE_ROLLUP" == function) {
-            if ((actualArgs.size != 2 || actualArgs.any { it == null })) {
-                throw IllegalStateException("${function}要求两个参数")
+    override fun translate(dialect: SqlDialect, function: FunctionDefinition, actualArgRoot: StatementInfo): String {
+        val actualArgs = actualArgRoot.children
+        val functionName = function.funcName.toUpperCase()
+        val dateUnit = if ("DATE_ROLLUP" == functionName) {
+            if ((actualArgs.size != 2 || actualArgs.any { it == StatementInfo.Empty })) {
+                throw IllegalStateException("${functionName}要求两个参数")
             }
-            actualArgs[1]!!.expression.trim('"', '\'').toUpperCase()
-        } else if (actualArgs.size != 1 || actualArgs[0] == null) {
-            throw IllegalStateException("${function}要求一个参数")
+            actualArgs[1].expression.trim('"', '\'').toUpperCase()
+        } else if (actualArgs.size != 1 || actualArgs[0] == StatementInfo.Empty) {
+            throw IllegalStateException("${functionName}要求一个参数")
         } else ""
-        val field = actualArgs[0]!!
+        val field = actualArgs[0]
         var expression = field.expression
         if (field.dataType == DataType.DATE || field.dataType == DataType.DATETIME) {
-            return when (function) {
+            return when (functionName) {
                 "YEAR" -> "YEAR(${expression})"
                 "QUARTER" -> "QUARTER(${expression})"
                 "MONTH" -> "MONTH(${expression})"
@@ -264,12 +254,12 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
                         it.second[dateUnit]?.takeIf { u -> u.isNotBlank() }
                             ?: throw IllegalStateException("不支持的时间维度:${dateUnit}"))
                 } ?: throw IllegalStateException("")
-                else -> throw IllegalStateException("不支持的函数${function}")
+                else -> throw IllegalStateException("不支持的函数${functionName}")
             }
         } else if (field.dataType != DataType.INTEGER && field.dataType != DataType.STRING) {
             throw IllegalStateException("${field.dataType}不是有效的时间字段")
         }
-        var fieldFormat: String = ""
+        var fieldFormat = ""
         val column = if (field.payload !is IColumn
             || (field.payload as IColumn).format?.also { fieldFormat = it.trim() }?.isBlank() != false
         ) {
@@ -278,8 +268,8 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
         if (field.dataType == DataType.INTEGER) {
             expression = "TO_STRING(${expression})"
         }
-        var start: Int = 0
-        val transform = when (function) {
+        var start: Int
+        val transform = when (functionName) {
             "YEAR" -> {
                 if (fieldFormat.indexOf('y').also { start = it } >= 0) {
                     "TO_INTEGER(SUBSTRING(${expression}, ${fieldFormat.indexOf('y') + 1}, ${fieldFormat.count { it == 'y' }}))"
@@ -334,14 +324,14 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
                                 "SUBSTRING(${expression}, ${fieldFormat.indexOfFirst { it != ' ' }}, ${fieldFormat.trim().length}"
                             } else if (fieldFormat.contains('M')) {
                                 "CONCAT(".plus(
-                                    translate(
-                                        function,
-                                        dialect,
-                                        expectArgs,
-                                        actualArgs.also { it[1]!!.expression = "YEAR" })
+                                    translate(dialect, function,
+                                        StatementInfo.empty().apply { children = actualArgs.also { it[1].expression = "YEAR" } })
                                 )
                                     .plus(", '-', ")
-                                    .plus(translate("QUARTER", dialect, expectArgs, listOf(actualArgs[0])))
+                                    .plus(
+                                        translate(dialect, FunctionDefinitionParser.loadFunctions(dialect)["QUARTER"]?.get(0)!!,
+                                            StatementInfo.empty().apply { children = listOf(actualArgs[0]) })
+                                    )
                                     .plus(")")
                             }
                         }
@@ -357,13 +347,15 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
                             ?: throw IllegalStateException("字段${column.name}格式${fieldFormat}无法转换到周")
                         "CONCAT(".plus(
                             this.translate(
-                                function,
                                 dialect,
-                                expectArgs,
-                                actualArgs.also { it[1]!!.expression = "YEAR" })
+                                function,
+                                StatementInfo.empty().apply { children = actualArgs.also { it[1].expression = "YEAR" } })
                         )
                             .plus(", '-', ")
-                            .plus(translate("WEEK", dialect, expectArgs, listOf(actualArgs[0])))
+                            .plus(
+                                translate(dialect, FunctionDefinitionParser.loadFunctions(dialect)["WEEK"]?.get(0)!!,
+                                    StatementInfo.empty().apply { children = listOf(actualArgs[0]) })
+                            )
                             .plus(")")
                     }
                     "DAY" -> {
@@ -376,40 +368,37 @@ class DateFunctionTranslator(funcName: String) : FunctionTranslator {
                     else -> throw IllegalStateException("不支持的时间维度:${dateUnit}")
                 }
             }
-            else -> throw IllegalStateException("不支持的函数${function}")
+            else -> throw IllegalStateException("不支持的函数${functionName}")
         }
         return FormulaHelper.ofCurrent().toSql(transform, dialect).expression
     }
 
-    companion object {
-        private val functionMap = mapOf(
-            SqlDialect.MYSQL to
-                    ({ field: String, format: String -> "DATE_FORMAT(${field}, '${format}')" } to mapOf(
-                        "YEAR" to "%Y",
-                        "SEASON" to "",
-                        "MONTH" to "%Y-%m",
-                        "WEEK" to "%Y-%u",
-                        "DAY" to "%Y-%m-%d"
-                    )),
-            SqlDialect.HIVE to
-                    ({ field: String, format: String -> "FROM_TIMESTAMP(${field}, '${format}')" } to mapOf(
-                        "YEAR" to "yyyy",
-                        "SEASON" to "yyyy-QQ",
-                        "MONTH" to "yyyy-MM",
-                        "WEEK" to "yyyy-WW",
-                        "DAY" to "yyyy-MM-dd"
-                    )),
-            SqlDialect.IMPALA to
-                    ({ field: String, format: String -> "FROM_TIMESTAMP(${field}, '${format}')" } to mapOf(
-                        "YEAR" to "yyyy",
-                        "SEASON" to "yyyy-QQ",
-                        "MONTH" to "yyyy-MM",
-                        "WEEK" to "yyyy-WW",
-                        "DAY" to "yyyy-MM-dd"
-                    )),
-        )
-
-    }
+    private val functionMap = mapOf(
+        SqlDialect.MYSQL to
+                ({ field: String, format: String -> "DATE_FORMAT(${field}, '${format}')" } to mapOf(
+                    "YEAR" to "%Y",
+                    "SEASON" to "",
+                    "MONTH" to "%Y-%m",
+                    "WEEK" to "%Y-%u",
+                    "DAY" to "%Y-%m-%d"
+                )),
+        SqlDialect.HIVE to
+                ({ field: String, format: String -> "FROM_TIMESTAMP(${field}, '${format}')" } to mapOf(
+                    "YEAR" to "yyyy",
+                    "SEASON" to "yyyy-QQ",
+                    "MONTH" to "yyyy-MM",
+                    "WEEK" to "yyyy-WW",
+                    "DAY" to "yyyy-MM-dd"
+                )),
+        SqlDialect.IMPALA to
+                ({ field: String, format: String -> "FROM_TIMESTAMP(${field}, '${format}')" } to mapOf(
+                    "YEAR" to "yyyy",
+                    "SEASON" to "yyyy-QQ",
+                    "MONTH" to "yyyy-MM",
+                    "WEEK" to "yyyy-WW",
+                    "DAY" to "yyyy-MM-dd"
+                )),
+    )
 
 }
 
@@ -419,17 +408,16 @@ object RawSqlTranslator : FunctionTranslator {
     private val ParamPattern = Pattern.compile("(?:,\\s*)?\\{\\s*(\\d+)\\s*}")
 
     override fun translate(
-        funcName: String,
         dialect: SqlDialect,
-        expectArgs: List<FunctionDefinition.FunctionArgument>,
-        actualArgs: List<StatementInfo?>
+        function: FunctionDefinition,
+        actualArgRoot: StatementInfo
     ): String {
+        val actualArgs = actualArgRoot.children
         val argSize = actualArgs.size
         if (argSize == 0) {
             throw IllegalStateException("函数RAW_SQL未提供数据库SQL方法参数")
         }
-        val rawSql = actualArgs[0]?.expression?.trim('"', '\'')
-            ?: throw IllegalStateException("函数RAW_SQL未提供数据库SQL方法参数")
+        val rawSql = actualArgs[0].expression.trim('"', '\'').takeIf { it.isNotBlank() } ?: throw IllegalStateException("函数RAW_SQL未提供数据库SQL方法参数")
         val matcher = ParamPattern.matcher(rawSql)
         var lastArgIndex = 0
         while (matcher.find()) {
@@ -449,10 +437,9 @@ object RawSqlTranslator : FunctionTranslator {
             val index = matcher.group(1).toInt()
             var expression = try {
                 if (index == 0) {
-                    actualArgs.subList(lastArgIndex + 1, actualArgs.size).filterNotNull()
-                        .joinToString(", ") { it.expression }
+                    actualArgs.subList(lastArgIndex + 1, actualArgs.size).joinToString(", ") { it.expression }
                 } else {
-                    actualArgs[index]?.expression ?: ""
+                    actualArgs[index].expression
                 }
             } catch (e: IndexOutOfBoundsException) {
                 throw IllegalStateException("未提供${index}参数")

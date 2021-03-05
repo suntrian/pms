@@ -1,3 +1,4 @@
+@file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE")
 package org.sunt.formula
 
 import org.antlr.v4.runtime.ParserRuleContext
@@ -315,7 +316,7 @@ class FormulaSuggestVisitor(
             //则将缺少的参数也作为错误信息加入参数列表返回
             //否则返回正常的参数列表，用于上层推荐)
             if (hasComma || !anyVararg) {
-                result.add(StatementInfo("", -1, -1, -1, -1).apply {
+                result.add(StatementInfo.empty().apply {
                     status = TokenStatus.EXPECTED
                 })
             }

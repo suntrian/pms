@@ -9,6 +9,7 @@ import org.sunt.formula.function.StatementInfo
 import org.sunt.formula.support.AllMatchColumn
 import org.sunt.formula.support.ExactColumn
 import org.sunt.formula.support.TestColumn
+import org.sunt.formula.support.removeBlank
 
 class TestFormulaToSql {
 
@@ -27,6 +28,8 @@ class TestFormulaToSql {
         val stmt = helper.toSql("x + y/3^4", SqlDialect.MYSQL);
         println(stmt)
         println(stmt.expression)
+        Assertions.assertEquals("x+y/POWER(3, 4)".removeBlank(), stmt.expression.removeBlank())
+
 
         val helper2 = FormulaHelper.of({ id -> getColumnById(id, DataType.STRING) },
             { name -> getColumnByName(name, DataType.STRING) })
@@ -34,6 +37,7 @@ class TestFormulaToSql {
 
         println(stmt2)
         println(stmt2.expression)
+        Assertions.assertEquals("CONCAT(x, y, z, X)".removeBlank(), stmt2.expression.removeBlank())
     }
 
 
@@ -44,22 +48,27 @@ class TestFormulaToSql {
         val stmt = helper.toSql("SUBSTRING(IFNULL(TO_STRING(xyz), ''), 2, 6) ", SqlDialect.MYSQL);
         println(stmt)
         println(stmt.expression)
+        Assertions.assertEquals("SUBSTRING(IFNULL(CAST(xyz AS CHAR), ''), 2, 6)".removeBlank(), stmt.expression.removeBlank())
 
         val stmt2 = helper.toSql("SUBSTR(IFNULL(TO_STRING(xyz), ''), 2, 6) ", SqlDialect.MYSQL);
         println(stmt2)
         println(stmt2.expression)
+        Assertions.assertEquals("SUBSTRING(IFNULL(CAST(xyz AS CHAR), ''), 2, 6)".removeBlank(), stmt2.expression.removeBlank())
 
         val stmt3 = helper.toSql("COALESCE(abc, def, ghi, 2, 3)", SqlDialect.HIVE)
         println(stmt3)
         println(stmt3.expression)
+        Assertions.assertEquals("COALESCE(abc,def,ghi,2,3)".removeBlank(), stmt3.expression.removeBlank())
 
         val stmt4 = helper.toSql("abc?: def ?: ghi?:2?:3?:'sfw'", SqlDialect.HIVE)
         println(stmt4)
         println(stmt4.expression)
+        Assertions.assertEquals("COALESCE(abc, def, ghi, 2, 3, 'sfw')".removeBlank(), stmt4.expression.removeBlank())
 
         val stmt5 = helper.toSql("abc?: def", SqlDialect.HIVE)
         println(stmt5)
         println(stmt5.expression)
+        Assertions.assertEquals("COALESCE(abc, def)".removeBlank(), stmt5.expression.removeBlank())
 
 //        val stmt6 = helper.toSql("COALESCE(abc, def, ghi, 2, 3, 'sfee')", SqlDialect.HIVE)
 //        println(stmt6)
@@ -77,15 +86,18 @@ class TestFormulaToSql {
         val stmt = helper.toSql("GROUP_COUNT(abcd, eefe, aaab)", SqlDialect.HIVE)
         println(stmt)
         println(stmt.expression)
+        Assertions.assertEquals("COUNT(abcd)".removeBlank(), stmt.expression.removeBlank())
 
         val stmt2 = helper.toSql("GROUP_COUNT(DISTINCT, abcd, eefe, aaab)", SqlDialect.HIVE)
         println(stmt2)
         println(stmt2.expression)
+        Assertions.assertEquals("COUNT(DISTINCT abcd)".removeBlank(), stmt2.expression.removeBlank())
 
         val stmt3 = helper.toSql("GROUP_count(distinct, abcd?:efgh?:0, eefe, aaab)", SqlDialect.HIVE)
         println(stmt3)
         println(stmt3.expression)
         println("COUNT(DISTINCT COALESCE(abcd, efgh, 0))")
+        Assertions.assertEquals("COUNT(DISTINCT COALESCE(abcd, efgh, 0))".removeBlank().toUpperCase(), stmt3.expression.removeBlank().toUpperCase())
     }
 
     @Test
@@ -111,6 +123,7 @@ class TestFormulaToSql {
             println(stmt)
             println("EXPECT: $e")
             println("ACTUAL: " + stmt.expression)
+            Assertions.assertEquals(e.removeBlank(), stmt.expression.removeBlank())
         }
 
     }
@@ -131,6 +144,7 @@ class TestFormulaToSql {
             println(stmt)
             println("EXPECT: $e")
             println("ACTUAL: " + stmt.expression)
+            Assertions.assertEquals(e.removeBlank(), stmt.expression.removeBlank())
         }
     }
 
@@ -151,6 +165,7 @@ class TestFormulaToSql {
                 println(stmt)
                 println("EXPECT: $e")
                 println("ACTUAL: " + stmt.expression)
+                Assertions.assertEquals(e.removeBlank(), stmt.expression.removeBlank())
             }
         }
     }
@@ -168,7 +183,7 @@ class TestFormulaToSql {
         )
 
         val map = mapOf(
-            "TO_DOUBLE(cdef)" to "CAST(abcd as DECIMAL(38, 2))",
+            "TO_DOUBLE(cdef)" to "CAST(cdef AS DECIMAL(38, 2))",
             "DATEDIFF(abcd, bcde)" to "DATEDIFF(abcd, bcde)",
             "DATEDIFF(abcd, bcde, 'day')" to "DATEDIFF(abcd, bcde)",
             "DATEDIFF(abcd, bcde, 'year')" to "YEAR(abcd) - YEAR(bcde)",
@@ -182,9 +197,8 @@ class TestFormulaToSql {
             println(stmt)
             println("EXPECT: $e")
             println("ACTUAL: " + stmt.expression)
+            Assertions.assertEquals(e.removeBlank(), stmt.expression.removeBlank())
         }
-
-        //TIMESTAMPDIFF({"$3".substring(1, "$3".length()-1)},  $1, $2)
     }
 
     @Test
@@ -193,6 +207,7 @@ class TestFormulaToSql {
         val formula = "STDDEV_OVER(abcd, [], [bcde])"
         val stmt = helper.toSql(formula, SqlDialect.HIVE)
         println(stmt.expression)
+        Assertions.assertEquals("STDDEV(abcd) OVER ( ORDER BY bcde)".removeBlank(), stmt.expression.removeBlank())
 
     }
 
@@ -238,18 +253,13 @@ class TestFormulaToSql {
         stmt = helper.toSql("QUARTER(defg)", SqlDialect.HIVE)
         println(stmt.expression)
         Assertions.assertEquals(
-            "CEIL(CAST(SUBSTRING(defg, 5, 2) AS DECIMAL) / 3)".replace("\\s+".toRegex(), ""),
-            stmt.expression.replace("\\s+".toRegex(), "")
+            "CEIL(CAST(SUBSTRING(defg, 5, 2) AS DECIMAL) / 3)".removeBlank(),
+            stmt.expression.removeBlank()
         )
 
         stmt = helper.toSql("DATE_ROLLUP(cdef, 'WEEK')", SqlDialect.HIVE)
         println(stmt.expression)
-        Assertions.assertEquals(
-            "CONCAT(SUBSTRING(cdef, 1, 4), '-', WEEKOFYEAR(TO_TIMESTAMP(cdef, 'yyyy-MM-dd')))".replace(
-                "\\s+".toRegex(),
-                ""
-            ), stmt.expression.replace("\\s+".toRegex(), "")
-        )
+        Assertions.assertEquals("CONCAT(SUBSTRING(cdef, 1, 4), '-', WEEKOFYEAR(TO_TIMESTAMP(cdef, 'yyyy-MM-dd')))".removeBlank(), stmt.expression.removeBlank())
 
     }
 }

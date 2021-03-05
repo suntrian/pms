@@ -28,11 +28,12 @@ class FormulaToSqlVisitor(
 
     override fun visitParenthesesExpression(ctx: ParenthesesExpressionContext): StatementInfo {
         val stmt = visitStatement(ctx.statement())
-        val parenthesesStmt = StatementInfo(ctx);
-        parenthesesStmt.expression = "(" + stmt.expression + ")"
-        parenthesesStmt.dataType = stmt.dataType
-        parenthesesStmt.status = stmt.status;
-        return parenthesesStmt
+        return StatementInfo(ctx).apply {
+            expression = "(" + stmt.expression + ")"
+            dataType = stmt.dataType
+            status = stmt.status;
+            children = listOf(stmt)
+        }
     }
 
     override fun visitComparePredicate(ctx: ComparePredicateContext): StatementInfo {
@@ -40,10 +41,8 @@ class FormulaToSqlVisitor(
         val left = visitStatement(ctx.statement(0))
         val right = visitStatement(ctx.statement(1))
         val predStmt = StatementInfo(ctx)
-        predStmt.dataType = DataType.BOOLEAN
-        if (ctx.op.type == EQUAL || ctx.op.type == NOT_EQUAL) {
-            //相等判断时，数据类型可不一致
-            if (VOCABULARY.getSymbolicName(NULL).equals(right.expression, true)) {
+        if (VOCABULARY.getSymbolicName(NULL).equals(right.expression, true)) {
+            if (ctx.op.type == EQUAL || ctx.op.type == NOT_EQUAL) {
                 predStmt.expression = left.expression + when (ctx.op.type) {
                     EQUAL -> " IS NULL";
                     NOT_EQUAL -> " IS NOT NULL"
@@ -51,11 +50,22 @@ class FormulaToSqlVisitor(
                 }
                 predStmt.status = left.status
                 return predStmt
+            } else {
+                throw ParamTypeMismatchException("NULL只可用于==，!=的比较")
+            }
+        } else if (ctx.op.type == EQUAL || ctx.op.type == NOT_EQUAL) {
+            //相等判断时，数据类型可不一致
+        } else {
+            if (!(left.dataType.isAssignableFrom(right.dataType) || right.dataType.isAssignableFrom(left.dataType))) {
+                throw ParamTypeMismatchException(right.expression, left.dataType, right.dataType)
             }
         }
-
-        predStmt.expression = left.expression + operatorMap[ctx.op.type] + right.expression
-        predStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+        with(predStmt) {
+            this.dataType = DataType.BOOLEAN
+            this.expression = left.expression + operatorMap[ctx.op.type] + right.expression
+            this.children = listOf(left, right)
+            this.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+        }
         return predStmt
     }
 
@@ -67,22 +77,27 @@ class FormulaToSqlVisitor(
             exprBuilder.append(" NOT")
         }
         exprBuilder.append(" IN (")
-        val rightStmts = visitStatements(ctx.statements()).iterator()
-        for (stmt in rightStmts) {
+        val rightStmts = visitStatements(ctx.statements())
+        val rightStmtsIter = rightStmts.iterator()
+        for (stmt in rightStmtsIter) {
             if (stmt.status.privilege > status.privilege) {
                 status = stmt.status
             }
             exprBuilder.append(stmt.expression)
-            if (rightStmts.hasNext()) {
+            if (rightStmtsIter.hasNext()) {
                 exprBuilder.append(",")
             }
         }
         exprBuilder.append(")")
-        val inStmt = StatementInfo(ctx)
-        inStmt.expression = exprBuilder.toString()
-        inStmt.dataType = DataType.BOOLEAN
-        inStmt.status = status
-        return inStmt
+        return StatementInfo(ctx).apply {
+            this.expression = exprBuilder.toString()
+            this.dataType = DataType.BOOLEAN
+            this.status = status
+            this.children = LinkedList<StatementInfo>().also {
+                it.add(left)
+                it.addAll(rightStmts)
+            }
+        }
     }
 
     override fun visitMathExpression(ctx: MathExpressionContext): StatementInfo {
@@ -90,6 +105,7 @@ class FormulaToSqlVisitor(
         val left = visitStatement(ctx.statement(0))
         val right = visitStatement(ctx.statement(1))
         val mathStmt = StatementInfo(ctx)
+        mathStmt.children = listOf(left, right)
         mathStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
         if (left.dataType == DataType.STRING && right.dataType == DataType.STRING) {
             if (ctx.op.type == PLUS) {
@@ -153,11 +169,12 @@ class FormulaToSqlVisitor(
     override fun visitNotPredicate(ctx: NotPredicateContext): StatementInfo {
         val pred = visitStatement(ctx.statement())
         checkDataType(pred, DataType.BOOLEAN)
-        val stmt = StatementInfo(ctx)
-        stmt.expression = " NOT " + pred.expression
-        stmt.dataType = DataType.BOOLEAN
-        stmt.status = pred.status
-        return stmt
+        return StatementInfo(ctx).apply {
+            expression = " NOT " + pred.expression
+            dataType = DataType.BOOLEAN
+            status = pred.status
+            children = listOf(pred)
+        }
     }
 
     override fun visitLogicalPredicate(ctx: LogicalPredicateContext): StatementInfo {
@@ -166,25 +183,27 @@ class FormulaToSqlVisitor(
         checkDataType(left, DataType.BOOLEAN)
         val right = visitStatement(ctx.statement(1))
         checkDataType(right, DataType.BOOLEAN)
-        val stmt = StatementInfo(ctx)
-        stmt.dataType = DataType.BOOLEAN
-        stmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
-        stmt.expression = left.expression + operatorMap[ctx.op.type] + right.expression
-        return stmt
+        return StatementInfo(ctx).apply {
+            dataType = DataType.BOOLEAN
+            status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+            expression = left.expression + operatorMap[ctx.op.type] + right.expression
+            children = listOf(left, right)
+        }
     }
 
     override fun visitIfnullExpression(ctx: IfnullExpressionContext): StatementInfo {
         checkArgSize(ctx.statement(), 2)
         val left = visitStatement(ctx.statement(0))
         val right = visitStatement(ctx.statement(1))
-        val stmt = StatementInfo(ctx)
-        stmt.dataType = left.dataType
-        stmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
-        stmt.expression = left.expression + ", " + right.expression
-        if (ctx.parent !is IfnullExpressionContext) {
-            stmt.expression = "COALESCE(${stmt.expression})"
+        return StatementInfo(ctx).apply {
+            children = listOf(left, right)
+            dataType = left.dataType
+            status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+            expression = left.expression + ", " + right.expression
+            if (ctx.parent !is IfnullExpressionContext) {
+                expression = "COALESCE($expression)"
+            }
         }
-        return stmt
     }
 
     override fun visitLikePredicate(ctx: LikePredicateContext): StatementInfo {
@@ -193,11 +212,12 @@ class FormulaToSqlVisitor(
         val not = ctx.NOT() != null
         val right = visitStatement(ctx.statement(1))
         checkDataType(right, DataType.STRING)
-        val likeStmt = StatementInfo(ctx)
-        likeStmt.expression = left.expression + (if (not) " NOT" else "") + " LIKE " + right.expression
-        likeStmt.status = left.status
-        likeStmt.dataType = DataType.BOOLEAN
-        return likeStmt
+        return StatementInfo(ctx).apply {
+            expression = left.expression + (if (not) " NOT" else "") + " LIKE " + right.expression
+            status = left.status
+            dataType = DataType.BOOLEAN
+            children = listOf(left, right)
+        }
     }
 
     override fun visitFunctionStatement(ctx: FunctionStatementContext): StatementInfo {
@@ -210,7 +230,7 @@ class FormulaToSqlVisitor(
         else recordCurrent(functionDefines, functionDefines.flatMap { it.arguments }.flatMap { it.reserved }.toSet()) {
             visitFunctionParams(ctx.functionParams())
         }
-        val filledParams: MutableList<StatementInfo?> = params.toMutableList()
+        val filledParams: MutableList<StatementInfo> = params.toMutableList()
         val finalFunctionDefine: FunctionDefinition = figureFunctionDefine(functionDefines, filledParams)
         kotlin.run {
             val isRoot = ctx.parent.parent is FormulaContext
@@ -228,13 +248,12 @@ class FormulaToSqlVisitor(
                 else -> FormulaType.NORMAL
             }
         }
-        val funcStmt = StatementInfo(ctx)
-        funcStmt.status = params.map { it.status }.maxByOrNull { it.privilege } ?: TokenStatus.NORMAL
-        funcStmt.dataType =
-            if (finalFunctionDefine.typeParamIndex != null) filledParams[finalFunctionDefine.typeParamIndex!!]!!.dataType else finalFunctionDefine.dataType
-        funcStmt.expression = finalFunctionDefine.translate(filledParams)
-
-        return funcStmt
+        return StatementInfo(ctx).apply {
+            status = params.map { it.status }.maxByOrNull { it.privilege } ?: TokenStatus.NORMAL
+            dataType = if (finalFunctionDefine.typeParamIndex != null) filledParams[finalFunctionDefine.typeParamIndex!!].dataType else finalFunctionDefine.dataType
+            children = filledParams
+            expression = finalFunctionDefine.translate(this)
+        }
     }
 
     override fun visitFunctionParams(ctx: FunctionParamsContext): List<StatementInfo> {
@@ -276,11 +295,12 @@ class FormulaToSqlVisitor(
         if (stmts.map { it.dataType }.distinct().count() > 1) {
             log.warn("CASE表达式多个条件返回的数据类型不一致")
         }
-        val caseStmt = StatementInfo(ctx)
-        caseStmt.expression = exprBuilder.toString()
-        caseStmt.dataType = stmts[0].dataType
-        caseStmt.status = stmts.map { it.status }.maxByOrNull { it.privilege }!!
-        return caseStmt
+        return StatementInfo(ctx).apply {
+            expression = exprBuilder.toString()
+            dataType = stmts[0].dataType
+            status = stmts.map { it.status }.maxByOrNull { it.privilege }!!
+            children = stmts
+        }
     }
 
     override fun visitIfStatement(ctx: IfStatementContext): StatementInfo {
@@ -290,13 +310,13 @@ class FormulaToSqlVisitor(
         var stmt = visitStatement(ctx.statement())
         stmts.add(stmt)
         exprBuilder.append("\n").append("\t WHEN ").append(predStmt.expression)
-                .append(" THEN ").append(stmt.expression).append("\n")
+            .append(" THEN ").append(stmt.expression).append("\n")
         for (elseIfStmt in ctx.elseIfStatement()) {
             predStmt = visitPredictStatement(elseIfStmt.ifStatement().predict)
             stmt = visitStatement(elseIfStmt.ifStatement().statement())
             stmts.add(stmt)
             exprBuilder.append("\n").append("\t WHEN ").append(predStmt.expression)
-                    .append(" THEN ").append(stmt.expression).append("\n")
+                .append(" THEN ").append(stmt.expression).append("\n")
         }
         if (ctx.elseStatement() != null) {
             stmt = visitStatement(ctx.elseStatement().statement())
@@ -307,11 +327,12 @@ class FormulaToSqlVisitor(
         if (stmts.map { it.dataType }.distinct().count() > 1) {
             log.warn("IF表达式多个条件返回的数据类型不一致")
         }
-        val ifStmt = StatementInfo(ctx)
-        ifStmt.dataType = stmts[0].dataType
-        ifStmt.expression = exprBuilder.toString()
-        ifStmt.status = stmts.map { it.status }.maxByOrNull { it.privilege }!!
-        return ifStmt
+        return StatementInfo(ctx).apply {
+            dataType = stmts[0].dataType
+            expression = exprBuilder.toString()
+            status = stmts.map { it.status }.maxByOrNull { it.privilege }!!
+            children = stmts
+        }
     }
 
     override fun visitIfSpecial(ctx: IfSpecialContext): StatementInfo {
@@ -328,11 +349,12 @@ class FormulaToSqlVisitor(
         checkArgSize(ctx.statement(), 2)
         val trueStmt = visitStatement(ctx.statement(0))
         val falseStmt = visitStatement(ctx.statement(1))
-        val ifStmt = StatementInfo(ctx)
-        ifStmt.expression = "IF(${predStmt.expression}, ${trueStmt.expression}, ${falseStmt.expression})"
-        ifStmt.dataType = trueStmt.dataType
-        ifStmt.status = maxOf(trueStmt.status, falseStmt.status, Comparator.comparingInt { it.privilege })
-        return ifStmt
+        return StatementInfo(ctx).apply {
+            expression = "IF(${predStmt.expression}, ${trueStmt.expression}, ${falseStmt.expression})"
+            dataType = trueStmt.dataType
+            status = maxOf(trueStmt.status, falseStmt.status, Comparator.comparingInt { it.privilege })
+            children = listOf(predStmt, trueStmt, falseStmt)
+        }
     }
 
     override fun visitPredictStatement(ctx: PredictStatementContext): StatementInfo {
@@ -344,11 +366,12 @@ class FormulaToSqlVisitor(
             checkArgSize(ctx.predictStatement(), 2)
             val left = visitPredictStatement(ctx.predictStatement(0))
             val right = visitPredictStatement(ctx.predictStatement(1))
-            val predStmt = StatementInfo(ctx)
-            predStmt.expression = left.expression + operatorMap[ctx.op.type] + right.expression
-            predStmt.dataType = DataType.BOOLEAN
-            predStmt.status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
-            return predStmt
+            return StatementInfo(ctx).apply {
+                expression = left.expression + operatorMap[ctx.op.type] + right.expression
+                dataType = DataType.BOOLEAN
+                status = maxOf(left.status, right.status, Comparator.comparingInt { it.privilege })
+                children = listOf(left, right)
+            }
         } else if (ctx.L_PARENTHESES() != null && ctx.R_PARENTHESES() != null) {
             checkArgSize(ctx.predictStatement(), 1)
             val stmt = visitPredictStatement(ctx.predictStatement(0))
@@ -360,7 +383,7 @@ class FormulaToSqlVisitor(
 
     private fun figureFunctionDefine(
         functionDefines: List<FunctionDefinition>,
-        actualArgs: MutableList<StatementInfo?>
+        actualArgs: MutableList<StatementInfo>
     ): FunctionDefinition {
         val matched = HashMap<Int, FunctionDefinition>(functionDefines.size)
         val errorInfos = HashMap<Int, List<AbstractFormulaException>>(functionDefines.size)
@@ -398,7 +421,7 @@ class FormulaToSqlVisitor(
             val actualIter = actualArgs.listIterator()
 
             var expectArg: FunctionDefinition.FunctionArgument = expectIter.next()
-            var actualArg: StatementInfo = actualIter.next()!!
+            var actualArg: StatementInfo = actualIter.next()
             var firstNoMatchArgType: DataType? = null
             while (true) {
                 //泛型实际类型
@@ -452,13 +475,13 @@ class FormulaToSqlVisitor(
                         errorInfos[funcIndex] = errors
                         continue@outer
                     } else {
-                        actualArg = actualIter.next()!!
+                        actualArg = actualIter.next()
                         continue
                     }
                 }
 
                 expectArg = expectIter.next()
-                actualArg = actualIter.next()!!
+                actualArg = actualIter.next()
             }
             matched[funcIndex] = funcDefine
         }
