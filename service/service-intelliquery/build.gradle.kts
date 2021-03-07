@@ -7,6 +7,6 @@ dependencies {
     implementation("org.antlr:antlr4")
     implementation("org.antlr:antlr4-runtime")
 
-    implementation(project(":module:module-formula"))
+    implementation(project(":module:module-query"))
 
 }
