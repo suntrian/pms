@@ -13,7 +13,7 @@ import org.sunt.query.formula.function.*
 import org.sunt.query.formula.parser.FormulaParser.*
 import org.sunt.query.formula.suggestion.FormulaSuggestion
 import org.sunt.query.formula.suggestion.TokenSuggestion
-import org.sunt.query.model.column.IColumn
+import org.sunt.query.model.metadata.IColumn
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.component1

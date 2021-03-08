@@ -1,17 +1,17 @@
 package org.sunt.query.formula.support
 
 import org.sunt.query.define.DataType
+import org.sunt.query.formula.Column
 import org.sunt.query.formula.ColumnInterface
-import org.sunt.query.model.column.IColumn
 
 class AllMatchColumn(private val map: Map<String, DataType>) : ColumnInterface {
 
-    override fun getColumnById(id: String): IColumn? {
+    override fun getColumnById(id: String): Column? {
         println("请求字段ID:${id}")
         return TestColumn(id, "", id, map[id] ?: DataType.STRING)
     }
 
-    override fun getColumnByName(name: String): IColumn? {
+    override fun getColumnByName(name: String): Column? {
         println("请求字段NAME:${name}")
         return TestColumn("", name, name, map[name] ?: DataType.STRING)
     }
@@ -20,7 +20,7 @@ class AllMatchColumn(private val map: Map<String, DataType>) : ColumnInterface {
 
 class RestrictColumn(private val map: Map<String, DataType>) : ColumnInterface {
 
-    override fun getColumnById(id: String): IColumn? {
+    override fun getColumnById(id: String): Column? {
         println("请求字段ID:${id}")
         if (!map.containsKey(id)) {
             println("未找到字段${id}")
@@ -29,7 +29,7 @@ class RestrictColumn(private val map: Map<String, DataType>) : ColumnInterface {
         return TestColumn(id, "", id, map[id] ?: DataType.STRING)
     }
 
-    override fun getColumnByName(name: String): IColumn? {
+    override fun getColumnByName(name: String): Column? {
         println("请求字段NAME:${name}")
         if (!map.containsKey(name)) {
             println("未找到字段${name}")
@@ -40,12 +40,12 @@ class RestrictColumn(private val map: Map<String, DataType>) : ColumnInterface {
 
 }
 
-class ExactColumn(private val map: Map<String, IColumn?>) : ColumnInterface {
-    override fun getColumnById(id: String): IColumn? {
+class ExactColumn(private val map: Map<String, Column?>) : ColumnInterface {
+    override fun getColumnById(id: String): Column? {
         return map[id]
     }
 
-    override fun getColumnByName(name: String): IColumn? {
+    override fun getColumnByName(name: String): Column? {
         return map[name]
     }
 

@@ -9,7 +9,7 @@ import org.sunt.query.formula.support.AllMatchColumn
 import org.sunt.query.formula.support.ExactColumn
 import org.sunt.query.formula.support.TestColumn
 import org.sunt.query.formula.support.removeBlank
-import org.sunt.query.model.column.IColumn
+import org.sunt.query.model.metadata.IColumn
 
 class TestFormulaToSql {
 

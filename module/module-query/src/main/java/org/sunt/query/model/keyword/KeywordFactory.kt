@@ -3,7 +3,7 @@ package org.sunt.query.model.keyword
 import org.sunt.query.define.AggregateType
 import org.sunt.query.define.FilterOperator
 import org.sunt.query.define.LogicalOperator
-import org.sunt.query.model.column.IColumn
+import org.sunt.query.model.metadata.IColumn
 
 object KeywordFactory {
 

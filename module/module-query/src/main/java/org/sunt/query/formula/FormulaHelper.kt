@@ -9,7 +9,6 @@ import org.sunt.query.formula.parser.FormulaLexer
 import org.sunt.query.formula.parser.FormulaParser
 import org.sunt.query.formula.suggestion.FormulaSuggestion
 import org.sunt.query.formula.suggestion.SuggestErrorStrategy
-import org.sunt.query.model.column.IColumn
 
 class FormulaHelper private constructor(private val columnInterface: ColumnInterface) {
 
@@ -61,11 +60,11 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
         private val CurrentContainer = ThreadLocal<FormulaHelper>()
 
         @JvmStatic
-        fun of(getColumnById: (String) -> IColumn?, getColumnByName: (String) -> IColumn?): FormulaHelper {
+        fun of(getColumnById: (String) -> Column?, getColumnByName: (String) -> Column?): FormulaHelper {
             return FormulaHelper(object : ColumnInterface {
-                override fun getColumnById(id: String): IColumn? = getColumnById(id)
+                override fun getColumnById(id: String): Column? = getColumnById(id)
 
-                override fun getColumnByName(name: String): IColumn? = getColumnByName(name)
+                override fun getColumnByName(name: String): Column? = getColumnByName(name)
             })
         }
 

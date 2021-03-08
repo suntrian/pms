@@ -1,4 +1,4 @@
-package org.sunt.query.model.column
+package org.sunt.query.model.metadata
 
 interface PhysicalColumn : IColumn {
 }

@@ -1,16 +1,11 @@
-package org.sunt.query.model.column
+package org.sunt.query.formula
 
-import org.sunt.query.define.ColumnType
 import org.sunt.query.define.DataType
 
-interface IColumn {
-
+interface Column {
     val id: String
     val name: String
     val expression: String
     val dataType: DataType
     val format: String?
-
-    val columnType: ColumnType
-
 }

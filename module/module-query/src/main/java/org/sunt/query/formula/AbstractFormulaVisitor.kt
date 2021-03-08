@@ -19,7 +19,6 @@ import org.sunt.query.formula.function.TokenStatus
 import org.sunt.query.formula.parser.FormulaBaseVisitor
 import org.sunt.query.formula.parser.FormulaParser
 import org.sunt.query.formula.parser.FormulaParser.*
-import org.sunt.query.model.column.IColumn
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -178,7 +177,7 @@ abstract class AbstractFormulaVisitor(
     override fun visitIdentity(ctx: IdentityContext): StatementInfo {
         val identity = ctx.text
         var funcDefines: List<FunctionDefinition>? = emptyList()
-        var column: IColumn? = null
+        var column: Column? = null
         val stmt = StatementInfo(ctx)
         with(stmt) {
             if (functionMap[identity]?.also { funcDefines = it } != null) {
@@ -209,7 +208,7 @@ abstract class AbstractFormulaVisitor(
         return stmt
     }
 
-    private fun getColumnStmt(ctx: ParserRuleContext, column: IColumn?): StatementInfo {
+    private fun getColumnStmt(ctx: ParserRuleContext, column: Column?): StatementInfo {
         val colStmt = StatementInfo(ctx)
         with(colStmt) {
             token = TokenItem.COLUMN(ctx.text)
@@ -228,7 +227,7 @@ abstract class AbstractFormulaVisitor(
         return colStmt
     }
 
-    protected fun convertColumnExpression(column: IColumn): String = "${column.name}@(${column.id})"
+    protected fun convertColumnExpression(column: Column): String = "${column.name}@(${column.id})"
 
     protected val syntaxErrors: MutableList<SyntaxError> = mutableListOf()
 

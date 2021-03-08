@@ -6,7 +6,7 @@ import org.sunt.query.formula.FormulaHelper
 import org.sunt.query.formula.function.FunctionDefinition
 import org.sunt.query.formula.function.FunctionDefinitionParser
 import org.sunt.query.formula.function.StatementInfo
-import org.sunt.query.model.column.IColumn
+import org.sunt.query.model.metadata.IColumn
 import java.util.regex.Pattern
 
 

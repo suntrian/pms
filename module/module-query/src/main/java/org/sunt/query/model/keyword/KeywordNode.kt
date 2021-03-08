@@ -4,7 +4,7 @@ import org.sunt.query.define.AggregateType
 import org.sunt.query.define.FilterOperator
 import org.sunt.query.define.LogicalOperator
 import org.sunt.query.define.Operator
-import org.sunt.query.model.column.IColumn
+import org.sunt.query.model.metadata.IColumn
 import java.math.BigDecimal
 
 sealed class KeywordNode {
