@@ -1,4 +1,4 @@
-package org.sunt.keyword.define
+package org.sunt.query.define
 
 enum class JoinType {
 
