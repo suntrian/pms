@@ -249,11 +249,8 @@ object DateFunctionTranslator : FunctionTranslator {
                 "WEEK" -> "WEEKOFYEAR(${expression})"
                 "DAY" -> "DAY(${expression})"
                 "DATE_ROLLUP" -> functionMap[dialect]?.let {
-                    it.first.invoke(
-                        expression,
-                        it.second[dateUnit]?.takeIf { u -> u.isNotBlank() }
-                            ?: throw IllegalStateException("不支持的时间维度:${dateUnit}"))
-                } ?: throw IllegalStateException("")
+                    it[dateUnit]?.invoke(expression) ?: throw IllegalStateException("不支持的时间维度:${dateUnit}")
+                } ?: throw IllegalStateException("未支持的数据库方言:$dialect")
                 else -> throw IllegalStateException("不支持的函数${functionName}")
             }
         } else if (field.dataType != DataType.INTEGER && field.dataType != DataType.STRING) {
@@ -374,30 +371,27 @@ object DateFunctionTranslator : FunctionTranslator {
     }
 
     private val functionMap = mapOf(
-        SqlDialect.MYSQL to
-                ({ field: String, format: String -> "DATE_FORMAT(${field}, '${format}')" } to mapOf(
-                    "YEAR" to "%Y",
-                    "SEASON" to "",
-                    "MONTH" to "%Y-%m",
-                    "WEEK" to "%Y-%u",
-                    "DAY" to "%Y-%m-%d"
-                )),
-        SqlDialect.HIVE to
-                ({ field: String, format: String -> "FROM_TIMESTAMP(${field}, '${format}')" } to mapOf(
-                    "YEAR" to "yyyy",
-                    "SEASON" to "yyyy-QQ",
-                    "MONTH" to "yyyy-MM",
-                    "WEEK" to "yyyy-WW",
-                    "DAY" to "yyyy-MM-dd"
-                )),
-        SqlDialect.IMPALA to
-                ({ field: String, format: String -> "FROM_TIMESTAMP(${field}, '${format}')" } to mapOf(
-                    "YEAR" to "yyyy",
-                    "SEASON" to "yyyy-QQ",
-                    "MONTH" to "yyyy-MM",
-                    "WEEK" to "yyyy-WW",
-                    "DAY" to "yyyy-MM-dd"
-                )),
+        SqlDialect.MYSQL to mapOf(
+            "YEAR" to { field: String -> "DATE_FORMAT(${field}, '%Y')" },
+            "QUARTER" to { field: String -> "CONCAT(YEAR(${field}), '-', QUARTER(${field}))" },
+            "MONTH" to { field: String -> "DATE_FORMAT(${field}, '%Y-%m')" },
+            "WEEK" to { field: String -> "CONCAT(YEAR(${field}, '-', WEEKOFYEAR(${field}))" },
+            "DAY" to { field: String -> "DATE_FORMAT(${field}, '%Y-%m-%d')" },
+        ),
+        SqlDialect.HIVE to mapOf(
+            "YEAR" to { field: String -> "FROM_TIMESTAMP(${field}, 'yyyy')" },
+            "QUARTER" to { field: String -> "CONCAT(CAST(YEAR(${field}) AS CHAR), '-', CAST(CEIL(MONTH(${field})/3) AS CHAR)" },
+            "MONTH" to { field: String -> "FROM_TIMESTAMP(${field}, 'yyyy-MM')" },
+            "WEEK" to { field: String -> "CONCAT(CAST(YEAR(${field}) AS CHAR), '-', CAST(WEEKOFYEAR(${field}) AS CHAR)" },
+            "DAY" to { field: String -> "FROM_TIMESTAMP(${field}, 'yyyy-MM-dd')" },
+        ),
+        SqlDialect.IMPALA to mapOf(
+            "YEAR" to { field: String -> "FROM_TIMESTAMP(${field}, 'yyyy')" },
+            "QUARTER" to { field: String -> "CONCAT(CAST(YEAR(${field}) AS CHAR), '-', CAST(CEIL(MONTH(${field})/3) AS CHAR)" },
+            "MONTH" to { field: String -> "FROM_TIMESTAMP(${field}, 'yyyy-MM')" },
+            "WEEK" to { field: String -> "CONCAT(CAST(YEAR(${field}) AS CHAR), '-', CAST(WEEKOFYEAR(${field}) AS CHAR)" },
+            "DAY" to { field: String -> "FROM_TIMESTAMP(${field}, 'yyyy-MM-dd')" },
+        ),
     )
 
 }

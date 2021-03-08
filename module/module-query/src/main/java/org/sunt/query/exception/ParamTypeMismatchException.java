@@ -1,4 +1,4 @@
-package org.sunt.query.formula.exception;
+package org.sunt.query.exception;
 
 import org.sunt.query.define.DataType;
 

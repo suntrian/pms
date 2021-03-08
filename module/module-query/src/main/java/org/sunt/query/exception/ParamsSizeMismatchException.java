@@ -1,4 +1,4 @@
-package org.sunt.query.formula.exception;
+package org.sunt.query.exception;
 
 public class ParamsSizeMismatchException extends AbstractFormulaException {
 

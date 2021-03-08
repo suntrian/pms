@@ -4,7 +4,7 @@ import bsh.EvalError
 import bsh.Interpreter
 import org.sunt.query.define.DataType
 import org.sunt.query.define.SqlDialect
-import org.sunt.query.formula.exception.ParamTypeMismatchException
+import org.sunt.query.exception.ParamTypeMismatchException
 import org.sunt.query.formula.function.parser.FunctionTranslator
 import java.util.regex.Pattern
 

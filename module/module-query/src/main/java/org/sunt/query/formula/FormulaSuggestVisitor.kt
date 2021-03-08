@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.misc.IntervalSet
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.sunt.query.define.DataType
 import org.sunt.query.define.SqlDialect
-import org.sunt.query.formula.exception.ParamTypeMismatchException
+import org.sunt.query.exception.ParamTypeMismatchException
 import org.sunt.query.formula.function.*
 import org.sunt.query.formula.parser.FormulaParser.*
 import org.sunt.query.formula.suggestion.FormulaSuggestion

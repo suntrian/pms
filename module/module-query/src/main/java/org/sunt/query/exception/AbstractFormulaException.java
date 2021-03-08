@@ -1,4 +1,4 @@
-package org.sunt.query.formula.exception;
+package org.sunt.query.exception;
 
 public abstract class AbstractFormulaException extends RuntimeException {
 
