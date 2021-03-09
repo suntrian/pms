@@ -1,8 +1,8 @@
 package org.sunt.query.model.keyword
 
 import org.sunt.query.define.AggregateType
-import org.sunt.query.define.FilterOperator
 import org.sunt.query.define.LogicalOperator
+import org.sunt.query.define.PredicateOperator
 import org.sunt.query.model.metadata.IColumn
 
 object KeywordFactory {
@@ -13,18 +13,18 @@ object KeywordFactory {
 
     fun produceColumnValue(text: String, columnNode: ColumnNode): ColumnValueNode = ColumnValueNode(text, columnNode, StringValueNode(text))
 
-    fun produceFilter(text: String, column: IColumn, filterOp: FilterOperator, vararg values: String): FilterNode {
-        return produceFilter(text, ColumnNode("", column), filterOp, *values)
+    fun produceFilter(text: String, column: IColumn, predicateOp: PredicateOperator, vararg values: String): FilterNode {
+        return produceFilter(text, ColumnNode("", column), predicateOp, *values)
     }
 
-    fun produceFilter(text: String, predicateNode: PredicateNode, filterOp: FilterOperator, vararg values: String): FilterNode {
-        return when (filterOp.argSize) {
-            0 -> SoloFilterNode(text, predicateNode, filterOp)
-            1 -> BinaryFilterNode(text, predicateNode, filterOp, values.getOrNull(0)?.let { StringValueNode(it) } ?: throw IllegalArgumentException("${filterOp}需要一个参数"))
-            2 -> TripleFilterNode(text, predicateNode, filterOp, values.getOrNull(0)?.let { StringValueNode(it) } ?: throw IllegalArgumentException("${filterOp}需要二个参数"),
-                values.getOrNull(1)?.let { StringValueNode(it) } ?: throw IllegalArgumentException("${filterOp}需要二个参数")
+    fun produceFilter(text: String, predicateNode: PredicateNode, predicateOp: PredicateOperator, vararg values: String): FilterNode {
+        return when (predicateOp.argSize) {
+            0 -> SoloFilterNode(text, predicateNode, predicateOp)
+            1 -> BinaryFilterNode(text, predicateNode, predicateOp, values.getOrNull(0)?.let { StringValueNode(it) } ?: throw IllegalArgumentException("${predicateOp}需要一个参数"))
+            2 -> TripleFilterNode(text, predicateNode, predicateOp, values.getOrNull(0)?.let { StringValueNode(it) } ?: throw IllegalArgumentException("${predicateOp}需要二个参数"),
+                values.getOrNull(1)?.let { StringValueNode(it) } ?: throw IllegalArgumentException("${predicateOp}需要二个参数")
             )
-            else -> MultiFilterNode(text, predicateNode, filterOp, values.map { StringValueNode(it) })
+            else -> MultiFilterNode(text, predicateNode, predicateOp, values.map { StringValueNode(it) })
         }
     }
 

@@ -1,9 +1,9 @@
 package org.sunt.query.model.keyword
 
 import org.sunt.query.define.AggregateType
-import org.sunt.query.define.FilterOperator
 import org.sunt.query.define.LogicalOperator
 import org.sunt.query.define.Operator
+import org.sunt.query.define.PredicateOperator
 import org.sunt.query.model.metadata.IColumn
 import java.math.BigDecimal
 
@@ -48,30 +48,32 @@ class AggregateNode internal constructor(override val text: String, fieldNode: P
 abstract class OperatorNode internal constructor(text: String, val fieldNode: PredicateNode, val op: Operator) : PredicateNode(text)
 
 //用途过滤条件的关键词组
-abstract class FilterNode internal constructor(text: String, fieldNode: PredicateNode, filterOp: FilterOperator) : OperatorNode(text, fieldNode, filterOp)
+abstract class FilterNode internal constructor(text: String, fieldNode: PredicateNode, predicateOp: PredicateOperator) : OperatorNode(text, fieldNode, predicateOp)
 
 //逻辑组合
 class LogicalNode internal constructor(text: String, left: PredicateNode, logicOp: LogicalOperator, val right: PredicateNode) : OperatorNode(text, left, logicOp)
 
 //一元操作的关键词组
-class SoloFilterNode internal constructor(text: String, fieldNode: PredicateNode, filterOp: FilterOperator) : FilterNode(text, fieldNode, filterOp) {
+class SoloFilterNode internal constructor(text: String, fieldNode: PredicateNode, predicateOp: PredicateOperator) : FilterNode(text, fieldNode, predicateOp) {
     init {
-        if (filterOp.argSize != 0) throw IllegalStateException("${filterOp}要求参数")
+        if (predicateOp.argSize != 0) throw IllegalStateException("${predicateOp}要求参数")
     }
 }
 
 //二元操作的关键词组
-open class BinaryFilterNode internal constructor(text: String, fieldNode: PredicateNode, filterOp: FilterOperator, val value: ValueNode) : FilterNode(text, fieldNode, filterOp) {
+open class BinaryFilterNode internal constructor(text: String, fieldNode: PredicateNode, predicateOp: PredicateOperator, val value: ValueNode) :
+    FilterNode(text, fieldNode, predicateOp) {
     init {
-        if (filterOp.argSize != 1) throw IllegalStateException("${filterOp}要求两个参数")
+        if (predicateOp.argSize != 1) throw IllegalStateException("${predicateOp}要求两个参数")
     }
 }
 
 //字段值查询的关键词
-class ColumnValueNode internal constructor(text: String, fieldNode: PredicateNode, value: ValueNode) : BinaryFilterNode(text, fieldNode, FilterOperator.EQUAL, value)
+class ColumnValueNode internal constructor(text: String, fieldNode: PredicateNode, value: ValueNode) : BinaryFilterNode(text, fieldNode, PredicateOperator.EQUAL, value)
 
 //三元操作的关键词组
-class TripleFilterNode internal constructor(text: String, fieldNode: PredicateNode, filterOp: FilterOperator, val first: ValueNode, val second: ValueNode) :
-    FilterNode(text, fieldNode, filterOp)
+class TripleFilterNode internal constructor(text: String, fieldNode: PredicateNode, predicateOp: PredicateOperator, val first: ValueNode, val second: ValueNode) :
+    FilterNode(text, fieldNode, predicateOp)
 
-class MultiFilterNode internal constructor(text: String, fieldNode: PredicateNode, filterOp: FilterOperator, val values: List<ValueNode>) : FilterNode(text, fieldNode, filterOp)
+class MultiFilterNode internal constructor(text: String, fieldNode: PredicateNode, predicateOp: PredicateOperator, val values: List<ValueNode>) :
+    FilterNode(text, fieldNode, predicateOp)

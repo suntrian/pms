@@ -1,6 +1,6 @@
 package org.sunt.query.define
 
-enum class FilterOperator(val argSize: Int) : Operator {
+enum class PredicateOperator(val argSize: Int) : Operator {
 
     EQUAL(1),
     GREATER(1),
