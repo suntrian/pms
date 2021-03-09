@@ -13,7 +13,8 @@ import org.sunt.query.formula.function.*
 import org.sunt.query.formula.parser.FormulaParser.*
 import org.sunt.query.formula.suggestion.FormulaSuggestion
 import org.sunt.query.formula.suggestion.TokenSuggestion
-import org.sunt.query.model.metadata.IColumn
+import org.sunt.query.model.metadata.Column
+import org.sunt.query.model.metadata.ColumnInterface
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.component1
@@ -338,7 +339,7 @@ class FormulaSuggestVisitor(
         val functions = functionMap[text] ?: aliasFunctionNameMap[text]?.let { functionMap[it] } ?: emptyList()
         val isFuncName = functions.isNotEmpty()
         val isReserved = currentOptValueCandidates.contains(text.toUpperCase())
-        var column: IColumn? = null
+        var column: Column? = null
         val isColName =
             (!isFuncName && !isReserved) && (columnInterface.getColumnByName(text)?.also { column = it } != null)
         //不是函数也不是字段

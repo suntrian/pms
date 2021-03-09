@@ -19,6 +19,8 @@ import org.sunt.query.formula.function.TokenStatus
 import org.sunt.query.formula.parser.FormulaBaseVisitor
 import org.sunt.query.formula.parser.FormulaParser
 import org.sunt.query.formula.parser.FormulaParser.*
+import org.sunt.query.model.metadata.Column
+import org.sunt.query.model.metadata.ColumnInterface
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -143,6 +145,7 @@ abstract class AbstractFormulaVisitor(
             status = statements.map { it.status }.maxByOrNull { it.privilege } ?: TokenStatus.NORMAL
             val commonDataType = DataType.commonType(statements.map { it.dataType })
             dataType = DataType.of("List<${commonDataType}>")
+            children = statements
         }
         return result
     }

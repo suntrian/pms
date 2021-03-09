@@ -6,7 +6,7 @@ import org.sunt.query.formula.FormulaHelper
 import org.sunt.query.formula.function.FunctionDefinition
 import org.sunt.query.formula.function.FunctionDefinitionParser
 import org.sunt.query.formula.function.StatementInfo
-import org.sunt.query.model.metadata.IColumn
+import org.sunt.query.model.metadata.Column
 import java.util.regex.Pattern
 
 
@@ -257,11 +257,11 @@ object DateFunctionTranslator : FunctionTranslator {
             throw IllegalStateException("${field.dataType}不是有效的时间字段")
         }
         var fieldFormat = ""
-        val column = if (field.payload !is IColumn
-            || (field.payload as IColumn).format?.also { fieldFormat = it.trim() }?.isBlank() != false
+        val column = if (field.payload !is Column
+            || (field.payload as Column).format?.also { fieldFormat = it.trim() }?.isBlank() != false
         ) {
             throw IllegalStateException("${expression}未配置时间格式")
-        } else field.payload as IColumn
+        } else field.payload as Column
         if (field.dataType == DataType.INTEGER) {
             expression = "TO_STRING(${expression})"
         }

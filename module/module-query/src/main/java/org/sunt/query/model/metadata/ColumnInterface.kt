@@ -1,4 +1,4 @@
-package org.sunt.query.formula
+package org.sunt.query.model.metadata
 
 interface ColumnInterface {
 

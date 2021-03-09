@@ -9,6 +9,8 @@ import org.sunt.query.formula.parser.FormulaLexer
 import org.sunt.query.formula.parser.FormulaParser
 import org.sunt.query.formula.suggestion.FormulaSuggestion
 import org.sunt.query.formula.suggestion.SuggestErrorStrategy
+import org.sunt.query.model.metadata.Column
+import org.sunt.query.model.metadata.ColumnInterface
 
 class FormulaHelper private constructor(private val columnInterface: ColumnInterface) {
 

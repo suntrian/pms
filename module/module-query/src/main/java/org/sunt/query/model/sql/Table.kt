@@ -14,7 +14,7 @@ class PhysicalTable : FromItem {
 
 }
 
-class QueryTable : FromItem, SelectItem {
+open class QueryTable : FromItem, SelectItem {
 
     var distinct: Boolean = false
     val select: MutableList<SelectItem> = LinkedList()
@@ -97,13 +97,17 @@ class QueryTable : FromItem, SelectItem {
 
 }
 
-class SetTable : FromItem {
+class SetTable : QueryTable() {
 
     lateinit var first: FromItem
     var extra: List<Pair<SetType, FromItem>> = emptyList()
 
     override fun toSql(dialect: SqlDialect): String {
-        TODO("Not yet implemented")
+        val sqlBuilder = StringBuilder(first.toSql(dialect))
+        for ((setType, fromItem) in extra) {
+            sqlBuilder.append(" ").append(setType.expression).append(" ").append(fromItem.toSql(dialect))
+        }
+        return sqlBuilder.toString()
     }
 
 }

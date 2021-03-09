@@ -1,7 +1,7 @@
 package org.sunt.query.formula.support
 
 import org.sunt.query.define.DataType
-import org.sunt.query.formula.Column
+import org.sunt.query.model.metadata.Column
 
 class TestColumn @JvmOverloads constructor(
     override val id: String,

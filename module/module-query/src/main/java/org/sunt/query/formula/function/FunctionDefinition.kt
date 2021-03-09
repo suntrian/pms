@@ -132,7 +132,7 @@ class FunctionDefinition(val funcName: String) {
                 throw ParamTypeMismatchException(expr, genericRealType, dataType)
             }
             if (this.reserved.isNotEmpty() && !reserved.contains(expr.toUpperCase())) {
-                throw ParamTypeMismatchException("${expr}应为关键字[${optionValues.joinToString(", ")}]之一")
+                throw ParamTypeMismatchException("${expr}应为关键字[${reserved.joinToString(", ")}]之一")
             }
             if (this.reserved.isEmpty() && tokenItem?.scope?.equals(TokenScope.RESERVED) == true) {
                 throw ParamTypeMismatchException("${expr}不可为关键字${tokenItem.text}")

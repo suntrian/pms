@@ -1,13 +1,12 @@
 package org.sunt.query.model.sql
 
-import org.sunt.query.define.AggregateType
-import org.sunt.query.define.SqlDialect
+import org.sunt.query.define.*
 
-interface Statement : SqlItem
-
-interface SelectItem : Statement {
+interface SelectItem : SqlItem {
     var alias: String?
 }
+
+interface Predicate : SelectItem
 
 class AsteriskColumn(override var alias: String?) : SelectItem {
 
@@ -15,7 +14,12 @@ class AsteriskColumn(override var alias: String?) : SelectItem {
 
 }
 
-class AggregateColumn(val aggType: AggregateType, val distinct: Boolean, val field: SelectItem, override var alias: String?) : SelectItem {
+class AggregateColumn(
+    val aggType: AggregateType,
+    val distinct: Boolean,
+    val field: SelectItem,
+    override var alias: String?
+) : SelectItem {
     init {
         if (field is AggregateColumn || field is AggregateFormulaColumn || field is WindowFormulaColumn) {
             throw IllegalStateException("")
@@ -76,3 +80,36 @@ class GroupByColumn(val selectItem: SelectItem) : SqlItem {
 
 }
 
+abstract class BasePredicate(val field: SelectItem, val op: Operator, override var alias: String? = "") : Predicate
+
+open class BinaryPredicate(left: SelectItem, predicateOp: PredicateOperator, val right: SelectItem) :
+    BasePredicate(left, predicateOp) {
+    override fun toSql(dialect: SqlDialect): String {
+        TODO("Not yet implemented")
+    }
+}
+
+open class TriplePredicate(
+    left: SelectItem,
+    predicateOp: PredicateOperator,
+    val value1: SelectItem,
+    val value2: SelectItem
+) : BasePredicate(left, predicateOp) {
+    override fun toSql(dialect: SqlDialect): String {
+        TODO("Not yet implemented")
+    }
+}
+
+open class MultiPredicate(left: SelectItem, predicateOp: PredicateOperator, vararg val value: SelectItem) :
+    BasePredicate(left, predicateOp) {
+    override fun toSql(dialect: SqlDialect): String {
+        TODO("Not yet implemented")
+    }
+}
+
+open class LogicalPredicate(left: SelectItem, logicalOp: LogicalOperator, val right: SelectItem) :
+    BasePredicate(left, logicalOp) {
+    override fun toSql(dialect: SqlDialect): String {
+        TODO("Not yet implemented")
+    }
+}

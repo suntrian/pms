@@ -9,14 +9,14 @@ import org.sunt.query.formula.support.AllMatchColumn
 import org.sunt.query.formula.support.ExactColumn
 import org.sunt.query.formula.support.TestColumn
 import org.sunt.query.formula.support.removeBlank
-import org.sunt.query.model.metadata.IColumn
+import org.sunt.query.model.metadata.Column
 
 class TestFormulaToSql {
 
-    private fun getColumnByName(id: String, dataType: DataType): IColumn? =
+    private fun getColumnByName(id: String, dataType: DataType): Column? =
         AllMatchColumn(mapOf(id to dataType)).getColumnByName(id)
 
-    private fun getColumnById(id: String, dataType: DataType): IColumn? =
+    private fun getColumnById(id: String, dataType: DataType): Column? =
         AllMatchColumn(mapOf(id to dataType)).getColumnById(id)
 
 

@@ -1,12 +1,12 @@
 package org.sunt.query.define
 
-enum class SetType {
+enum class SetType(val expression: String) {
 
-    UNION_ALL,
-    UNION_DISTINCT,
-    EXCEPT_ALL,
-    EXCEPT_DISTINCT,
-    INTERSECT_ALL,
-    INTERSECT_DISTINCT
+    UNION_ALL("UNION ALL"),
+    UNION_DISTINCT("UNION"),
+    EXCEPT_ALL("EXCEPT ALL"),
+    EXCEPT_DISTINCT("EXCEPT"),
+    INTERSECT_ALL("INTERSECT ALL"),
+    INTERSECT_DISTINCT("INTERSECT")
 
 }
