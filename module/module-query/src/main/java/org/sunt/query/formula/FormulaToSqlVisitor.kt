@@ -7,7 +7,6 @@ import org.sunt.query.exception.AbstractFormulaException
 import org.sunt.query.exception.ParamTypeMismatchException
 import org.sunt.query.exception.ParamsSizeMismatchException
 import org.sunt.query.exception.WillNeverHappenException
-import org.sunt.query.formula.exception.*
 import org.sunt.query.formula.function.FunctionDefinition
 import org.sunt.query.formula.function.StatementInfo
 import org.sunt.query.formula.function.TokenStatus
