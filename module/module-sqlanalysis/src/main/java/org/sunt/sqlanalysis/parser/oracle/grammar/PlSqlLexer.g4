@@ -1,0 +1,3008 @@
+/**
+ * Oracle(c) PL/SQL 11g Parser
+ *
+ * Copyright (c) 2009-2011 Alexandre Porcelli <alexandre.porcelli@gmail.com>
+ * Copyright (c) 2015-2019 Ivan Kochurkin (KvanTTT, kvanttt@gmail.com, Positive Technologies).
+ * Copyright (c) 2017 Mark Adams <madams51703@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+lexer grammar PlSqlLexer;
+
+options {
+    superClass=PlSqlLexerBase;
+}
+
+@lexer::postinclude {
+#include <PlSqlLexerBase.h>
+}
+
+ABORT:                        'ABORT';
+ABS:                          'ABS';
+ACCESS:                       'ACCESS';
+ACCESSED:                     'ACCESSED';
+ACCOUNT:                      'ACCOUNT';
+ACL:                          'ACL';
+ACOS:                         'ACOS';
+ACTION:                       'ACTION';
+ACTIONS:                      'ACTIONS';
+ACTIVATE:                     'ACTIVATE';
+ACTIVE:                       'ACTIVE';
+ACTIVE_COMPONENT:             'ACTIVE_COMPONENT';
+ACTIVE_DATA:                  'ACTIVE_DATA';
+ACTIVE_FUNCTION:              'ACTIVE_FUNCTION';
+ACTIVE_TAG:                   'ACTIVE_TAG';
+ACTIVITY:                     'ACTIVITY';
+ADAPTIVE_PLAN:                'ADAPTIVE_PLAN';
+ADD:                          'ADD';
+ADD_COLUMN:                   'ADD_COLUMN';
+ADD_GROUP:                    'ADD_GROUP';
+ADD_MONTHS:                   'ADD_MONTHS';
+ADJ_DATE:                     'ADJ_DATE';
+ADMIN:                        'ADMIN';
+ADMINISTER:                   'ADMINISTER';
+ADMINISTRATOR:                'ADMINISTRATOR';
+ADVANCED:                     'ADVANCED';
+ADVISE:                       'ADVISE';
+ADVISOR:                      'ADVISOR';
+AFD_DISKSTRING:               'AFD_DISKSTRING';
+AFTER:                        'AFTER';
+AGENT:                        'AGENT';
+AGGREGATE:                    'AGGREGATE';
+A_LETTER:                     'A';
+ALIAS:                        'ALIAS';
+ALL:                          'ALL';
+ALLOCATE:                     'ALLOCATE';
+ALLOW:                        'ALLOW';
+ALL_ROWS:                     'ALL_ROWS';
+ALTER:                        'ALTER';
+ALWAYS:                       'ALWAYS';
+ANALYZE:                      'ANALYZE';
+ANCILLARY:                    'ANCILLARY';
+AND:                          'AND';
+AND_EQUAL:                    'AND_EQUAL';
+ANOMALY:                      'ANOMALY';
+ANSI_REARCH:                  'ANSI_REARCH';
+ANTIJOIN:                     'ANTIJOIN';
+ANY:                          'ANY';
+ANYSCHEMA:                    'ANYSCHEMA';
+APPEND:                       'APPEND';
+APPENDCHILDXML:               'APPENDCHILDXML';
+APPEND_VALUES:                'APPEND_VALUES';
+APPLICATION:                  'APPLICATION';
+APPLY:                        'APPLY';
+APPROX_COUNT_DISTINCT:        'APPROX_COUNT_DISTINCT';
+ARCHIVAL:                     'ARCHIVAL';
+ARCHIVE:                      'ARCHIVE';
+ARCHIVED:                     'ARCHIVED';
+ARCHIVELOG:                   'ARCHIVELOG';
+ARRAY:                        'ARRAY';
+AS:                           'AS';
+ASC:                          'ASC';
+ASCII:                        'ASCII';
+ASCIISTR:                     'ASCIISTR';
+ASIN:                         'ASIN';
+ASIS:                         'ASIS';
+ASSEMBLY:                     'ASSEMBLY';
+ASSIGN:                       'ASSIGN';
+ASSOCIATE:                    'ASSOCIATE';
+ASYNC:                        'ASYNC';
+ASYNCHRONOUS:                 'ASYNCHRONOUS';
+ATAN2:                        'ATAN2';
+ATAN:                         'ATAN';
+AT:                           'AT';
+ATTRIBUTE:                    'ATTRIBUTE';
+ATTRIBUTES:                   'ATTRIBUTES';
+AUDIT:                        'AUDIT';
+AUTHENTICATED:                'AUTHENTICATED';
+AUTHENTICATION:               'AUTHENTICATION';
+AUTHID:                       'AUTHID';
+AUTHORIZATION:                'AUTHORIZATION';
+AUTOALLOCATE:                 'AUTOALLOCATE';
+AUTO:                         'AUTO';
+AUTOBACKUP:                   'AUTOBACKUP';
+AUTOEXTEND:                   'AUTOEXTEND';
+AUTO_LOGIN:                   'AUTO_LOGIN';
+AUTOMATIC:                    'AUTOMATIC';
+AUTONOMOUS_TRANSACTION:       'AUTONOMOUS_TRANSACTION';
+AUTO_REOPTIMIZE:              'AUTO_REOPTIMIZE';
+AVAILABILITY:                 'AVAILABILITY';
+AVRO:                         'AVRO';
+BACKGROUND:                   'BACKGROUND';
+BACKUP:                       'BACKUP';
+BACKUPSET:                    'BACKUPSET';
+BASIC:                        'BASIC';
+BASICFILE:                    'BASICFILE';
+BATCH:                        'BATCH';
+BATCHSIZE:                    'BATCHSIZE';
+BATCH_TABLE_ACCESS_BY_ROWID:  'BATCH_TABLE_ACCESS_BY_ROWID';
+BECOME:                       'BECOME';
+BEFORE:                       'BEFORE';
+BEGIN:                        'BEGIN';
+BEGINNING:                    'BEGINNING';
+BEGIN_OUTLINE_DATA:           'BEGIN_OUTLINE_DATA';
+BEHALF:                       'BEHALF';
+BEQUEATH:                     'BEQUEATH';
+BETWEEN:                      'BETWEEN';
+BFILE:                        'BFILE';
+BFILENAME:                    'BFILENAME';
+BIGFILE:                      'BIGFILE';
+BINARY:                       'BINARY';
+BINARY_DOUBLE:                'BINARY_DOUBLE';
+BINARY_DOUBLE_INFINITY:       'BINARY_DOUBLE_INFINITY';
+BINARY_DOUBLE_NAN:            'BINARY_DOUBLE_NAN';
+BINARY_FLOAT:                 'BINARY_FLOAT';
+BINARY_FLOAT_INFINITY:        'BINARY_FLOAT_INFINITY';
+BINARY_FLOAT_NAN:             'BINARY_FLOAT_NAN';
+BINARY_INTEGER:               'BINARY_INTEGER';
+BIND_AWARE:                   'BIND_AWARE';
+BINDING:                      'BINDING';
+BIN_TO_NUM:                   'BIN_TO_NUM';
+BITAND:                       'BITAND';
+BITMAP_AND:                   'BITMAP_AND';
+BITMAP:                       'BITMAP';
+BITMAPS:                      'BITMAPS';
+BITMAP_TREE:                  'BITMAP_TREE';
+BITS:                         'BITS';
+BLOB:                         'BLOB';
+BLOCK:                        'BLOCK';
+BLOCK_RANGE:                  'BLOCK_RANGE';
+BLOCKS:                       'BLOCKS';
+BLOCKSIZE:                    'BLOCKSIZE';
+BODY:                         'BODY';
+BOOLEAN:                      'BOOLEAN';
+BOTH:                         'BOTH';
+BOUND:                        'BOUND';
+BRANCH:                       'BRANCH';
+BREADTH:                      'BREADTH';
+BROADCAST:                    'BROADCAST';
+BSON:                         'BSON';
+BUFFER:                       'BUFFER';
+BUFFER_CACHE:                 'BUFFER_CACHE';
+BUFFER_POOL:                  'BUFFER_POOL';
+BUILD:                        'BUILD';
+BULK:                         'BULK';
+BY:                           'BY';
+BYPASS_RECURSIVE_CHECK:       'BYPASS_RECURSIVE_CHECK';
+BYPASS_UJVC:                  'BYPASS_UJVC';
+BYTE:                         'BYTE';
+CACHE:                        'CACHE';
+CACHE_CB:                     'CACHE_CB';
+CACHE_INSTANCES:              'CACHE_INSTANCES';
+CACHE_TEMP_TABLE:             'CACHE_TEMP_TABLE';
+CACHING:                      'CACHING';
+CALCULATED:                   'CALCULATED';
+CALLBACK:                     'CALLBACK';
+CALL:                         'CALL';
+CANCEL:                       'CANCEL';
+CANONICAL:                    'CANONICAL';
+CAPACITY:                     'CAPACITY';
+CARDINALITY:                  'CARDINALITY';
+CASCADE:                      'CASCADE';
+CASE:                         'CASE';
+CAST:                         'CAST';
+CATEGORY:                     'CATEGORY';
+CDBDEFAULT:                   'CDB$DEFAULT';
+CEIL:                         'CEIL';
+CELL_FLASH_CACHE:             'CELL_FLASH_CACHE';
+CERTIFICATE:                  'CERTIFICATE';
+CFILE:                        'CFILE';
+CHAINED:                      'CHAINED';
+CHANGE:                       'CHANGE';
+CHANGETRACKING:               'CHANGETRACKING';
+CHANGE_DUPKEY_ERROR_INDEX:    'CHANGE_DUPKEY_ERROR_INDEX';
+CHARACTER:                    'CHARACTER';
+CHAR:                         'CHAR';
+CHAR_CS:                      'CHAR_CS';
+CHARTOROWID:                  'CHARTOROWID';
+CHECK_ACL_REWRITE:            'CHECK_ACL_REWRITE';
+CHECK:                        'CHECK';
+CHECKPOINT:                   'CHECKPOINT';
+CHILD:                        'CHILD';
+CHOOSE:                       'CHOOSE';
+CHR:                          'CHR';
+CHUNK:                        'CHUNK';
+CLASS:                        'CLASS';
+CLASSIFIER:                   'CLASSIFIER';
+CLEANUP:                      'CLEANUP';
+CLEAR:                        'CLEAR';
+C_LETTER:                     'C';
+CLIENT:                       'CLIENT';
+CLOB:                         'CLOB';
+CLONE:                        'CLONE';
+CLOSE_CACHED_OPEN_CURSORS:    'CLOSE_CACHED_OPEN_CURSORS';
+CLOSE:                        'CLOSE';
+CLUSTER_BY_ROWID:             'CLUSTER_BY_ROWID';
+CLUSTER:                      'CLUSTER';
+CLUSTER_DETAILS:              'CLUSTER_DETAILS';
+CLUSTER_DISTANCE:             'CLUSTER_DISTANCE';
+CLUSTER_ID:                   'CLUSTER_ID';
+CLUSTERING:                   'CLUSTERING';
+CLUSTERING_FACTOR:            'CLUSTERING_FACTOR';
+CLUSTER_PROBABILITY:          'CLUSTER_PROBABILITY';
+CLUSTER_SET:                  'CLUSTER_SET';
+COALESCE:                     'COALESCE';
+COALESCE_SQ:                  'COALESCE_SQ';
+COARSE:                       'COARSE';
+CO_AUTH_IND:                  'CO_AUTH_IND';
+COLD:                         'COLD';
+COLLECT:                      'COLLECT';
+COLUMNAR:                     'COLUMNAR';
+COLUMN_AUTH_INDICATOR:        'COLUMN_AUTH_INDICATOR';
+COLUMN:                       'COLUMN';
+COLUMNS:                      'COLUMNS';
+COLUMN_STATS:                 'COLUMN_STATS';
+COLUMN_VALUE:                 'COLUMN_VALUE';
+COMMENT:                      'COMMENT';
+COMMIT:                       'COMMIT';
+COMMITTED:                    'COMMITTED';
+COMMON_DATA:                  'COMMON_DATA';
+COMPACT:                      'COMPACT';
+COMPATIBILITY:                'COMPATIBILITY';
+COMPILE:                      'COMPILE';
+COMPLETE:                     'COMPLETE';
+COMPLIANCE:                   'COMPLIANCE';
+COMPONENT:                    'COMPONENT';
+COMPONENTS:                   'COMPONENTS';
+COMPOSE:                      'COMPOSE';
+COMPOSITE:                    'COMPOSITE';
+COMPOSITE_LIMIT:              'COMPOSITE_LIMIT';
+COMPOUND:                     'COMPOUND';
+COMPRESS:                     'COMPRESS';
+COMPUTE:                      'COMPUTE';
+CONCAT:                       'CONCAT';
+CON_DBID_TO_ID:               'CON_DBID_TO_ID';
+CONDITIONAL:                  'CONDITIONAL';
+CONDITION:                    'CONDITION';
+CONFIRM:                      'CONFIRM';
+CONFORMING:                   'CONFORMING';
+CON_GUID_TO_ID:               'CON_GUID_TO_ID';
+CON_ID:                       'CON_ID';
+CON_NAME_TO_ID:               'CON_NAME_TO_ID';
+CONNECT_BY_CB_WHR_ONLY:       'CONNECT_BY_CB_WHR_ONLY';
+CONNECT_BY_COMBINE_SW:        'CONNECT_BY_COMBINE_SW';
+CONNECT_BY_COST_BASED:        'CONNECT_BY_COST_BASED';
+CONNECT_BY_ELIM_DUPS:         'CONNECT_BY_ELIM_DUPS';
+CONNECT_BY_FILTERING:         'CONNECT_BY_FILTERING';
+CONNECT_BY_ISCYCLE:           'CONNECT_BY_ISCYCLE';
+CONNECT_BY_ISLEAF:            'CONNECT_BY_ISLEAF';
+CONNECT_BY_ROOT:              'CONNECT_BY_ROOT';
+CONNECT:                      'CONNECT';
+CONNECT_TIME:                 'CONNECT_TIME';
+CONSIDER:                     'CONSIDER';
+CONSISTENT:                   'CONSISTENT';
+CONSTANT:                     'CONSTANT';
+CONST:                        'CONST';
+CONSTRAINT:                   'CONSTRAINT';
+CONSTRAINTS:                  'CONSTRAINTS';
+CONSTRUCTOR:                  'CONSTRUCTOR';
+CONTAINER:                    'CONTAINER';
+CONTAINER_DATA:               'CONTAINER_DATA';
+CONTAINERS:                   'CONTAINERS';
+CONTENT:                      'CONTENT';
+CONTENTS:                     'CONTENTS';
+CONTEXT:                      'CONTEXT';
+CONTINUE:                     'CONTINUE';
+CONTROLFILE:                  'CONTROLFILE';
+CON_UID_TO_ID:                'CON_UID_TO_ID';
+CONVERT:                      'CONVERT';
+COOKIE:                       'COOKIE';
+COPY:                         'COPY';
+CORR_K:                       'CORR_K';
+CORR_S:                       'CORR_S';
+CORRUPTION:                   'CORRUPTION';
+CORRUPT_XID_ALL:              'CORRUPT_XID_ALL';
+CORRUPT_XID:                  'CORRUPT_XID';
+COS:                          'COS';
+COSH:                         'COSH';
+COST:                         'COST';
+COST_XML_QUERY_REWRITE:       'COST_XML_QUERY_REWRITE';
+COUNT:                        'COUNT';
+COVAR_POP:                    'COVAR_POP';
+COVAR_SAMP:                   'COVAR_SAMP';
+CPU_COSTING:                  'CPU_COSTING';
+CPU_PER_CALL:                 'CPU_PER_CALL';
+CPU_PER_SESSION:              'CPU_PER_SESSION';
+CRASH:                        'CRASH';
+CREATE:                       'CREATE';
+CREATE_FILE_DEST:             'CREATE_FILE_DEST';
+CREATE_STORED_OUTLINES:       'CREATE_STORED_OUTLINES';
+CREATION:                     'CREATION';
+CREDENTIAL:                   'CREDENTIAL';
+CRITICAL:                     'CRITICAL';
+CROSS:                        'CROSS';
+CROSSEDITION:                 'CROSSEDITION';
+CSCONVERT:                    'CSCONVERT';
+CUBE_AJ:                      'CUBE_AJ';
+CUBE:                         'CUBE';
+CUBE_GB:                      'CUBE_GB';
+CUBE_SJ:                      'CUBE_SJ';
+CUME_DISTM:                   'CUME_DISTM';
+CURRENT:                      'CURRENT';
+CURRENT_DATE:                 'CURRENT_DATE';
+CURRENT_SCHEMA:               'CURRENT_SCHEMA';
+CURRENT_TIME:                 'CURRENT_TIME';
+CURRENT_TIMESTAMP:            'CURRENT_TIMESTAMP';
+CURRENT_USER:                 'CURRENT_USER';
+CURRENTV:                     'CURRENTV';
+CURSOR:                       'CURSOR';
+CURSOR_SHARING_EXACT:         'CURSOR_SHARING_EXACT';
+CURSOR_SPECIFIC_SEGMENT:      'CURSOR_SPECIFIC_SEGMENT';
+CUSTOMDATUM:                  'CUSTOMDATUM';
+CV:                           'CV';
+CYCLE:                        'CYCLE';
+DANGLING:                     'DANGLING';
+DATABASE:                     'DATABASE';
+DATA:                         'DATA';
+DATAFILE:                     'DATAFILE';
+DATAFILES:                    'DATAFILES';
+DATAGUARDCONFIG:              'DATAGUARDCONFIG';
+DATAMOVEMENT:                 'DATAMOVEMENT';
+DATAOBJNO:                    'DATAOBJNO';
+DATAOBJ_TO_MAT_PARTITION:     'DATAOBJ_TO_MAT_PARTITION';
+DATAOBJ_TO_PARTITION:         'DATAOBJ_TO_PARTITION';
+DATAPUMP:                     'DATAPUMP';
+DATA_SECURITY_REWRITE_LIMIT:  'DATA_SECURITY_REWRITE_LIMIT';
+DATE:                         'DATE';
+DATE_MODE:                    'DATE_MODE';
+DAY:                          'DAY';
+DAYS:                         'DAYS';
+DBA:                          'DBA';
+DBA_RECYCLEBIN:               'DBA_RECYCLEBIN';
+DBMS_STATS:                   'DBMS_STATS';
+DB_ROLE_CHANGE:               'DB_ROLE_CHANGE';
+DBTIMEZONE:                   'DBTIMEZONE';
+DB_UNIQUE_NAME:               'DB_UNIQUE_NAME';
+DB_VERSION:                   'DB_VERSION';
+DDL:                          'DDL';
+DEALLOCATE:                   'DEALLOCATE';
+DEBUG:                        'DEBUG';
+DEBUGGER:                     'DEBUGGER';
+DEC:                          'DEC';
+DECIMAL:                      'DECIMAL';
+DECLARE:                      'DECLARE';
+DECOMPOSE:                    'DECOMPOSE';
+DECORRELATE:                  'DECORRELATE';
+DECR:                         'DECR';
+DECREMENT:                    'DECREMENT';
+DECRYPT:                      'DECRYPT';
+DEDUPLICATE:                  'DEDUPLICATE';
+DEFAULT:                      'DEFAULT';
+DEFAULTS:                     'DEFAULTS';
+DEFERRABLE:                   'DEFERRABLE';
+DEFERRED:                     'DEFERRED';
+DEFINED:                      'DEFINED';
+DEFINE:                       'DEFINE';
+DEFINER:                      'DEFINER';
+DEGREE:                       'DEGREE';
+DELAY:                        'DELAY';
+DELEGATE:                     'DELEGATE';
+DELETE_ALL:                   'DELETE_ALL';
+DELETE:                       'DELETE';
+DELETEXML:                    'DELETEXML';
+DEMAND:                       'DEMAND';
+DENSE_RANKM:                  'DENSE_RANKM';
+DEPENDENT:                    'DEPENDENT';
+DEPTH:                        'DEPTH';
+DEQUEUE:                      'DEQUEUE';
+DEREF:                        'DEREF';
+DEREF_NO_REWRITE:             'DEREF_NO_REWRITE';
+DESC:                         'DESC';
+DESTROY:                      'DESTROY';
+DETACHED:                     'DETACHED';
+DETERMINES:                   'DETERMINES';
+DETERMINISTIC:                'DETERMINISTIC';
+DICTIONARY:                   'DICTIONARY';
+DIMENSION:                    'DIMENSION';
+DIMENSIONS:                   'DIMENSIONS';
+DIRECT_LOAD:                  'DIRECT_LOAD';
+DIRECTORY:                    'DIRECTORY';
+DIRECT_PATH:                  'DIRECT_PATH';
+DISABLE_ALL:                  'DISABLE_ALL';
+DISABLE:                      'DISABLE';
+DISABLE_PARALLEL_DML:         'DISABLE_PARALLEL_DML';
+DISABLE_PRESET:               'DISABLE_PRESET';
+DISABLE_RPKE:                 'DISABLE_RPKE';
+DISALLOW:                     'DISALLOW';
+DISASSOCIATE:                 'DISASSOCIATE';
+DISCARD:                      'DISCARD';
+DISCONNECT:                   'DISCONNECT';
+DISK:                         'DISK';
+DISKGROUP:                    'DISKGROUP';
+DISKGROUP_PLUS:               '\'+ DISKGROUP';
+DISKS:                        'DISKS';
+DISMOUNT:                     'DISMOUNT';
+DISTINCT:                     'DISTINCT';
+DISTINGUISHED:                'DISTINGUISHED';
+DISTRIBUTED:                  'DISTRIBUTED';
+DISTRIBUTE:                   'DISTRIBUTE';
+DML:                          'DML';
+DML_UPDATE:                   'DML_UPDATE';
+DOCFIDELITY:                  'DOCFIDELITY';
+DOCUMENT:                     'DOCUMENT';
+DOMAIN_INDEX_FILTER:          'DOMAIN_INDEX_FILTER';
+DOMAIN_INDEX_NO_SORT:         'DOMAIN_INDEX_NO_SORT';
+DOMAIN_INDEX_SORT:            'DOMAIN_INDEX_SORT';
+DOUBLE:                       'DOUBLE';
+DOWNGRADE:                    'DOWNGRADE';
+DRIVING_SITE:                 'DRIVING_SITE';
+DROP_COLUMN:                  'DROP_COLUMN';
+DROP:                         'DROP';
+DROP_GROUP:                   'DROP_GROUP';
+DSINTERVAL_UNCONSTRAINED:     'DSINTERVAL_UNCONSTRAINED';
+DST_UPGRADE_INSERT_CONV:      'DST_UPGRADE_INSERT_CONV';
+DUMP:                         'DUMP';
+DUMPSET:                      'DUMPSET';
+DUPLICATE:                    'DUPLICATE';
+DV:                           'DV';
+DYNAMIC:                      'DYNAMIC';
+DYNAMIC_SAMPLING:             'DYNAMIC_SAMPLING';
+DYNAMIC_SAMPLING_EST_CDN:     'DYNAMIC_SAMPLING_EST_CDN';
+EACH:                         'EACH';
+EDITIONABLE:                  'EDITIONABLE';
+EDITION:                      'EDITION';
+EDITIONING:                   'EDITIONING';
+EDITIONS:                     'EDITIONS';
+ELEMENT:                      'ELEMENT';
+ELIM_GROUPBY:                 'ELIM_GROUPBY';
+ELIMINATE_JOIN:               'ELIMINATE_JOIN';
+ELIMINATE_OBY:                'ELIMINATE_OBY';
+ELIMINATE_OUTER_JOIN:         'ELIMINATE_OUTER_JOIN';
+ELSE:                         'ELSE';
+ELSIF:                        'ELSIF';
+EM:                           'EM';
+EMPTY_BLOB:                   'EMPTY_BLOB';
+EMPTY_CLOB:                   'EMPTY_CLOB';
+EMPTY:                        'EMPTY';
+ENABLE_ALL:                   'ENABLE_ALL';
+ENABLE:                       'ENABLE';
+ENABLE_PARALLEL_DML:          'ENABLE_PARALLEL_DML';
+ENABLE_PRESET:                'ENABLE_PRESET';
+ENCODING:                     'ENCODING';
+ENCRYPT:                      'ENCRYPT';
+ENCRYPTION:                   'ENCRYPTION';
+END:                          'END';
+END_OUTLINE_DATA:             'END_OUTLINE_DATA';
+ENFORCED:                     'ENFORCED';
+ENFORCE:                      'ENFORCE';
+ENQUEUE:                      'ENQUEUE';
+ENTERPRISE:                   'ENTERPRISE';
+ENTITYESCAPING:               'ENTITYESCAPING';
+ENTRY:                        'ENTRY';
+EQUIPART:                     'EQUIPART';
+ERR:                          'ERR';
+ERROR_ARGUMENT:               'ERROR_ARGUMENT';
+ERROR:                        'ERROR';
+ERROR_ON_OVERLAP_TIME:        'ERROR_ON_OVERLAP_TIME';
+ERRORS:                       'ERRORS';
+ESCAPE:                       'ESCAPE';
+ESTIMATE:                     'ESTIMATE';
+EVAL:                         'EVAL';
+EVALNAME:                     'EVALNAME';
+EVALUATE:                     'EVALUATE';
+EVALUATION:                   'EVALUATION';
+EVENTS:                       'EVENTS';
+EVERY:                        'EVERY';
+EXCEPT:                       'EXCEPT';
+EXCEPTION:                    'EXCEPTION';
+EXCEPTION_INIT:               'EXCEPTION_INIT';
+EXCEPTIONS:                   'EXCEPTIONS';
+EXCHANGE:                     'EXCHANGE';
+EXCLUDE:                      'EXCLUDE';
+EXCLUDING:                    'EXCLUDING';
+EXCLUSIVE:                    'EXCLUSIVE';
+EXECUTE:                      'EXECUTE';
+EXEMPT:                       'EXEMPT';
+EXISTING:                     'EXISTING';
+EXISTS:                       'EXISTS';
+EXISTSNODE:                   'EXISTSNODE';
+EXIT:                         'EXIT';
+EXPAND_GSET_TO_UNION:         'EXPAND_GSET_TO_UNION';
+EXPAND_TABLE:                 'EXPAND_TABLE';
+EXP:                          'EXP';
+EXPIRE:                       'EXPIRE';
+EXPLAIN:                      'EXPLAIN';
+EXPLOSION:                    'EXPLOSION';
+EXPORT:                       'EXPORT';
+EXPR_CORR_CHECK:              'EXPR_CORR_CHECK';
+EXPRESS:                      'EXPRESS';
+EXTENDS:                      'EXTENDS';
+EXTENT:                       'EXTENT';
+EXTENTS:                      'EXTENTS';
+EXTERNAL:                     'EXTERNAL';
+EXTERNALLY:                   'EXTERNALLY';
+EXTRACTCLOBXML:               'EXTRACTCLOBXML';
+EXTRACT:                      'EXTRACT';
+EXTRACTVALUE:                 'EXTRACTVALUE';
+EXTRA:                        'EXTRA';
+FACILITY:                     'FACILITY';
+FACT:                         'FACT';
+FACTOR:                       'FACTOR';
+FACTORIZE_JOIN:               'FACTORIZE_JOIN';
+FAILED:                       'FAILED';
+FAILED_LOGIN_ATTEMPTS:        'FAILED_LOGIN_ATTEMPTS';
+FAILGROUP:                    'FAILGROUP';
+FAILOVER:                     'FAILOVER';
+FAILURE:                      'FAILURE';
+FALSE:                        'FALSE';
+FAMILY:                       'FAMILY';
+FAR:                          'FAR';
+FAST:                         'FAST';
+FASTSTART:                    'FASTSTART';
+FBTSCAN:                      'FBTSCAN';
+FEATURE_DETAILS:              'FEATURE_DETAILS';
+FEATURE_ID:                   'FEATURE_ID';
+FEATURE_SET:                  'FEATURE_SET';
+FEATURE_VALUE:                'FEATURE_VALUE';
+FETCH:                        'FETCH';
+FILE:                         'FILE';
+FILE_NAME_CONVERT:            'FILE_NAME_CONVERT';
+FILESYSTEM_LIKE_LOGGING:      'FILESYSTEM_LIKE_LOGGING';
+FILTER:                       'FILTER';
+FINAL:                        'FINAL';
+FINE:                         'FINE';
+FINISH:                       'FINISH';
+FIRST:                        'FIRST';
+FIRSTM:                       'FIRSTM';
+FIRST_ROWS:                   'FIRST_ROWS';
+FIRST_VALUE:                  'FIRST_VALUE';
+FIXED_VIEW_DATA:              'FIXED_VIEW_DATA';
+FLAGGER:                      'FLAGGER';
+FLASHBACK:                    'FLASHBACK';
+FLASH_CACHE:                  'FLASH_CACHE';
+FLOAT:                        'FLOAT';
+FLOB:                         'FLOB';
+FLOOR:                        'FLOOR';
+FLUSH:                        'FLUSH';
+FOLDER:                       'FOLDER';
+FOLLOWING:                    'FOLLOWING';
+FOLLOWS:                      'FOLLOWS';
+FORALL:                       'FORALL';
+FORCE:                        'FORCE';
+FORCE_XML_QUERY_REWRITE:      'FORCE_XML_QUERY_REWRITE';
+FOREIGN:                      'FOREIGN';
+FOREVER:                      'FOREVER';
+FOR:                          'FOR';
+FORMAT:                       'FORMAT';
+FORWARD:                      'FORWARD';
+FRAGMENT_NUMBER:              'FRAGMENT_NUMBER';
+FREELIST:                     'FREELIST';
+FREELISTS:                    'FREELISTS';
+FREEPOOLS:                    'FREEPOOLS';
+FRESH:                        'FRESH';
+FROM:                         'FROM';
+FROM_TZ:                      'FROM_TZ';
+FULL:                         'FULL';
+FULL_OUTER_JOIN_TO_OUTER:     'FULL_OUTER_JOIN_TO_OUTER';
+FUNCTION:                     'FUNCTION';
+FUNCTIONS:                    'FUNCTIONS';
+GATHER_OPTIMIZER_STATISTICS:  'GATHER_OPTIMIZER_STATISTICS';
+GATHER_PLAN_STATISTICS:       'GATHER_PLAN_STATISTICS';
+GBY_CONC_ROLLUP:              'GBY_CONC_ROLLUP';
+GBY_PUSHDOWN:                 'GBY_PUSHDOWN';
+GENERATED:                    'GENERATED';
+GET:                          'GET';
+GLOBAL:                       'GLOBAL';
+GLOBALLY:                     'GLOBALLY';
+GLOBAL_NAME:                  'GLOBAL_NAME';
+GLOBAL_TOPIC_ENABLED:         'GLOBAL_TOPIC_ENABLED';
+GOTO:                         'GOTO';
+GRANT:                        'GRANT';
+GROUP_BY:                     'GROUP_BY';
+GROUP:                        'GROUP';
+GROUP_ID:                     'GROUP_ID';
+GROUPING:                     'GROUPING';
+GROUPING_ID:                  'GROUPING_ID';
+GROUPS:                       'GROUPS';
+GUARANTEED:                   'GUARANTEED';
+GUARANTEE:                    'GUARANTEE';
+GUARD:                        'GUARD';
+HASH_AJ:                      'HASH_AJ';
+HASH:                         'HASH';
+HASHKEYS:                     'HASHKEYS';
+HASH_SJ:                      'HASH_SJ';
+HAVING:                       'HAVING';
+HEADER:                       'HEADER';
+HEAP:                         'HEAP';
+HELP:                         'HELP';
+HEXTORAW:                     'HEXTORAW';
+HEXTOREF:                     'HEXTOREF';
+HIDDEN_KEYWORD:               'HIDDEN';
+HIDE:                         'HIDE';
+HIERARCHY:                    'HIERARCHY';
+HIGH:                         'HIGH';
+HINTSET_BEGIN:                'HINTSET_BEGIN';
+HINTSET_END:                  'HINTSET_END';
+HOT:                          'HOT';
+HOUR:                         'HOUR';
+HWM_BROKERED:                 'HWM_BROKERED';
+HYBRID:                       'HYBRID';
+IDENTIFIED:                   'IDENTIFIED';
+IDENTIFIER:                   'IDENTIFIER';
+IDENTITY:                     'IDENTITY';
+IDGENERATORS:                 'IDGENERATORS';
+ID:                           'ID';
+IDLE_TIME:                    'IDLE_TIME';
+IF:                           'IF';
+IGNORE:                       'IGNORE';
+IGNORE_OPTIM_EMBEDDED_HINTS:  'IGNORE_OPTIM_EMBEDDED_HINTS';
+IGNORE_ROW_ON_DUPKEY_INDEX:   'IGNORE_ROW_ON_DUPKEY_INDEX';
+IGNORE_WHERE_CLAUSE:          'IGNORE_WHERE_CLAUSE';
+ILM:                          'ILM';
+IMMEDIATE:                    'IMMEDIATE';
+IMPACT:                       'IMPACT';
+IMPORT:                       'IMPORT';
+INACTIVE:                     'INACTIVE';
+INCLUDE:                      'INCLUDE';
+INCLUDE_VERSION:              'INCLUDE_VERSION';
+INCLUDING:                    'INCLUDING';
+INCREMENTAL:                  'INCREMENTAL';
+INCREMENT:                    'INCREMENT';
+INCR:                         'INCR';
+INDENT:                       'INDENT';
+INDEX_ASC:                    'INDEX_ASC';
+INDEX_COMBINE:                'INDEX_COMBINE';
+INDEX_DESC:                   'INDEX_DESC';
+INDEXED:                      'INDEXED';
+INDEXES:                      'INDEXES';
+INDEX_FFS:                    'INDEX_FFS';
+INDEX_FILTER:                 'INDEX_FILTER';
+INDEX:                        'INDEX';
+INDEXING:                     'INDEXING';
+INDEX_JOIN:                   'INDEX_JOIN';
+INDEX_ROWS:                   'INDEX_ROWS';
+INDEX_RRS:                    'INDEX_RRS';
+INDEX_RS_ASC:                 'INDEX_RS_ASC';
+INDEX_RS_DESC:                'INDEX_RS_DESC';
+INDEX_RS:                     'INDEX_RS';
+INDEX_SCAN:                   'INDEX_SCAN';
+INDEX_SKIP_SCAN:              'INDEX_SKIP_SCAN';
+INDEX_SS_ASC:                 'INDEX_SS_ASC';
+INDEX_SS_DESC:                'INDEX_SS_DESC';
+INDEX_SS:                     'INDEX_SS';
+INDEX_STATS:                  'INDEX_STATS';
+INDEXTYPE:                    'INDEXTYPE';
+INDEXTYPES:                   'INDEXTYPES';
+INDICATOR:                    'INDICATOR';
+INDICES:                      'INDICES';
+INFINITE:                     'INFINITE';
+INFORMATIONAL:                'INFORMATIONAL';
+INHERIT:                      'INHERIT';
+IN:                           'IN';
+INITCAP:                      'INITCAP';
+INITIAL:                      'INITIAL';
+INITIALIZED:                  'INITIALIZED';
+INITIALLY:                    'INITIALLY';
+INITRANS:                     'INITRANS';
+INLINE:                       'INLINE';
+INLINE_XMLTYPE_NT:            'INLINE_XMLTYPE_NT';
+INMEMORY:                     'INMEMORY';
+IN_MEMORY_METADATA:           'IN_MEMORY_METADATA';
+INMEMORY_PRUNING:             'INMEMORY_PRUNING';
+INNER:                        'INNER';
+INOUT:                        'INOUT';
+INPLACE:                      'INPLACE';
+INSERTCHILDXMLAFTER:          'INSERTCHILDXMLAFTER';
+INSERTCHILDXMLBEFORE:         'INSERTCHILDXMLBEFORE';
+INSERTCHILDXML:               'INSERTCHILDXML';
+INSERT:                       'INSERT';
+INSERTXMLAFTER:               'INSERTXMLAFTER';
+INSERTXMLBEFORE:              'INSERTXMLBEFORE';
+INSTANCE:                     'INSTANCE';
+INSTANCES:                    'INSTANCES';
+INSTANTIABLE:                 'INSTANTIABLE';
+INSTANTLY:                    'INSTANTLY';
+INSTEAD:                      'INSTEAD';
+INSTR2:                       'INSTR2';
+INSTR4:                       'INSTR4';
+INSTRB:                       'INSTRB';
+INSTRC:                       'INSTRC';
+INSTR:                        'INSTR';
+INTEGER:                      'INTEGER';
+INTERLEAVED:                  'INTERLEAVED';
+INTERMEDIATE:                 'INTERMEDIATE';
+INTERNAL_CONVERT:             'INTERNAL_CONVERT';
+INTERNAL_USE:                 'INTERNAL_USE';
+INTERPRETED:                  'INTERPRETED';
+INTERSECT:                    'INTERSECT';
+INTERVAL:                     'INTERVAL';
+INT:                          'INT';
+INTO:                         'INTO';
+INVALIDATE:                   'INVALIDATE';
+INVISIBLE:                    'INVISIBLE';
+IN_XQUERY:                    'IN_XQUERY';
+IS:                           'IS';
+ISOLATION:                    'ISOLATION';
+ISOLATION_LEVEL:              'ISOLATION_LEVEL';
+ITERATE:                      'ITERATE';
+ITERATION_NUMBER:             'ITERATION_NUMBER';
+JAVA:                         'JAVA';
+JOB:                          'JOB';
+JOIN:                         'JOIN';
+JSON_ARRAYAGG:                'JSON_ARRAYAGG';
+JSON_ARRAY:                   'JSON_ARRAY';
+JSON_EQUAL:                   'JSON_EQUAL';
+JSON_EXISTS2:                 'JSON_EXISTS2';
+JSON_EXISTS:                  'JSON_EXISTS';
+JSONGET:                      'JSONGET';
+JSON:                         'JSON';
+JSON_OBJECTAGG:               'JSON_OBJECTAGG';
+JSON_OBJECT:                  'JSON_OBJECT';
+JSONPARSE:                    'JSONPARSE';
+JSON_QUERY:                   'JSON_QUERY';
+JSON_SERIALIZE:               'JSON_SERIALIZE';
+JSON_TABLE:                   'JSON_TABLE';
+JSON_TEXTCONTAINS2:           'JSON_TEXTCONTAINS2';
+JSON_TEXTCONTAINS:            'JSON_TEXTCONTAINS';
+JSON_VALUE:                   'JSON_VALUE';
+KEEP_DUPLICATES:              'KEEP_DUPLICATES';
+KEEP:                         'KEEP';
+KERBEROS:                     'KERBEROS';
+KEY:                          'KEY';
+KEY_LENGTH:                   'KEY_LENGTH';
+KEYSIZE:                      'KEYSIZE';
+KEYS:                         'KEYS';
+KEYSTORE:                     'KEYSTORE';
+KILL:                         'KILL';
+LABEL:                        'LABEL';
+LANGUAGE:                     'LANGUAGE';
+LAST_DAY:                     'LAST_DAY';
+LAST:                         'LAST';
+LAST_VALUE:                   'LAST_VALUE';
+LATERAL:                      'LATERAL';
+LAX:                          'LAX';
+LAYER:                        'LAYER';
+LDAP_REGISTRATION_ENABLED:    'LDAP_REGISTRATION_ENABLED';
+LDAP_REGISTRATION:            'LDAP_REGISTRATION';
+LDAP_REG_SYNC_INTERVAL:       'LDAP_REG_SYNC_INTERVAL';
+LEADING:                      'LEADING';
+LEFT:                         'LEFT';
+LENGTH2:                      'LENGTH2';
+LENGTH4:                      'LENGTH4';
+LENGTHB:                      'LENGTHB';
+LENGTHC:                      'LENGTHC';
+LENGTH:                       'LENGTH';
+LESS:                         'LESS';
+LEVEL:                        'LEVEL';
+LEVELS:                       'LEVELS';
+LIBRARY:                      'LIBRARY';
+LIFECYCLE:                    'LIFECYCLE';
+LIFE:                         'LIFE';
+LIFETIME:                     'LIFETIME';
+LIKE2:                        'LIKE2';
+LIKE4:                        'LIKE4';
+LIKEC:                        'LIKEC';
+LIKE_EXPAND:                  'LIKE_EXPAND';
+LIKE:                         'LIKE';
+LIMIT:                        'LIMIT';
+LINEAR:                       'LINEAR';
+LINK:                         'LINK';
+LIST:                         'LIST';
+LN:                           'LN';
+LNNVL:                        'LNNVL';
+LOAD:                         'LOAD';
+LOB:                          'LOB';
+LOBNVL:                       'LOBNVL';
+LOBS:                         'LOBS';
+LOCAL_INDEXES:                'LOCAL_INDEXES';
+LOCAL:                        'LOCAL';
+LOCALTIME:                    'LOCALTIME';
+LOCALTIMESTAMP:               'LOCALTIMESTAMP';
+LOCATION:                     'LOCATION';
+LOCATOR:                      'LOCATOR';
+LOCKED:                       'LOCKED';
+LOCKING:                      'LOCKING';
+LOCK:                         'LOCK';
+LOGFILE:                      'LOGFILE';
+LOGFILES:                     'LOGFILES';
+LOGGING:                      'LOGGING';
+LOGICAL:                      'LOGICAL';
+LOGICAL_READS_PER_CALL:       'LOGICAL_READS_PER_CALL';
+LOGICAL_READS_PER_SESSION:    'LOGICAL_READS_PER_SESSION';
+LOG:                          'LOG';
+LOGMINING:                    'LOGMINING';
+LOGOFF:                       'LOGOFF';
+LOGON:                        'LOGON';
+LOG_READ_ONLY_VIOLATIONS:     'LOG_READ_ONLY_VIOLATIONS';
+LONG:                         'LONG';
+LOOP:                         'LOOP';
+LOWER:                        'LOWER';
+LOW:                          'LOW';
+LPAD:                         'LPAD';
+LTRIM:                        'LTRIM';
+MAIN:                         'MAIN';
+MAKE_REF:                     'MAKE_REF';
+MANAGED:                      'MANAGED';
+MANAGE:                       'MANAGE';
+MANAGEMENT:                   'MANAGEMENT';
+MANAGER:                      'MANAGER';
+MANUAL:                       'MANUAL';
+MAP:                          'MAP';
+MAPPING:                      'MAPPING';
+MASTER:                       'MASTER';
+MATCHED:                      'MATCHED';
+MATCHES:                      'MATCHES';
+MATCH:                        'MATCH';
+MATCH_NUMBER:                 'MATCH_NUMBER';
+MATCH_RECOGNIZE:              'MATCH_RECOGNIZE';
+MATERIALIZED:                 'MATERIALIZED';
+MATERIALIZE:                  'MATERIALIZE';
+MAXARCHLOGS:                  'MAXARCHLOGS';
+MAXDATAFILES:                 'MAXDATAFILES';
+MAXEXTENTS:                   'MAXEXTENTS';
+MAXIMIZE:                     'MAXIMIZE';
+MAXINSTANCES:                 'MAXINSTANCES';
+MAXLOGFILES:                  'MAXLOGFILES';
+MAXLOGHISTORY:                'MAXLOGHISTORY';
+MAXLOGMEMBERS:                'MAXLOGMEMBERS';
+MAX_SHARED_TEMP_SIZE:         'MAX_SHARED_TEMP_SIZE';
+MAXSIZE:                      'MAXSIZE';
+MAXTRANS:                     'MAXTRANS';
+MAXVALUE:                     'MAXVALUE';
+MEASURE:                      'MEASURE';
+MEASURES:                     'MEASURES';
+MEDIUM:                       'MEDIUM';
+MEMBER:                       'MEMBER';
+MEMCOMPRESS:                  'MEMCOMPRESS';
+MEMORY:                       'MEMORY';
+MERGEACTIONS:                 'MERGE$ACTIONS';
+MERGE_AJ:                     'MERGE_AJ';
+MERGE_CONST_ON:               'MERGE_CONST_ON';
+MERGE:                        'MERGE';
+MERGE_SJ:                     'MERGE_SJ';
+METADATA:                     'METADATA';
+METHOD:                       'METHOD';
+MIGRATE:                      'MIGRATE';
+MIGRATION:                    'MIGRATION';
+MINEXTENTS:                   'MINEXTENTS';
+MINIMIZE:                     'MINIMIZE';
+MINIMUM:                      'MINIMUM';
+MINING:                       'MINING';
+MINUS:                        'MINUS';
+MINUS_NULL:                   'MINUS_NULL';
+MINUTE:                       'MINUTE';
+MINVALUE:                     'MINVALUE';
+MIRRORCOLD:                   'MIRRORCOLD';
+MIRRORHOT:                    'MIRRORHOT';
+MIRROR:                       'MIRROR';
+MLSLABEL:                     'MLSLABEL';
+MODEL_COMPILE_SUBQUERY:       'MODEL_COMPILE_SUBQUERY';
+MODEL_DONTVERIFY_UNIQUENESS:  'MODEL_DONTVERIFY_UNIQUENESS';
+MODEL_DYNAMIC_SUBQUERY:       'MODEL_DYNAMIC_SUBQUERY';
+MODEL_MIN_ANALYSIS:           'MODEL_MIN_ANALYSIS';
+MODEL:                        'MODEL';
+MODEL_NB:                     'MODEL_NB';
+MODEL_NO_ANALYSIS:            'MODEL_NO_ANALYSIS';
+MODEL_PBY:                    'MODEL_PBY';
+MODEL_PUSH_REF:               'MODEL_PUSH_REF';
+MODEL_SV:                     'MODEL_SV';
+MODE:                         'MODE';
+MODIFICATION:                 'MODIFICATION';
+MODIFY_COLUMN_TYPE:           'MODIFY_COLUMN_TYPE';
+MODIFY:                       'MODIFY';
+MOD:                          'MOD';
+MODULE:                       'MODULE';
+MONITORING:                   'MONITORING';
+MONITOR:                      'MONITOR';
+MONTH:                        'MONTH';
+MONTHS_BETWEEN:               'MONTHS_BETWEEN';
+MONTHS:                       'MONTHS';
+MOUNT:                        'MOUNT';
+MOUNTPATH:                    'MOUNTPATH';
+MOVEMENT:                     'MOVEMENT';
+MOVE:                         'MOVE';
+MULTIDIMENSIONAL:             'MULTIDIMENSIONAL';
+MULTISET:                     'MULTISET';
+MV_MERGE:                     'MV_MERGE';
+NAMED:                        'NAMED';
+NAME:                         'NAME';
+NAMESPACE:                    'NAMESPACE';
+NAN:                          'NAN';
+NANVL:                        'NANVL';
+NATIONAL:                     'NATIONAL';
+NATIVE_FULL_OUTER_JOIN:       'NATIVE_FULL_OUTER_JOIN';
+NATIVE:                       'NATIVE';
+NATURAL:                      'NATURAL';
+NATURALN:                     'NATURALN';
+NAV:                          'NAV';
+NCHAR_CS:                     'NCHAR_CS';
+NCHAR:                        'NCHAR';
+NCHR:                         'NCHR';
+NCLOB:                        'NCLOB';
+NEEDED:                       'NEEDED';
+NEG:                          'NEG';
+NESTED:                       'NESTED';
+NESTED_TABLE_FAST_INSERT:     'NESTED_TABLE_FAST_INSERT';
+NESTED_TABLE_GET_REFS:        'NESTED_TABLE_GET_REFS';
+NESTED_TABLE_ID:              'NESTED_TABLE_ID';
+NESTED_TABLE_SET_REFS:        'NESTED_TABLE_SET_REFS';
+NESTED_TABLE_SET_SETID:       'NESTED_TABLE_SET_SETID';
+NETWORK:                      'NETWORK';
+NEVER:                        'NEVER';
+NEW:                          'NEW';
+NEW_TIME:                     'NEW_TIME';
+NEXT_DAY:                     'NEXT_DAY';
+NEXT:                         'NEXT';
+NL_AJ:                        'NL_AJ';
+NLJ_BATCHING:                 'NLJ_BATCHING';
+NLJ_INDEX_FILTER:             'NLJ_INDEX_FILTER';
+NLJ_INDEX_SCAN:               'NLJ_INDEX_SCAN';
+NLJ_PREFETCH:                 'NLJ_PREFETCH';
+NLS_CALENDAR:                 'NLS_CALENDAR';
+NLS_CHARACTERSET:             'NLS_CHARACTERSET';
+NLS_CHARSET_DECL_LEN:         'NLS_CHARSET_DECL_LEN';
+NLS_CHARSET_ID:               'NLS_CHARSET_ID';
+NLS_CHARSET_NAME:             'NLS_CHARSET_NAME';
+NLS_COMP:                     'NLS_COMP';
+NLS_CURRENCY:                 'NLS_CURRENCY';
+NLS_DATE_FORMAT:              'NLS_DATE_FORMAT';
+NLS_DATE_LANGUAGE:            'NLS_DATE_LANGUAGE';
+NLS_INITCAP:                  'NLS_INITCAP';
+NLS_ISO_CURRENCY:             'NLS_ISO_CURRENCY';
+NL_SJ:                        'NL_SJ';
+NLS_LANG:                     'NLS_LANG';
+NLS_LANGUAGE:                 'NLS_LANGUAGE';
+NLS_LENGTH_SEMANTICS:         'NLS_LENGTH_SEMANTICS';
+NLS_LOWER:                    'NLS_LOWER';
+NLS_NCHAR_CONV_EXCP:          'NLS_NCHAR_CONV_EXCP';
+NLS_NUMERIC_CHARACTERS:       'NLS_NUMERIC_CHARACTERS';
+NLS_SORT:                     'NLS_SORT';
+NLSSORT:                      'NLSSORT';
+NLS_SPECIAL_CHARS:            'NLS_SPECIAL_CHARS';
+NLS_TERRITORY:                'NLS_TERRITORY';
+NLS_UPPER:                    'NLS_UPPER';
+NO_ACCESS:                    'NO_ACCESS';
+NO_ADAPTIVE_PLAN:             'NO_ADAPTIVE_PLAN';
+NO_ANSI_REARCH:               'NO_ANSI_REARCH';
+NOAPPEND:                     'NOAPPEND';
+NOARCHIVELOG:                 'NOARCHIVELOG';
+NOAUDIT:                      'NOAUDIT';
+NO_AUTO_REOPTIMIZE:           'NO_AUTO_REOPTIMIZE';
+NO_BASETABLE_MULTIMV_REWRITE: 'NO_BASETABLE_MULTIMV_REWRITE';
+NO_BATCH_TABLE_ACCESS_BY_ROWID: 'NO_BATCH_TABLE_ACCESS_BY_ROWID';
+NO_BIND_AWARE:                'NO_BIND_AWARE';
+NO_BUFFER:                    'NO_BUFFER';
+NOCACHE:                      'NOCACHE';
+NO_CARTESIAN:                 'NO_CARTESIAN';
+NO_CHECK_ACL_REWRITE:         'NO_CHECK_ACL_REWRITE';
+NO_CLUSTER_BY_ROWID:          'NO_CLUSTER_BY_ROWID';
+NO_CLUSTERING:                'NO_CLUSTERING';
+NO_COALESCE_SQ:               'NO_COALESCE_SQ';
+NO_COMMON_DATA:               'NO_COMMON_DATA';
+NOCOMPRESS:                   'NOCOMPRESS';
+NO_CONNECT_BY_CB_WHR_ONLY:    'NO_CONNECT_BY_CB_WHR_ONLY';
+NO_CONNECT_BY_COMBINE_SW:     'NO_CONNECT_BY_COMBINE_SW';
+NO_CONNECT_BY_COST_BASED:     'NO_CONNECT_BY_COST_BASED';
+NO_CONNECT_BY_ELIM_DUPS:      'NO_CONNECT_BY_ELIM_DUPS';
+NO_CONNECT_BY_FILTERING:      'NO_CONNECT_BY_FILTERING';
+NOCOPY:                       'NOCOPY';
+NO_COST_XML_QUERY_REWRITE:    'NO_COST_XML_QUERY_REWRITE';
+NO_CPU_COSTING:               'NO_CPU_COSTING';
+NOCPU_COSTING:                'NOCPU_COSTING';
+NOCYCLE:                      'NOCYCLE';
+NO_DATA_SECURITY_REWRITE:     'NO_DATA_SECURITY_REWRITE';
+NO_DECORRELATE:               'NO_DECORRELATE';
+NODELAY:                      'NODELAY';
+NO_DOMAIN_INDEX_FILTER:       'NO_DOMAIN_INDEX_FILTER';
+NO_DST_UPGRADE_INSERT_CONV:   'NO_DST_UPGRADE_INSERT_CONV';
+NO_ELIM_GROUPBY:              'NO_ELIM_GROUPBY';
+NO_ELIMINATE_JOIN:            'NO_ELIMINATE_JOIN';
+NO_ELIMINATE_OBY:             'NO_ELIMINATE_OBY';
+NO_ELIMINATE_OUTER_JOIN:      'NO_ELIMINATE_OUTER_JOIN';
+NOENTITYESCAPING:             'NOENTITYESCAPING';
+NO_EXPAND_GSET_TO_UNION:      'NO_EXPAND_GSET_TO_UNION';
+NO_EXPAND:                    'NO_EXPAND';
+NO_EXPAND_TABLE:              'NO_EXPAND_TABLE';
+NO_FACT:                      'NO_FACT';
+NO_FACTORIZE_JOIN:            'NO_FACTORIZE_JOIN';
+NO_FILTERING:                 'NO_FILTERING';
+NOFORCE:                      'NOFORCE';
+NO_FULL_OUTER_JOIN_TO_OUTER:  'NO_FULL_OUTER_JOIN_TO_OUTER';
+NO_GATHER_OPTIMIZER_STATISTICS: 'NO_GATHER_OPTIMIZER_STATISTICS';
+NO_GBY_PUSHDOWN:              'NO_GBY_PUSHDOWN';
+NOGUARANTEE:                  'NOGUARANTEE';
+NO_INDEX_FFS:                 'NO_INDEX_FFS';
+NO_INDEX:                     'NO_INDEX';
+NO_INDEX_SS:                  'NO_INDEX_SS';
+NO_INMEMORY:                  'NO_INMEMORY';
+NO_INMEMORY_PRUNING:          'NO_INMEMORY_PRUNING';
+NOKEEP:                       'NOKEEP';
+NO_LOAD:                      'NO_LOAD';
+NOLOCAL:                      'NOLOCAL';
+NOLOGGING:                    'NOLOGGING';
+NOMAPPING:                    'NOMAPPING';
+NOMAXVALUE:                   'NOMAXVALUE';
+NO_MERGE:                     'NO_MERGE';
+NOMINIMIZE:                   'NOMINIMIZE';
+NOMINVALUE:                   'NOMINVALUE';
+NO_MODEL_PUSH_REF:            'NO_MODEL_PUSH_REF';
+NO_MONITORING:                'NO_MONITORING';
+NOMONITORING:                 'NOMONITORING';
+NO_MONITOR:                   'NO_MONITOR';
+NO_MULTIMV_REWRITE:           'NO_MULTIMV_REWRITE';
+NO_NATIVE_FULL_OUTER_JOIN:    'NO_NATIVE_FULL_OUTER_JOIN';
+NONBLOCKING:                  'NONBLOCKING';
+NONEDITIONABLE:               'NONEDITIONABLE';
+NONE:                         'NONE';
+NO_NLJ_BATCHING:              'NO_NLJ_BATCHING';
+NO_NLJ_PREFETCH:              'NO_NLJ_PREFETCH';
+NO:                           'NO';
+NONSCHEMA:                    'NONSCHEMA';
+NO_OBJECT_LINK:               'NO_OBJECT_LINK';
+NOORDER:                      'NOORDER';
+NO_ORDER_ROLLUPS:             'NO_ORDER_ROLLUPS';
+NO_OUTER_JOIN_TO_ANTI:        'NO_OUTER_JOIN_TO_ANTI';
+NO_OUTER_JOIN_TO_INNER:       'NO_OUTER_JOIN_TO_INNER';
+NOOVERRIDE:                   'NOOVERRIDE';
+NO_PARALLEL_INDEX:            'NO_PARALLEL_INDEX';
+NOPARALLEL_INDEX:             'NOPARALLEL_INDEX';
+NO_PARALLEL:                  'NO_PARALLEL';
+NOPARALLEL:                   'NOPARALLEL';
+NO_PARTIAL_COMMIT:            'NO_PARTIAL_COMMIT';
+NO_PARTIAL_JOIN:              'NO_PARTIAL_JOIN';
+NO_PARTIAL_ROLLUP_PUSHDOWN:   'NO_PARTIAL_ROLLUP_PUSHDOWN';
+NOPARTITION:                  'NOPARTITION';
+NO_PLACE_DISTINCT:            'NO_PLACE_DISTINCT';
+NO_PLACE_GROUP_BY:            'NO_PLACE_GROUP_BY';
+NO_PQ_CONCURRENT_UNION:       'NO_PQ_CONCURRENT_UNION';
+NO_PQ_MAP:                    'NO_PQ_MAP';
+NO_PQ_REPLICATE:              'NO_PQ_REPLICATE';
+NO_PQ_SKEW:                   'NO_PQ_SKEW';
+NO_PRUNE_GSETS:               'NO_PRUNE_GSETS';
+NO_PULL_PRED:                 'NO_PULL_PRED';
+NO_PUSH_PRED:                 'NO_PUSH_PRED';
+NO_PUSH_SUBQ:                 'NO_PUSH_SUBQ';
+NO_PX_FAULT_TOLERANCE:        'NO_PX_FAULT_TOLERANCE';
+NO_PX_JOIN_FILTER:            'NO_PX_JOIN_FILTER';
+NO_QKN_BUFF:                  'NO_QKN_BUFF';
+NO_QUERY_TRANSFORMATION:      'NO_QUERY_TRANSFORMATION';
+NO_REF_CASCADE:               'NO_REF_CASCADE';
+NORELOCATE:                   'NORELOCATE';
+NORELY:                       'NORELY';
+NOREPAIR:                     'NOREPAIR';
+NOREPLAY:                     'NOREPLAY';
+NORESETLOGS:                  'NORESETLOGS';
+NO_RESULT_CACHE:              'NO_RESULT_CACHE';
+NOREVERSE:                    'NOREVERSE';
+NO_REWRITE:                   'NO_REWRITE';
+NOREWRITE:                    'NOREWRITE';
+NORMAL:                       'NORMAL';
+NO_ROOT_SW_FOR_LOCAL:         'NO_ROOT_SW_FOR_LOCAL';
+NOROWDEPENDENCIES:            'NOROWDEPENDENCIES';
+NOSCHEMACHECK:                'NOSCHEMACHECK';
+NOSEGMENT:                    'NOSEGMENT';
+NO_SEMIJOIN:                  'NO_SEMIJOIN';
+NO_SEMI_TO_INNER:             'NO_SEMI_TO_INNER';
+NO_SET_TO_JOIN:               'NO_SET_TO_JOIN';
+NOSORT:                       'NOSORT';
+NO_SQL_TRANSLATION:           'NO_SQL_TRANSLATION';
+NO_SQL_TUNE:                  'NO_SQL_TUNE';
+NO_STAR_TRANSFORMATION:       'NO_STAR_TRANSFORMATION';
+NO_STATEMENT_QUEUING:         'NO_STATEMENT_QUEUING';
+NO_STATS_GSETS:               'NO_STATS_GSETS';
+NOSTRICT:                     'NOSTRICT';
+NO_SUBQUERY_PRUNING:          'NO_SUBQUERY_PRUNING';
+NO_SUBSTRB_PAD:               'NO_SUBSTRB_PAD';
+NO_SWAP_JOIN_INPUTS:          'NO_SWAP_JOIN_INPUTS';
+NOSWITCH:                     'NOSWITCH';
+NO_TABLE_LOOKUP_BY_NL:        'NO_TABLE_LOOKUP_BY_NL';
+NO_TEMP_TABLE:                'NO_TEMP_TABLE';
+NOTHING:                      'NOTHING';
+NOTIFICATION:                 'NOTIFICATION';
+NOT:                          'NOT';
+NO_TRANSFORM_DISTINCT_AGG:    'NO_TRANSFORM_DISTINCT_AGG';
+NO_UNNEST:                    'NO_UNNEST';
+NO_USE_CUBE:                  'NO_USE_CUBE';
+NO_USE_HASH_AGGREGATION:      'NO_USE_HASH_AGGREGATION';
+NO_USE_HASH_GBY_FOR_PUSHDOWN: 'NO_USE_HASH_GBY_FOR_PUSHDOWN';
+NO_USE_HASH:                  'NO_USE_HASH';
+NO_USE_INVISIBLE_INDEXES:     'NO_USE_INVISIBLE_INDEXES';
+NO_USE_MERGE:                 'NO_USE_MERGE';
+NO_USE_NL:                    'NO_USE_NL';
+NO_USE_VECTOR_AGGREGATION:    'NO_USE_VECTOR_AGGREGATION';
+NOVALIDATE:                   'NOVALIDATE';
+NO_VECTOR_TRANSFORM_DIMS:     'NO_VECTOR_TRANSFORM_DIMS';
+NO_VECTOR_TRANSFORM_FACT:     'NO_VECTOR_TRANSFORM_FACT';
+NO_VECTOR_TRANSFORM:          'NO_VECTOR_TRANSFORM';
+NOWAIT:                       'NOWAIT';
+NO_XDB_FASTPATH_INSERT:       'NO_XDB_FASTPATH_INSERT';
+NO_XML_DML_REWRITE:           'NO_XML_DML_REWRITE';
+NO_XMLINDEX_REWRITE_IN_SELECT: 'NO_XMLINDEX_REWRITE_IN_SELECT';
+NO_XMLINDEX_REWRITE:          'NO_XMLINDEX_REWRITE';
+NO_XML_QUERY_REWRITE:         'NO_XML_QUERY_REWRITE';
+NO_ZONEMAP:                   'NO_ZONEMAP';
+NTH_VALUE:                    'NTH_VALUE';
+NULLIF:                       'NULLIF';
+NULL_:                        'NULL';
+NULLS:                        'NULLS';
+NUMBER:                       'NUMBER';
+NUMERIC:                      'NUMERIC';
+NUM_INDEX_KEYS:               'NUM_INDEX_KEYS';
+NUMTODSINTERVAL:              'NUMTODSINTERVAL';
+NUMTOYMINTERVAL:              'NUMTOYMINTERVAL';
+NVARCHAR2:                    'NVARCHAR2';
+NVL2:                         'NVL2';
+OBJECT2XML:                   'OBJECT2XML';
+OBJECT:                       'OBJECT';
+OBJ_ID:                       'OBJ_ID';
+OBJNO:                        'OBJNO';
+OBJNO_REUSE:                  'OBJNO_REUSE';
+OCCURENCES:                   'OCCURENCES';
+OFFLINE:                      'OFFLINE';
+OFF:                          'OFF';
+OFFSET:                       'OFFSET';
+OF:                           'OF';
+OIDINDEX:                     'OIDINDEX';
+OID:                          'OID';
+OLAP:                         'OLAP';
+OLD:                          'OLD';
+OLD_PUSH_PRED:                'OLD_PUSH_PRED';
+OLS:                          'OLS';
+OLTP:                         'OLTP';
+OMIT:                         'OMIT';
+ONE:                          'ONE';
+ONLINE:                       'ONLINE';
+ONLINELOG:                    'ONLINELOG';
+ONLY:                         'ONLY';
+ON:                           'ON';
+OPAQUE:                       'OPAQUE';
+OPAQUE_TRANSFORM:             'OPAQUE_TRANSFORM';
+OPAQUE_XCANONICAL:            'OPAQUE_XCANONICAL';
+OPCODE:                       'OPCODE';
+OPEN:                         'OPEN';
+OPERATIONS:                   'OPERATIONS';
+OPERATOR:                     'OPERATOR';
+OPT_ESTIMATE:                 'OPT_ESTIMATE';
+OPTIMAL:                      'OPTIMAL';
+OPTIMIZE:                     'OPTIMIZE';
+OPTIMIZER_FEATURES_ENABLE:    'OPTIMIZER_FEATURES_ENABLE';
+OPTIMIZER_GOAL:               'OPTIMIZER_GOAL';
+OPTION:                       'OPTION';
+OPT_PARAM:                    'OPT_PARAM';
+ORA_BRANCH:                   'ORA_BRANCH';
+ORA_CHECK_ACL:                'ORA_CHECK_ACL';
+ORA_CHECK_PRIVILEGE:          'ORA_CHECK_PRIVILEGE';
+ORA_CLUSTERING:               'ORA_CLUSTERING';
+ORADATA:                      'ORADATA';
+ORADEBUG:                     'ORADEBUG';
+ORA_DST_AFFECTED:             'ORA_DST_AFFECTED';
+ORA_DST_CONVERT:              'ORA_DST_CONVERT';
+ORA_DST_ERROR:                'ORA_DST_ERROR';
+ORA_GET_ACLIDS:               'ORA_GET_ACLIDS';
+ORA_GET_PRIVILEGES:           'ORA_GET_PRIVILEGES';
+ORA_HASH:                     'ORA_HASH';
+ORA_INVOKING_USERID:          'ORA_INVOKING_USERID';
+ORA_INVOKING_USER:            'ORA_INVOKING_USER';
+ORA_INVOKING_XS_USER_GUID:    'ORA_INVOKING_XS_USER_GUID';
+ORA_INVOKING_XS_USER:         'ORA_INVOKING_XS_USER';
+ORA_RAWCOMPARE:               'ORA_RAWCOMPARE';
+ORA_RAWCONCAT:                'ORA_RAWCONCAT';
+ORA_ROWSCN:                   'ORA_ROWSCN';
+ORA_ROWSCN_RAW:               'ORA_ROWSCN_RAW';
+ORA_ROWVERSION:               'ORA_ROWVERSION';
+ORA_TABVERSION:               'ORA_TABVERSION';
+ORA_WRITE_TIME:               'ORA_WRITE_TIME';
+ORDERED:                      'ORDERED';
+ORDERED_PREDICATES:           'ORDERED_PREDICATES';
+ORDER:                        'ORDER';
+ORDINALITY:                   'ORDINALITY';
+OR_EXPAND:                    'OR_EXPAND';
+ORGANIZATION:                 'ORGANIZATION';
+OR:                           'OR';
+OR_PREDICATES:                'OR_PREDICATES';
+OSERROR:                      'OSERROR';
+OTHER:                        'OTHER';
+OUTER_JOIN_TO_ANTI:           'OUTER_JOIN_TO_ANTI';
+OUTER_JOIN_TO_INNER:          'OUTER_JOIN_TO_INNER';
+OUTER:                        'OUTER';
+OUTLINE_LEAF:                 'OUTLINE_LEAF';
+OUTLINE:                      'OUTLINE';
+OUT_OF_LINE:                  'OUT_OF_LINE';
+OUT:                          'OUT';
+OVERFLOW_NOMOVE:              'OVERFLOW_NOMOVE';
+OVERFLOW:                     'OVERFLOW';
+OVERLAPS:                     'OVERLAPS';
+OVER:                         'OVER';
+OVERRIDING:                   'OVERRIDING';
+OWNER:                        'OWNER';
+OWNERSHIP:                    'OWNERSHIP';
+OWN:                          'OWN';
+PACKAGE:                      'PACKAGE';
+PACKAGES:                     'PACKAGES';
+PARALLEL_ENABLE:              'PARALLEL_ENABLE';
+PARALLEL_INDEX:               'PARALLEL_INDEX';
+PARALLEL:                     'PARALLEL';
+PARAMETERFILE:                'PARAMETERFILE';
+PARAMETERS:                   'PARAMETERS';
+PARAM:                        'PARAM';
+PARENT:                       'PARENT';
+PARITY:                       'PARITY';
+PARTIAL_JOIN:                 'PARTIAL_JOIN';
+PARTIALLY:                    'PARTIALLY';
+PARTIAL:                      'PARTIAL';
+PARTIAL_ROLLUP_PUSHDOWN:      'PARTIAL_ROLLUP_PUSHDOWN';
+PARTITION_HASH:               'PARTITION_HASH';
+PARTITION_LIST:               'PARTITION_LIST';
+PARTITION:                    'PARTITION';
+PARTITION_RANGE:              'PARTITION_RANGE';
+PARTITIONS:                   'PARTITIONS';
+PARTNUMINST:                  'PART$NUM$INST';
+PASSING:                      'PASSING';
+PASSWORD_GRACE_TIME:          'PASSWORD_GRACE_TIME';
+PASSWORD_LIFE_TIME:           'PASSWORD_LIFE_TIME';
+PASSWORD_LOCK_TIME:           'PASSWORD_LOCK_TIME';
+PASSWORD:                     'PASSWORD';
+PASSWORD_REUSE_MAX:           'PASSWORD_REUSE_MAX';
+PASSWORD_REUSE_TIME:          'PASSWORD_REUSE_TIME';
+PASSWORD_VERIFY_FUNCTION:     'PASSWORD_VERIFY_FUNCTION';
+PAST:                         'PAST';
+PATCH:                        'PATCH';
+PATH:                         'PATH';
+PATH_PREFIX:                  'PATH_PREFIX';
+PATHS:                        'PATHS';
+PATTERN:                      'PATTERN';
+PBL_HS_BEGIN:                 'PBL_HS_BEGIN';
+PBL_HS_END:                   'PBL_HS_END';
+PCTFREE:                      'PCTFREE';
+PCTINCREASE:                  'PCTINCREASE';
+PCTTHRESHOLD:                 'PCTTHRESHOLD';
+PCTUSED:                      'PCTUSED';
+PCTVERSION:                   'PCTVERSION';
+PENDING:                      'PENDING';
+PERCENT_FOUND:                '%' SPACE* 'FOUND';
+PERCENT_ISOPEN:               '%' SPACE* 'ISOPEN';
+PERCENT_NOTFOUND:             '%' SPACE* 'NOTFOUND';
+PERCENT_KEYWORD:              'PERCENT';
+PERCENT_RANKM:                'PERCENT_RANKM';
+PERCENT_ROWCOUNT:             '%' SPACE* 'ROWCOUNT';
+PERCENT_ROWTYPE:              '%' SPACE* 'ROWTYPE';
+PERCENT_TYPE:                 '%' SPACE* 'TYPE';
+PERFORMANCE:                  'PERFORMANCE';
+PERIOD_KEYWORD:               'PERIOD';
+PERMANENT:                    'PERMANENT';
+PERMISSION:                   'PERMISSION';
+PERMUTE:                      'PERMUTE';
+PER:                          'PER';
+PFILE:                        'PFILE';
+PHYSICAL:                     'PHYSICAL';
+PIKEY:                        'PIKEY';
+PIPELINED:                    'PIPELINED';
+PIPE:                         'PIPE';
+PIV_GB:                       'PIV_GB';
+PIVOT:                        'PIVOT';
+PIV_SSF:                      'PIV_SSF';
+PLACE_DISTINCT:               'PLACE_DISTINCT';
+PLACE_GROUP_BY:               'PLACE_GROUP_BY';
+PLAN:                         'PLAN';
+PLSCOPE_SETTINGS:             'PLSCOPE_SETTINGS';
+PLS_INTEGER:                  'PLS_INTEGER';
+PLSQL_CCFLAGS:                'PLSQL_CCFLAGS';
+PLSQL_CODE_TYPE:              'PLSQL_CODE_TYPE';
+PLSQL_DEBUG:                  'PLSQL_DEBUG';
+PLSQL_OPTIMIZE_LEVEL:         'PLSQL_OPTIMIZE_LEVEL';
+PLSQL_WARNINGS:               'PLSQL_WARNINGS';
+PLUGGABLE:                    'PLUGGABLE';
+POINT:                        'POINT';
+POLICY:                       'POLICY';
+POOL_16K:                     'POOL_16K';
+POOL_2K:                      'POOL_2K';
+POOL_32K:                     'POOL_32K';
+POOL_4K:                      'POOL_4K';
+POOL_8K:                      'POOL_8K';
+POSITIVEN:                    'POSITIVEN';
+POSITIVE:                     'POSITIVE';
+POST_TRANSACTION:             'POST_TRANSACTION';
+POWERMULTISET_BY_CARDINALITY: 'POWERMULTISET_BY_CARDINALITY';
+POWERMULTISET:                'POWERMULTISET';
+POWER:                        'POWER';
+PQ_CONCURRENT_UNION:          'PQ_CONCURRENT_UNION';
+PQ_DISTRIBUTE:                'PQ_DISTRIBUTE';
+PQ_DISTRIBUTE_WINDOW:         'PQ_DISTRIBUTE_WINDOW';
+PQ_FILTER:                    'PQ_FILTER';
+PQ_MAP:                       'PQ_MAP';
+PQ_NOMAP:                     'PQ_NOMAP';
+PQ_REPLICATE:                 'PQ_REPLICATE';
+PQ_SKEW:                      'PQ_SKEW';
+PRAGMA:                       'PRAGMA';
+PREBUILT:                     'PREBUILT';
+PRECEDES:                     'PRECEDES';
+PRECEDING:                    'PRECEDING';
+PRECISION:                    'PRECISION';
+PRECOMPUTE_SUBQUERY:          'PRECOMPUTE_SUBQUERY';
+PREDICATE_REORDERS:           'PREDICATE_REORDERS';
+PRELOAD:                      'PRELOAD';
+PREPARE:                      'PREPARE';
+PRESENTNNV:                   'PRESENTNNV';
+PRESENT:                      'PRESENT';
+PRESENTV:                     'PRESENTV';
+PRESERVE_OID:                 'PRESERVE_OID';
+PRESERVE:                     'PRESERVE';
+PRETTY:                       'PRETTY';
+PREVIOUS:                     'PREVIOUS';
+PREV:                         'PREV';
+PRIMARY:                      'PRIMARY';
+PRINTBLOBTOCLOB:              'PRINTBLOBTOCLOB';
+PRIORITY:                     'PRIORITY';
+PRIOR:                        'PRIOR';
+PRIVATE:                      'PRIVATE';
+PRIVATE_SGA:                  'PRIVATE_SGA';
+PRIVILEGED:                   'PRIVILEGED';
+PRIVILEGE:                    'PRIVILEGE';
+PRIVILEGES:                   'PRIVILEGES';
+PROCEDURAL:                   'PROCEDURAL';
+PROCEDURE:                    'PROCEDURE';
+PROCESS:                      'PROCESS';
+PROFILE:                      'PROFILE';
+PROGRAM:                      'PROGRAM';
+PROJECT:                      'PROJECT';
+PROPAGATE:                    'PROPAGATE';
+PROTECTED:                    'PROTECTED';
+PROTECTION:                   'PROTECTION';
+PROXY:                        'PROXY';
+PRUNING:                      'PRUNING';
+PUBLIC:                       'PUBLIC';
+PULL_PRED:                    'PULL_PRED';
+PURGE:                        'PURGE';
+PUSH_PRED:                    'PUSH_PRED';
+PUSH_SUBQ:                    'PUSH_SUBQ';
+PX_FAULT_TOLERANCE:           'PX_FAULT_TOLERANCE';
+PX_GRANULE:                   'PX_GRANULE';
+PX_JOIN_FILTER:               'PX_JOIN_FILTER';
+QB_NAME:                      'QB_NAME';
+QUERY_BLOCK:                  'QUERY_BLOCK';
+QUERY:                        'QUERY';
+QUEUE_CURR:                   'QUEUE_CURR';
+QUEUE:                        'QUEUE';
+QUEUE_ROWP:                   'QUEUE_ROWP';
+QUIESCE:                      'QUIESCE';
+QUORUM:                       'QUORUM';
+QUOTA:                        'QUOTA';
+RAISE:                        'RAISE';
+RANDOM_LOCAL:                 'RANDOM_LOCAL';
+RANDOM:                       'RANDOM';
+RANGE:                        'RANGE';
+RANKM:                        'RANKM';
+RAPIDLY:                      'RAPIDLY';
+RAW:                          'RAW';
+RAWTOHEX:                     'RAWTOHEX';
+RAWTONHEX:                    'RAWTONHEX';
+RBA:                          'RBA';
+RBO_OUTLINE:                  'RBO_OUTLINE';
+RDBA:                         'RDBA';
+READ:                         'READ';
+READS:                        'READS';
+REALM:                        'REALM';
+REAL:                         'REAL';
+REBALANCE:                    'REBALANCE';
+REBUILD:                      'REBUILD';
+RECORD:                       'RECORD';
+RECORDS_PER_BLOCK:            'RECORDS_PER_BLOCK';
+RECOVERABLE:                  'RECOVERABLE';
+RECOVER:                      'RECOVER';
+RECOVERY:                     'RECOVERY';
+RECYCLEBIN:                   'RECYCLEBIN';
+RECYCLE:                      'RECYCLE';
+REDACTION:                    'REDACTION';
+REDEFINE:                     'REDEFINE';
+REDO:                         'REDO';
+REDUCED:                      'REDUCED';
+REDUNDANCY:                   'REDUNDANCY';
+REF_CASCADE_CURSOR:           'REF_CASCADE_CURSOR';
+REFERENCED:                   'REFERENCED';
+REFERENCE:                    'REFERENCE';
+REFERENCES:                   'REFERENCES';
+REFERENCING:                  'REFERENCING';
+REF:                          'REF';
+REFRESH:                      'REFRESH';
+REFTOHEX:                     'REFTOHEX';
+REGEXP_COUNT:                 'REGEXP_COUNT';
+REGEXP_INSTR:                 'REGEXP_INSTR';
+REGEXP_LIKE:                  'REGEXP_LIKE';
+REGEXP_REPLACE:               'REGEXP_REPLACE';
+REGEXP_SUBSTR:                'REGEXP_SUBSTR';
+REGISTER:                     'REGISTER';
+REGR_AVGX:                    'REGR_AVGX';
+REGR_AVGY:                    'REGR_AVGY';
+REGR_COUNT:                   'REGR_COUNT';
+REGR_INTERCEPT:               'REGR_INTERCEPT';
+REGR_R2:                      'REGR_R2';
+REGR_SLOPE:                   'REGR_SLOPE';
+REGR_SXX:                     'REGR_SXX';
+REGR_SXY:                     'REGR_SXY';
+REGR_SYY:                     'REGR_SYY';
+REGULAR:                      'REGULAR';
+REJECT:                       'REJECT';
+REKEY:                        'REKEY';
+RELATIONAL:                   'RELATIONAL';
+RELIES_ON:                    'RELIES_ON';
+RELOCATE:                     'RELOCATE';
+RELY:                         'RELY';
+REMAINDER:                    'REMAINDER';
+REMOTE_MAPPED:                'REMOTE_MAPPED';
+REMOVE:                       'REMOVE';
+RENAME:                       'RENAME';
+REPAIR:                       'REPAIR';
+REPEAT:                       'REPEAT';
+REPLACE:                      'REPLACE';
+REPLICATION:                  'REPLICATION';
+REQUIRED:                     'REQUIRED';
+RESETLOGS:                    'RESETLOGS';
+RESET:                        'RESET';
+RESIZE:                       'RESIZE';
+RESOLVE:                      'RESOLVE';
+RESOLVER:                     'RESOLVER';
+RESOURCE:                     'RESOURCE';
+RESPECT:                      'RESPECT';
+RESTART:                      'RESTART';
+RESTORE_AS_INTERVALS:         'RESTORE_AS_INTERVALS';
+RESTORE:                      'RESTORE';
+RESTRICT_ALL_REF_CONS:        'RESTRICT_ALL_REF_CONS';
+RESTRICTED:                   'RESTRICTED';
+RESTRICT_REFERENCES:          'RESTRICT_REFERENCES';
+RESTRICT:                     'RESTRICT';
+RESULT_CACHE:                 'RESULT_CACHE';
+RESULT:                       'RESULT';
+RESUMABLE:                    'RESUMABLE';
+RESUME:                       'RESUME';
+RETENTION:                    'RETENTION';
+RETRY_ON_ROW_CHANGE:          'RETRY_ON_ROW_CHANGE';
+RETURNING:                    'RETURNING';
+RETURN:                       'RETURN';
+REUSE:                        'REUSE';
+REVERSE:                      'REVERSE';
+REVOKE:                       'REVOKE';
+REWRITE_OR_ERROR:             'REWRITE_OR_ERROR';
+REWRITE:                      'REWRITE';
+RIGHT:                        'RIGHT';
+ROLE:                         'ROLE';
+ROLESET:                      'ROLESET';
+ROLES:                        'ROLES';
+ROLLBACK:                     'ROLLBACK';
+ROLLING:                      'ROLLING';
+ROLLUP:                       'ROLLUP';
+ROWDEPENDENCIES:              'ROWDEPENDENCIES';
+ROWID_MAPPING_TABLE:          'ROWID_MAPPING_TABLE';
+ROWID:                        'ROWID';
+ROWIDTOCHAR:                  'ROWIDTOCHAR';
+ROWIDTONCHAR:                 'ROWIDTONCHAR';
+ROW_LENGTH:                   'ROW_LENGTH';
+ROWNUM:                       'ROWNUM';
+ROW:                          'ROW';
+ROWS:                         'ROWS';
+RPAD:                         'RPAD';
+RTRIM:                        'RTRIM';
+RULE:                         'RULE';
+RULES:                        'RULES';
+RUNNING:                      'RUNNING';
+SALT:                         'SALT';
+SAMPLE:                       'SAMPLE';
+SAVE_AS_INTERVALS:            'SAVE_AS_INTERVALS';
+SAVEPOINT:                    'SAVEPOINT';
+SAVE:                         'SAVE';
+SB4:                          'SB4';
+SCALE_ROWS:                   'SCALE_ROWS';
+SCALE:                        'SCALE';
+SCAN_INSTANCES:               'SCAN_INSTANCES';
+SCAN:                         'SCAN';
+SCHEDULER:                    'SCHEDULER';
+SCHEMACHECK:                  'SCHEMACHECK';
+SCHEMA:                       'SCHEMA';
+SCN_ASCENDING:                'SCN_ASCENDING';
+SCN:                          'SCN';
+SCOPE:                        'SCOPE';
+SCRUB:                        'SCRUB';
+SD_ALL:                       'SD_ALL';
+SD_INHIBIT:                   'SD_INHIBIT';
+SDO_GEOM_MBR:                 'SDO_GEOM_MBR';
+SD_SHOW:                      'SD_SHOW';
+SEARCH:                       'SEARCH';
+SECOND:                       'SECOND';
+SECRET:                       'SECRET';
+SECUREFILE_DBA:               'SECUREFILE_DBA';
+SECUREFILE:                   'SECUREFILE';
+SECURITY:                     'SECURITY';
+SEED:                         'SEED';
+SEG_BLOCK:                    'SEG_BLOCK';
+SEG_FILE:                     'SEG_FILE';
+SEGMENT:                      'SEGMENT';
+SELECTIVITY:                  'SELECTIVITY';
+SELECT:                       'SELECT';
+SELF:                         'SELF';
+SEMIJOIN_DRIVER:              'SEMIJOIN_DRIVER';
+SEMIJOIN:                     'SEMIJOIN';
+SEMI_TO_INNER:                'SEMI_TO_INNER';
+SEQUENCED:                    'SEQUENCED';
+SEQUENCE:                     'SEQUENCE';
+SEQUENTIAL:                   'SEQUENTIAL';
+SEQ:                          'SEQ';
+SERIALIZABLE:                 'SERIALIZABLE';
+SERIALLY_REUSABLE:            'SERIALLY_REUSABLE';
+SERIAL:                       'SERIAL';
+SERVERERROR:                  'SERVERERROR';
+SERVICE_NAME_CONVERT:         'SERVICE_NAME_CONVERT';
+SERVICES:                     'SERVICES';
+SESSION_CACHED_CURSORS:       'SESSION_CACHED_CURSORS';
+SESSION:                      'SESSION';
+SESSIONS_PER_USER:            'SESSIONS_PER_USER';
+SESSIONTIMEZONE:              'SESSIONTIMEZONE';
+SESSIONTZNAME:                'SESSIONTZNAME';
+SET:                          'SET';
+SETS:                         'SETS';
+SETTINGS:                     'SETTINGS';
+SET_TO_JOIN:                  'SET_TO_JOIN';
+SEVERE:                       'SEVERE';
+SHARED_POOL:                  'SHARED_POOL';
+SHARED:                       'SHARED';
+SHARE:                        'SHARE';
+SHARING:                      'SHARING';
+SHELFLIFE:                    'SHELFLIFE';
+SHOW:                         'SHOW';
+SHRINK:                       'SHRINK';
+SHUTDOWN:                     'SHUTDOWN';
+SIBLINGS:                     'SIBLINGS';
+SID:                          'SID';
+SIGNAL_COMPONENT:             'SIGNAL_COMPONENT';
+SIGNAL_FUNCTION:              'SIGNAL_FUNCTION';
+SIGN:                         'SIGN';
+SIGNTYPE:                     'SIGNTYPE';
+SIMPLE_INTEGER:               'SIMPLE_INTEGER';
+SIMPLE:                       'SIMPLE';
+SINGLE:                       'SINGLE';
+SINGLETASK:                   'SINGLETASK';
+SINH:                         'SINH';
+SIN:                          'SIN';
+SIZE:                         'SIZE';
+SKIP_EXT_OPTIMIZER:           'SKIP_EXT_OPTIMIZER';
+SKIP_       :                 'SKIP';
+SKIP_UNQ_UNUSABLE_IDX:        'SKIP_UNQ_UNUSABLE_IDX';
+SKIP_UNUSABLE_INDEXES:        'SKIP_UNUSABLE_INDEXES';
+SMALLFILE:                    'SMALLFILE';
+SMALLINT:                     'SMALLINT';
+SNAPSHOT:                     'SNAPSHOT';
+SOME:                         'SOME';
+SORT:                         'SORT';
+SOUNDEX:                      'SOUNDEX';
+SOURCE_FILE_DIRECTORY:        'SOURCE_FILE_DIRECTORY';
+SOURCE_FILE_NAME_CONVERT:     'SOURCE_FILE_NAME_CONVERT';
+SOURCE:                       'SOURCE';
+SPACE_KEYWORD:                'SPACE';
+SPECIFICATION:                'SPECIFICATION';
+SPFILE:                       'SPFILE';
+SPLIT:                        'SPLIT';
+SPREADSHEET:                  'SPREADSHEET';
+SQLDATA:                      'SQLDATA';
+SQLERROR:                     'SQLERROR';
+SQLLDR:                       'SQLLDR';
+SQL:                          'SQL';
+SQL_TRACE:                    'SQL_TRACE';
+SQL_TRANSLATION_PROFILE:      'SQL_TRANSLATION_PROFILE';
+SQRT:                         'SQRT';
+STALE:                        'STALE';
+STANDALONE:                   'STANDALONE';
+STANDARD_HASH:                'STANDARD_HASH';
+STANDBY_MAX_DATA_DELAY:       'STANDBY_MAX_DATA_DELAY';
+STANDBYS:                     'STANDBYS';
+STANDBY:                      'STANDBY';
+STAR:                         'STAR';
+STAR_TRANSFORMATION:          'STAR_TRANSFORMATION';
+START:                        'START';
+STARTUP:                      'STARTUP';
+STATEMENT_ID:                 'STATEMENT_ID';
+STATEMENT_QUEUING:            'STATEMENT_QUEUING';
+STATEMENTS:                   'STATEMENTS';
+STATEMENT:                    'STATEMENT';
+STATE:                        'STATE';
+STATIC:                       'STATIC';
+STATISTICS:                   'STATISTICS';
+STATS_BINOMIAL_TEST:          'STATS_BINOMIAL_TEST';
+STATS_CROSSTAB:               'STATS_CROSSTAB';
+STATS_F_TEST:                 'STATS_F_TEST';
+STATS_KS_TEST:                'STATS_KS_TEST';
+STATS_MODE:                   'STATS_MODE';
+STATS_MW_TEST:                'STATS_MW_TEST';
+STATS_ONE_WAY_ANOVA:          'STATS_ONE_WAY_ANOVA';
+STATS_T_TEST_INDEP:           'STATS_T_TEST_INDEP';
+STATS_T_TEST_INDEPU:          'STATS_T_TEST_INDEPU';
+STATS_T_TEST_ONE:             'STATS_T_TEST_ONE';
+STATS_T_TEST_PAIRED:          'STATS_T_TEST_PAIRED';
+STATS_WSR_TEST:               'STATS_WSR_TEST';
+STDDEV_POP:                   'STDDEV_POP';
+STDDEV_SAMP:                  'STDDEV_SAMP';
+STOP:                         'STOP';
+STORAGE:                      'STORAGE';
+STORE:                        'STORE';
+STREAMS:                      'STREAMS';
+STREAM:                       'STREAM';
+STRICT:                       'STRICT';
+STRING:                       'STRING';
+STRIPE_COLUMNS:               'STRIPE_COLUMNS';
+STRIPE_WIDTH:                 'STRIPE_WIDTH';
+STRIP:                        'STRIP';
+STRUCTURE:                    'STRUCTURE';
+SUBMULTISET:                  'SUBMULTISET';
+SUBPARTITION_REL:             'SUBPARTITION_REL';
+SUBPARTITIONS:                'SUBPARTITIONS';
+SUBPARTITION:                 'SUBPARTITION';
+SUBQUERIES:                   'SUBQUERIES';
+SUBQUERY_PRUNING:             'SUBQUERY_PRUNING';
+SUBSCRIBE:                    'SUBSCRIBE';
+SUBSET:                       'SUBSET';
+SUBSTITUTABLE:                'SUBSTITUTABLE';
+SUBSTR2:                      'SUBSTR2';
+SUBSTR4:                      'SUBSTR4';
+SUBSTRB:                      'SUBSTRB';
+SUBSTRC:                      'SUBSTRC';
+SUBTYPE:                      'SUBTYPE';
+SUCCESSFUL:                   'SUCCESSFUL';
+SUCCESS:                      'SUCCESS';
+SUMMARY:                      'SUMMARY';
+SUPPLEMENTAL:                 'SUPPLEMENTAL';
+SUSPEND:                      'SUSPEND';
+SWAP_JOIN_INPUTS:             'SWAP_JOIN_INPUTS';
+SWITCHOVER:                   'SWITCHOVER';
+SWITCH:                       'SWITCH';
+SYNCHRONOUS:                  'SYNCHRONOUS';
+SYNC:                         'SYNC';
+SYNONYM:                      'SYNONYM';
+SYSASM:                       'SYSASM';
+SYS_AUDIT:                    'SYS_AUDIT';
+SYSAUX:                       'SYSAUX';
+SYSBACKUP:                    'SYSBACKUP';
+SYS_CHECKACL:                 'SYS_CHECKACL';
+SYS_CHECK_PRIVILEGE:          'SYS_CHECK_PRIVILEGE';
+SYS_CONNECT_BY_PATH:          'SYS_CONNECT_BY_PATH';
+SYS_CONTEXT:                  'SYS_CONTEXT';
+SYSDATE:                      'SYSDATE';
+SYSDBA:                       'SYSDBA';
+SYS_DBURIGEN:                 'SYS_DBURIGEN';
+SYSDG:                        'SYSDG';
+SYS_DL_CURSOR:                'SYS_DL_CURSOR';
+SYS_DM_RXFORM_CHR:            'SYS_DM_RXFORM_CHR';
+SYS_DM_RXFORM_NUM:            'SYS_DM_RXFORM_NUM';
+SYS_DOM_COMPARE:              'SYS_DOM_COMPARE';
+SYS_DST_PRIM2SEC:             'SYS_DST_PRIM2SEC';
+SYS_DST_SEC2PRIM:             'SYS_DST_SEC2PRIM';
+SYS_ET_BFILE_TO_RAW:          'SYS_ET_BFILE_TO_RAW';
+SYS_ET_BLOB_TO_IMAGE:         'SYS_ET_BLOB_TO_IMAGE';
+SYS_ET_IMAGE_TO_BLOB:         'SYS_ET_IMAGE_TO_BLOB';
+SYS_ET_RAW_TO_BFILE:          'SYS_ET_RAW_TO_BFILE';
+SYS_EXTPDTXT:                 'SYS_EXTPDTXT';
+SYS_EXTRACT_UTC:              'SYS_EXTRACT_UTC';
+SYS_FBT_INSDEL:               'SYS_FBT_INSDEL';
+SYS_FILTER_ACLS:              'SYS_FILTER_ACLS';
+SYS_FNMATCHES:                'SYS_FNMATCHES';
+SYS_FNREPLACE:                'SYS_FNREPLACE';
+SYS_GET_ACLIDS:               'SYS_GET_ACLIDS';
+SYS_GET_COL_ACLIDS:           'SYS_GET_COL_ACLIDS';
+SYS_GET_PRIVILEGES:           'SYS_GET_PRIVILEGES';
+SYS_GETTOKENID:               'SYS_GETTOKENID';
+SYS_GETXTIVAL:                'SYS_GETXTIVAL';
+SYS_GUID:                     'SYS_GUID';
+SYSGUID:                      'SYSGUID';
+SYSKM:                        'SYSKM';
+SYS_MAKE_XMLNODEID:           'SYS_MAKE_XMLNODEID';
+SYS_MAKEXML:                  'SYS_MAKEXML';
+SYS_MKXMLATTR:                'SYS_MKXMLATTR';
+SYS_MKXTI:                    'SYS_MKXTI';
+SYSOBJ:                       'SYSOBJ';
+SYS_OP_ADT2BIN:               'SYS_OP_ADT2BIN';
+SYS_OP_ADTCONS:               'SYS_OP_ADTCONS';
+SYS_OP_ALSCRVAL:              'SYS_OP_ALSCRVAL';
+SYS_OP_ATG:                   'SYS_OP_ATG';
+SYS_OP_BIN2ADT:               'SYS_OP_BIN2ADT';
+SYS_OP_BITVEC:                'SYS_OP_BITVEC';
+SYS_OP_BL2R:                  'SYS_OP_BL2R';
+SYS_OP_BLOOM_FILTER_LIST:     'SYS_OP_BLOOM_FILTER_LIST';
+SYS_OP_BLOOM_FILTER:          'SYS_OP_BLOOM_FILTER';
+SYS_OP_C2C:                   'SYS_OP_C2C';
+SYS_OP_CAST:                  'SYS_OP_CAST';
+SYS_OP_CEG:                   'SYS_OP_CEG';
+SYS_OP_CL2C:                  'SYS_OP_CL2C';
+SYS_OP_COMBINED_HASH:         'SYS_OP_COMBINED_HASH';
+SYS_OP_COMP:                  'SYS_OP_COMP';
+SYS_OP_CONVERT:               'SYS_OP_CONVERT';
+SYS_OP_COUNTCHG:              'SYS_OP_COUNTCHG';
+SYS_OP_CSCONV:                'SYS_OP_CSCONV';
+SYS_OP_CSCONVTEST:            'SYS_OP_CSCONVTEST';
+SYS_OP_CSR:                   'SYS_OP_CSR';
+SYS_OP_CSX_PATCH:             'SYS_OP_CSX_PATCH';
+SYS_OP_CYCLED_SEQ:            'SYS_OP_CYCLED_SEQ';
+SYS_OP_DECOMP:                'SYS_OP_DECOMP';
+SYS_OP_DESCEND:               'SYS_OP_DESCEND';
+SYS_OP_DISTINCT:              'SYS_OP_DISTINCT';
+SYS_OP_DRA:                   'SYS_OP_DRA';
+SYS_OP_DUMP:                  'SYS_OP_DUMP';
+SYS_OP_DV_CHECK:              'SYS_OP_DV_CHECK';
+SYS_OP_ENFORCE_NOT_NULL:      'SYS_OP_ENFORCE_NOT_NULL$';
+SYSOPER:                      'SYSOPER';
+SYS_OP_EXTRACT:               'SYS_OP_EXTRACT';
+SYS_OP_GROUPING:              'SYS_OP_GROUPING';
+SYS_OP_GUID:                  'SYS_OP_GUID';
+SYS_OP_HASH:                  'SYS_OP_HASH';
+SYS_OP_IIX:                   'SYS_OP_IIX';
+SYS_OP_ITR:                   'SYS_OP_ITR';
+SYS_OP_KEY_VECTOR_CREATE:     'SYS_OP_KEY_VECTOR_CREATE';
+SYS_OP_KEY_VECTOR_FILTER_LIST: 'SYS_OP_KEY_VECTOR_FILTER_LIST';
+SYS_OP_KEY_VECTOR_FILTER:     'SYS_OP_KEY_VECTOR_FILTER';
+SYS_OP_KEY_VECTOR_SUCCEEDED:  'SYS_OP_KEY_VECTOR_SUCCEEDED';
+SYS_OP_KEY_VECTOR_USE:        'SYS_OP_KEY_VECTOR_USE';
+SYS_OP_LBID:                  'SYS_OP_LBID';
+SYS_OP_LOBLOC2BLOB:           'SYS_OP_LOBLOC2BLOB';
+SYS_OP_LOBLOC2CLOB:           'SYS_OP_LOBLOC2CLOB';
+SYS_OP_LOBLOC2ID:             'SYS_OP_LOBLOC2ID';
+SYS_OP_LOBLOC2NCLOB:          'SYS_OP_LOBLOC2NCLOB';
+SYS_OP_LOBLOC2TYP:            'SYS_OP_LOBLOC2TYP';
+SYS_OP_LSVI:                  'SYS_OP_LSVI';
+SYS_OP_LVL:                   'SYS_OP_LVL';
+SYS_OP_MAKEOID:               'SYS_OP_MAKEOID';
+SYS_OP_MAP_NONNULL:           'SYS_OP_MAP_NONNULL';
+SYS_OP_MSR:                   'SYS_OP_MSR';
+SYS_OP_NICOMBINE:             'SYS_OP_NICOMBINE';
+SYS_OP_NIEXTRACT:             'SYS_OP_NIEXTRACT';
+SYS_OP_NII:                   'SYS_OP_NII';
+SYS_OP_NIX:                   'SYS_OP_NIX';
+SYS_OP_NOEXPAND:              'SYS_OP_NOEXPAND';
+SYS_OP_NTCIMG:                'SYS_OP_NTCIMG$';
+SYS_OP_NUMTORAW:              'SYS_OP_NUMTORAW';
+SYS_OP_OIDVALUE:              'SYS_OP_OIDVALUE';
+SYS_OP_OPNSIZE:               'SYS_OP_OPNSIZE';
+SYS_OP_PAR_1:                 'SYS_OP_PAR_1';
+SYS_OP_PARGID_1:              'SYS_OP_PARGID_1';
+SYS_OP_PARGID:                'SYS_OP_PARGID';
+SYS_OP_PAR:                   'SYS_OP_PAR';
+SYS_OP_PART_ID:               'SYS_OP_PART_ID';
+SYS_OP_PIVOT:                 'SYS_OP_PIVOT';
+SYS_OP_R2O:                   'SYS_OP_R2O';
+SYS_OP_RAWTONUM:              'SYS_OP_RAWTONUM';
+SYS_OP_RDTM:                  'SYS_OP_RDTM';
+SYS_OP_REF:                   'SYS_OP_REF';
+SYS_OP_RMTD:                  'SYS_OP_RMTD';
+SYS_OP_ROWIDTOOBJ:            'SYS_OP_ROWIDTOOBJ';
+SYS_OP_RPB:                   'SYS_OP_RPB';
+SYS_OPTLOBPRBSC:              'SYS_OPTLOBPRBSC';
+SYS_OP_TOSETID:               'SYS_OP_TOSETID';
+SYS_OP_TPR:                   'SYS_OP_TPR';
+SYS_OP_TRTB:                  'SYS_OP_TRTB';
+SYS_OPTXICMP:                 'SYS_OPTXICMP';
+SYS_OPTXQCASTASNQ:            'SYS_OPTXQCASTASNQ';
+SYS_OP_UNDESCEND:             'SYS_OP_UNDESCEND';
+SYS_OP_VECAND:                'SYS_OP_VECAND';
+SYS_OP_VECBIT:                'SYS_OP_VECBIT';
+SYS_OP_VECOR:                 'SYS_OP_VECOR';
+SYS_OP_VECXOR:                'SYS_OP_VECXOR';
+SYS_OP_VERSION:               'SYS_OP_VERSION';
+SYS_OP_VREF:                  'SYS_OP_VREF';
+SYS_OP_VVD:                   'SYS_OP_VVD';
+SYS_OP_XMLCONS_FOR_CSX:       'SYS_OP_XMLCONS_FOR_CSX';
+SYS_OP_XPTHATG:               'SYS_OP_XPTHATG';
+SYS_OP_XPTHIDX:               'SYS_OP_XPTHIDX';
+SYS_OP_XPTHOP:                'SYS_OP_XPTHOP';
+SYS_OP_XTXT2SQLT:             'SYS_OP_XTXT2SQLT';
+SYS_OP_ZONE_ID:               'SYS_OP_ZONE_ID';
+SYS_ORDERKEY_DEPTH:           'SYS_ORDERKEY_DEPTH';
+SYS_ORDERKEY_MAXCHILD:        'SYS_ORDERKEY_MAXCHILD';
+SYS_ORDERKEY_PARENT:          'SYS_ORDERKEY_PARENT';
+SYS_PARALLEL_TXN:             'SYS_PARALLEL_TXN';
+SYS_PATHID_IS_ATTR:           'SYS_PATHID_IS_ATTR';
+SYS_PATHID_IS_NMSPC:          'SYS_PATHID_IS_NMSPC';
+SYS_PATHID_LASTNAME:          'SYS_PATHID_LASTNAME';
+SYS_PATHID_LASTNMSPC:         'SYS_PATHID_LASTNMSPC';
+SYS_PATH_REVERSE:             'SYS_PATH_REVERSE';
+SYS_PXQEXTRACT:               'SYS_PXQEXTRACT';
+SYS_RAW_TO_XSID:              'SYS_RAW_TO_XSID';
+SYS_RID_ORDER:                'SYS_RID_ORDER';
+SYS_ROW_DELTA:                'SYS_ROW_DELTA';
+SYS_SC_2_XMLT:                'SYS_SC_2_XMLT';
+SYS_SYNRCIREDO:               'SYS_SYNRCIREDO';
+SYSTEM_DEFINED:               'SYSTEM_DEFINED';
+SYSTEM:                       'SYSTEM';
+SYSTIMESTAMP:                 'SYSTIMESTAMP';
+SYS_TYPEID:                   'SYS_TYPEID';
+SYS_UMAKEXML:                 'SYS_UMAKEXML';
+SYS_XMLANALYZE:               'SYS_XMLANALYZE';
+SYS_XMLCONTAINS:              'SYS_XMLCONTAINS';
+SYS_XMLCONV:                  'SYS_XMLCONV';
+SYS_XMLEXNSURI:               'SYS_XMLEXNSURI';
+SYS_XMLGEN:                   'SYS_XMLGEN';
+SYS_XMLI_LOC_ISNODE:          'SYS_XMLI_LOC_ISNODE';
+SYS_XMLI_LOC_ISTEXT:          'SYS_XMLI_LOC_ISTEXT';
+SYS_XMLINSTR:                 'SYS_XMLINSTR';
+SYS_XMLLOCATOR_GETSVAL:       'SYS_XMLLOCATOR_GETSVAL';
+SYS_XMLNODEID_GETCID:         'SYS_XMLNODEID_GETCID';
+SYS_XMLNODEID_GETLOCATOR:     'SYS_XMLNODEID_GETLOCATOR';
+SYS_XMLNODEID_GETOKEY:        'SYS_XMLNODEID_GETOKEY';
+SYS_XMLNODEID_GETPATHID:      'SYS_XMLNODEID_GETPATHID';
+SYS_XMLNODEID_GETPTRID:       'SYS_XMLNODEID_GETPTRID';
+SYS_XMLNODEID_GETRID:         'SYS_XMLNODEID_GETRID';
+SYS_XMLNODEID_GETSVAL:        'SYS_XMLNODEID_GETSVAL';
+SYS_XMLNODEID_GETTID:         'SYS_XMLNODEID_GETTID';
+SYS_XMLNODEID:                'SYS_XMLNODEID';
+SYS_XMLT_2_SC:                'SYS_XMLT_2_SC';
+SYS_XMLTRANSLATE:             'SYS_XMLTRANSLATE';
+SYS_XMLTYPE2SQL:              'SYS_XMLTYPE2SQL';
+SYS_XQ_ASQLCNV:               'SYS_XQ_ASQLCNV';
+SYS_XQ_ATOMCNVCHK:            'SYS_XQ_ATOMCNVCHK';
+SYS_XQBASEURI:                'SYS_XQBASEURI';
+SYS_XQCASTABLEERRH:           'SYS_XQCASTABLEERRH';
+SYS_XQCODEP2STR:              'SYS_XQCODEP2STR';
+SYS_XQCODEPEQ:                'SYS_XQCODEPEQ';
+SYS_XQCON2SEQ:                'SYS_XQCON2SEQ';
+SYS_XQCONCAT:                 'SYS_XQCONCAT';
+SYS_XQDELETE:                 'SYS_XQDELETE';
+SYS_XQDFLTCOLATION:           'SYS_XQDFLTCOLATION';
+SYS_XQDOC:                    'SYS_XQDOC';
+SYS_XQDOCURI:                 'SYS_XQDOCURI';
+SYS_XQDURDIV:                 'SYS_XQDURDIV';
+SYS_XQED4URI:                 'SYS_XQED4URI';
+SYS_XQENDSWITH:               'SYS_XQENDSWITH';
+SYS_XQERRH:                   'SYS_XQERRH';
+SYS_XQERR:                    'SYS_XQERR';
+SYS_XQESHTMLURI:              'SYS_XQESHTMLURI';
+SYS_XQEXLOBVAL:               'SYS_XQEXLOBVAL';
+SYS_XQEXSTWRP:                'SYS_XQEXSTWRP';
+SYS_XQEXTRACT:                'SYS_XQEXTRACT';
+SYS_XQEXTRREF:                'SYS_XQEXTRREF';
+SYS_XQEXVAL:                  'SYS_XQEXVAL';
+SYS_XQFB2STR:                 'SYS_XQFB2STR';
+SYS_XQFNBOOL:                 'SYS_XQFNBOOL';
+SYS_XQFNCMP:                  'SYS_XQFNCMP';
+SYS_XQFNDATIM:                'SYS_XQFNDATIM';
+SYS_XQFNLNAME:                'SYS_XQFNLNAME';
+SYS_XQFNNM:                   'SYS_XQFNNM';
+SYS_XQFNNSURI:                'SYS_XQFNNSURI';
+SYS_XQFNPREDTRUTH:            'SYS_XQFNPREDTRUTH';
+SYS_XQFNQNM:                  'SYS_XQFNQNM';
+SYS_XQFNROOT:                 'SYS_XQFNROOT';
+SYS_XQFORMATNUM:              'SYS_XQFORMATNUM';
+SYS_XQFTCONTAIN:              'SYS_XQFTCONTAIN';
+SYS_XQFUNCR:                  'SYS_XQFUNCR';
+SYS_XQGETCONTENT:             'SYS_XQGETCONTENT';
+SYS_XQINDXOF:                 'SYS_XQINDXOF';
+SYS_XQINSERT:                 'SYS_XQINSERT';
+SYS_XQINSPFX:                 'SYS_XQINSPFX';
+SYS_XQIRI2URI:                'SYS_XQIRI2URI';
+SYS_XQLANG:                   'SYS_XQLANG';
+SYS_XQLLNMFRMQNM:             'SYS_XQLLNMFRMQNM';
+SYS_XQMKNODEREF:              'SYS_XQMKNODEREF';
+SYS_XQNILLED:                 'SYS_XQNILLED';
+SYS_XQNODENAME:               'SYS_XQNODENAME';
+SYS_XQNORMSPACE:              'SYS_XQNORMSPACE';
+SYS_XQNORMUCODE:              'SYS_XQNORMUCODE';
+SYS_XQ_NRNG:                  'SYS_XQ_NRNG';
+SYS_XQNSP4PFX:                'SYS_XQNSP4PFX';
+SYS_XQNSPFRMQNM:              'SYS_XQNSPFRMQNM';
+SYS_XQPFXFRMQNM:              'SYS_XQPFXFRMQNM';
+SYS_XQ_PKSQL2XML:             'SYS_XQ_PKSQL2XML';
+SYS_XQPOLYABS:                'SYS_XQPOLYABS';
+SYS_XQPOLYADD:                'SYS_XQPOLYADD';
+SYS_XQPOLYCEL:                'SYS_XQPOLYCEL';
+SYS_XQPOLYCSTBL:              'SYS_XQPOLYCSTBL';
+SYS_XQPOLYCST:                'SYS_XQPOLYCST';
+SYS_XQPOLYDIV:                'SYS_XQPOLYDIV';
+SYS_XQPOLYFLR:                'SYS_XQPOLYFLR';
+SYS_XQPOLYMOD:                'SYS_XQPOLYMOD';
+SYS_XQPOLYMUL:                'SYS_XQPOLYMUL';
+SYS_XQPOLYRND:                'SYS_XQPOLYRND';
+SYS_XQPOLYSQRT:               'SYS_XQPOLYSQRT';
+SYS_XQPOLYSUB:                'SYS_XQPOLYSUB';
+SYS_XQPOLYUMUS:               'SYS_XQPOLYUMUS';
+SYS_XQPOLYUPLS:               'SYS_XQPOLYUPLS';
+SYS_XQPOLYVEQ:                'SYS_XQPOLYVEQ';
+SYS_XQPOLYVGE:                'SYS_XQPOLYVGE';
+SYS_XQPOLYVGT:                'SYS_XQPOLYVGT';
+SYS_XQPOLYVLE:                'SYS_XQPOLYVLE';
+SYS_XQPOLYVLT:                'SYS_XQPOLYVLT';
+SYS_XQPOLYVNE:                'SYS_XQPOLYVNE';
+SYS_XQREF2VAL:                'SYS_XQREF2VAL';
+SYS_XQRENAME:                 'SYS_XQRENAME';
+SYS_XQREPLACE:                'SYS_XQREPLACE';
+SYS_XQRESVURI:                'SYS_XQRESVURI';
+SYS_XQRNDHALF2EVN:            'SYS_XQRNDHALF2EVN';
+SYS_XQRSLVQNM:                'SYS_XQRSLVQNM';
+SYS_XQRYENVPGET:              'SYS_XQRYENVPGET';
+SYS_XQRYVARGET:               'SYS_XQRYVARGET';
+SYS_XQRYWRP:                  'SYS_XQRYWRP';
+SYS_XQSEQ2CON4XC:             'SYS_XQSEQ2CON4XC';
+SYS_XQSEQ2CON:                'SYS_XQSEQ2CON';
+SYS_XQSEQDEEPEQ:              'SYS_XQSEQDEEPEQ';
+SYS_XQSEQINSB:                'SYS_XQSEQINSB';
+SYS_XQSEQRM:                  'SYS_XQSEQRM';
+SYS_XQSEQRVS:                 'SYS_XQSEQRVS';
+SYS_XQSEQSUB:                 'SYS_XQSEQSUB';
+SYS_XQSEQTYPMATCH:            'SYS_XQSEQTYPMATCH';
+SYS_XQSTARTSWITH:             'SYS_XQSTARTSWITH';
+SYS_XQSTATBURI:               'SYS_XQSTATBURI';
+SYS_XQSTR2CODEP:              'SYS_XQSTR2CODEP';
+SYS_XQSTRJOIN:                'SYS_XQSTRJOIN';
+SYS_XQSUBSTRAFT:              'SYS_XQSUBSTRAFT';
+SYS_XQSUBSTRBEF:              'SYS_XQSUBSTRBEF';
+SYS_XQTOKENIZE:               'SYS_XQTOKENIZE';
+SYS_XQTREATAS:                'SYS_XQTREATAS';
+SYS_XQ_UPKXML2SQL:            'SYS_XQ_UPKXML2SQL';
+SYS_XQXFORM:                  'SYS_XQXFORM';
+SYS_XSID_TO_RAW:              'SYS_XSID_TO_RAW';
+SYS_ZMAP_FILTER:              'SYS_ZMAP_FILTER';
+SYS_ZMAP_REFRESH:             'SYS_ZMAP_REFRESH';
+TABLE_LOOKUP_BY_NL:           'TABLE_LOOKUP_BY_NL';
+TABLESPACE_NO:                'TABLESPACE_NO';
+TABLESPACE:                   'TABLESPACE';
+TABLES:                       'TABLES';
+TABLE_STATS:                  'TABLE_STATS';
+TABLE:                        'TABLE';
+TABNO:                        'TABNO';
+TAG:                          'TAG';
+TANH:                         'TANH';
+TAN:                          'TAN';
+TBLORIDXPARTNUM:              'TBL$OR$IDX$PART$NUM';
+TEMPFILE:                     'TEMPFILE';
+TEMPLATE:                     'TEMPLATE';
+TEMPORARY:                    'TEMPORARY';
+TEMP_TABLE:                   'TEMP_TABLE';
+TEST:                         'TEST';
+TEXT:                         'TEXT';
+THAN:                         'THAN';
+THEN:                         'THEN';
+THE:                          'THE';
+THREAD:                       'THREAD';
+THROUGH:                      'THROUGH';
+TIER:                         'TIER';
+TIES:                         'TIES';
+TIMEOUT:                      'TIMEOUT';
+TIMESTAMP_LTZ_UNCONSTRAINED:  'TIMESTAMP_LTZ_UNCONSTRAINED';
+TIMESTAMP:                    'TIMESTAMP';
+TIMESTAMP_TZ_UNCONSTRAINED:   'TIMESTAMP_TZ_UNCONSTRAINED';
+TIMESTAMP_UNCONSTRAINED:      'TIMESTAMP_UNCONSTRAINED';
+TIMES:                        'TIMES';
+TIME:                         'TIME';
+TIMEZONE:                     'TIMEZONE';
+TIMEZONE_ABBR:                'TIMEZONE_ABBR';
+TIMEZONE_HOUR:                'TIMEZONE_HOUR';
+TIMEZONE_MINUTE:              'TIMEZONE_MINUTE';
+TIMEZONE_OFFSET:              'TIMEZONE_OFFSET';
+TIMEZONE_REGION:              'TIMEZONE_REGION';
+TIME_ZONE:                    'TIME_ZONE';
+TIV_GB:                       'TIV_GB';
+TIV_SSF:                      'TIV_SSF';
+TO_ACLID:                     'TO_ACLID';
+TO_BINARY_DOUBLE:             'TO_BINARY_DOUBLE';
+TO_BINARY_FLOAT:              'TO_BINARY_FLOAT';
+TO_BLOB:                      'TO_BLOB';
+TO_CLOB:                      'TO_CLOB';
+TO_DSINTERVAL:                'TO_DSINTERVAL';
+TO_LOB:                       'TO_LOB';
+TO_MULTI_BYTE:                'TO_MULTI_BYTE';
+TO_NCHAR:                     'TO_NCHAR';
+TO_NCLOB:                     'TO_NCLOB';
+TO_NUMBER:                    'TO_NUMBER';
+TOPLEVEL:                     'TOPLEVEL';
+TO_SINGLE_BYTE:               'TO_SINGLE_BYTE';
+TO_TIMESTAMP:                 'TO_TIMESTAMP';
+TO_TIMESTAMP_TZ:              'TO_TIMESTAMP_TZ';
+TO_TIME:                      'TO_TIME';
+TO_TIME_TZ:                   'TO_TIME_TZ';
+TO:                           'TO';
+TO_YMINTERVAL:                'TO_YMINTERVAL';
+TRACE:                        'TRACE';
+TRACING:                      'TRACING';
+TRACKING:                     'TRACKING';
+TRAILING:                     'TRAILING';
+TRANSACTION:                  'TRANSACTION';
+TRANSFORM_DISTINCT_AGG:       'TRANSFORM_DISTINCT_AGG';
+TRANSITIONAL:                 'TRANSITIONAL';
+TRANSITION:                   'TRANSITION';
+TRANSLATE:                    'TRANSLATE';
+TRANSLATION:                  'TRANSLATION';
+TREAT:                        'TREAT';
+TRIGGERS:                     'TRIGGERS';
+TRIGGER:                      'TRIGGER';
+TRUE:                         'TRUE';
+TRUNCATE:                     'TRUNCATE';
+TRUNC:                        'TRUNC';
+TRUSTED:                      'TRUSTED';
+TRUST:                        'TRUST';
+TUNING:                       'TUNING';
+TX:                           'TX';
+TYPES:                        'TYPES';
+TYPE:                         'TYPE';
+TZ_OFFSET:                    'TZ_OFFSET';
+UB2:                          'UB2';
+UBA:                          'UBA';
+UCS2:                         'UCS2';
+UID:                          'UID';
+UNARCHIVED:                   'UNARCHIVED';
+UNBOUNDED:                    'UNBOUNDED';
+UNBOUND:                      'UNBOUND';
+UNCONDITIONAL:                'UNCONDITIONAL';
+UNDER:                        'UNDER';
+UNDO:                         'UNDO';
+UNDROP:                       'UNDROP';
+UNIFORM:                      'UNIFORM';
+UNION:                        'UNION';
+UNIQUE:                       'UNIQUE';
+UNISTR:                       'UNISTR';
+UNLIMITED:                    'UNLIMITED';
+UNLOAD:                       'UNLOAD';
+UNLOCK:                       'UNLOCK';
+UNMATCHED:                    'UNMATCHED';
+UNNEST_INNERJ_DISTINCT_VIEW:  'UNNEST_INNERJ_DISTINCT_VIEW';
+UNNEST_NOSEMIJ_NODISTINCTVIEW: 'UNNEST_NOSEMIJ_NODISTINCTVIEW';
+UNNEST_SEMIJ_VIEW:            'UNNEST_SEMIJ_VIEW';
+UNNEST:                       'UNNEST';
+UNPACKED:                     'UNPACKED';
+UNPIVOT:                      'UNPIVOT';
+UNPLUG:                       'UNPLUG';
+UNPROTECTED:                  'UNPROTECTED';
+UNQUIESCE:                    'UNQUIESCE';
+UNRECOVERABLE:                'UNRECOVERABLE';
+UNRESTRICTED:                 'UNRESTRICTED';
+UNSUBSCRIBE:                  'UNSUBSCRIBE';
+UNTIL:                        'UNTIL';
+UNUSABLE:                     'UNUSABLE';
+UNUSED:                       'UNUSED';
+UPDATABLE:                    'UPDATABLE';
+UPDATED:                      'UPDATED';
+UPDATE:                       'UPDATE';
+UPDATEXML:                    'UPDATEXML';
+UPD_INDEXES:                  'UPD_INDEXES';
+UPD_JOININDEX:                'UPD_JOININDEX';
+UPGRADE:                      'UPGRADE';
+UPPER:                        'UPPER';
+UPSERT:                       'UPSERT';
+UROWID:                       'UROWID';
+USABLE:                       'USABLE';
+USAGE:                        'USAGE';
+USE_ANTI:                     'USE_ANTI';
+USE_CONCAT:                   'USE_CONCAT';
+USE_CUBE:                     'USE_CUBE';
+USE_HASH_AGGREGATION:         'USE_HASH_AGGREGATION';
+USE_HASH_GBY_FOR_PUSHDOWN:    'USE_HASH_GBY_FOR_PUSHDOWN';
+USE_HASH:                     'USE_HASH';
+USE_HIDDEN_PARTITIONS:        'USE_HIDDEN_PARTITIONS';
+USE_INVISIBLE_INDEXES:        'USE_INVISIBLE_INDEXES';
+USE_MERGE_CARTESIAN:          'USE_MERGE_CARTESIAN';
+USE_MERGE:                    'USE_MERGE';
+USE_NL:                       'USE_NL';
+USE_NL_WITH_INDEX:            'USE_NL_WITH_INDEX';
+USE_PRIVATE_OUTLINES:         'USE_PRIVATE_OUTLINES';
+USER_DATA:                    'USER_DATA';
+USER_DEFINED:                 'USER_DEFINED';
+USERENV:                      'USERENV';
+USERGROUP:                    'USERGROUP';
+USER_RECYCLEBIN:              'USER_RECYCLEBIN';
+USERS:                        'USERS';
+USER_TABLESPACES:             'USER_TABLESPACES';
+USER:                         'USER';
+USE_SEMI:                     'USE_SEMI';
+USE_STORED_OUTLINES:          'USE_STORED_OUTLINES';
+USE_TTT_FOR_GSETS:            'USE_TTT_FOR_GSETS';
+USE:                          'USE';
+USE_VECTOR_AGGREGATION:       'USE_VECTOR_AGGREGATION';
+USE_WEAK_NAME_RESL:           'USE_WEAK_NAME_RESL';
+USING_NO_EXPAND:              'USING_NO_EXPAND';
+USING:                        'USING';
+UTF16BE:                      'UTF16BE';
+UTF16LE:                      'UTF16LE';
+UTF32:                        'UTF32';
+UTF8:                         'UTF8';
+V1:                           'V1';
+V2:                           'V2';
+VALIDATE:                     'VALIDATE';
+VALIDATION:                   'VALIDATION';
+VALID_TIME_END:               'VALID_TIME_END';
+VALUES:                       'VALUES';
+VALUE:                        'VALUE';
+VARCHAR2:                     'VARCHAR2';
+VARCHAR:                      'VARCHAR';
+VARIABLE:                     'VARIABLE';
+VAR_POP:                      'VAR_POP';
+VARRAYS:                      'VARRAYS';
+VARRAY:                       'VARRAY';
+VAR_SAMP:                     'VAR_SAMP';
+VARYING:                      'VARYING';
+VECTOR_READ_TRACE:            'VECTOR_READ_TRACE';
+VECTOR_READ:                  'VECTOR_READ';
+VECTOR_TRANSFORM_DIMS:        'VECTOR_TRANSFORM_DIMS';
+VECTOR_TRANSFORM_FACT:        'VECTOR_TRANSFORM_FACT';
+VECTOR_TRANSFORM:             'VECTOR_TRANSFORM';
+VERIFIER:                     'VERIFIER';
+VERIFY:                       'VERIFY';
+VERSIONING:                   'VERSIONING';
+VERSIONS_ENDSCN:              'VERSIONS_ENDSCN';
+VERSIONS_ENDTIME:             'VERSIONS_ENDTIME';
+VERSIONS_OPERATION:           'VERSIONS_OPERATION';
+VERSIONS_STARTSCN:            'VERSIONS_STARTSCN';
+VERSIONS_STARTTIME:           'VERSIONS_STARTTIME';
+VERSIONS:                     'VERSIONS';
+VERSIONS_XID:                 'VERSIONS_XID';
+VERSION:                      'VERSION';
+VIEW:                         'VIEW';
+VIOLATION:                    'VIOLATION';
+VIRTUAL:                      'VIRTUAL';
+VISIBILITY:                   'VISIBILITY';
+VISIBLE:                      'VISIBLE';
+VOLUME:                       'VOLUME';
+VSIZE:                        'VSIZE';
+WAIT:                         'WAIT';
+WALLET:                       'WALLET';
+WARNING:                      'WARNING';
+WEEKS:                        'WEEKS';
+WEEK:                         'WEEK';
+WELLFORMED:                   'WELLFORMED';
+WHENEVER:                     'WHENEVER';
+WHEN:                         'WHEN';
+WHERE:                        'WHERE';
+WHILE:                        'WHILE';
+WHITESPACE:                   'WHITESPACE';
+WIDTH_BUCKET:                 'WIDTH_BUCKET';
+WITHIN:                       'WITHIN';
+WITHOUT:                      'WITHOUT';
+WITH_PLSQL:                   'WITH_PLSQL';
+WITH:                         'WITH';
+WORK:                         'WORK';
+WRAPPED:                      'WRAPPED';
+WRAPPER:                      'WRAPPER';
+WRITE:                        'WRITE';
+XDB_FASTPATH_INSERT:          'XDB_FASTPATH_INSERT';
+XDB:                          'XDB';
+X_DYN_PRUNE:                  'X_DYN_PRUNE';
+XID:                          'XID';
+XML2OBJECT:                   'XML2OBJECT';
+XMLAGG:                       'XMLAGG';
+XMLATTRIBUTES:                'XMLATTRIBUTES';
+XMLCAST:                      'XMLCAST';
+XMLCDATA:                     'XMLCDATA';
+XMLCOLATTVAL:                 'XMLCOLATTVAL';
+XMLCOMMENT:                   'XMLCOMMENT';
+XMLCONCAT:                    'XMLCONCAT';
+XMLDIFF:                      'XMLDIFF';
+XML_DML_RWT_STMT:             'XML_DML_RWT_STMT';
+XMLELEMENT:                   'XMLELEMENT';
+XMLEXISTS2:                   'XMLEXISTS2';
+XMLEXISTS:                    'XMLEXISTS';
+XMLFOREST:                    'XMLFOREST';
+XMLINDEX:                     'XMLINDEX';
+XMLINDEX_REWRITE_IN_SELECT:   'XMLINDEX_REWRITE_IN_SELECT';
+XMLINDEX_REWRITE:             'XMLINDEX_REWRITE';
+XMLINDEX_SEL_IDX_TBL:         'XMLINDEX_SEL_IDX_TBL';
+XMLISNODE:                    'XMLISNODE';
+XMLISVALID:                   'XMLISVALID';
+XMLNAMESPACES:                'XMLNAMESPACES';
+XMLPARSE:                     'XMLPARSE';
+XMLPATCH:                     'XMLPATCH';
+XMLPI:                        'XMLPI';
+XMLQUERYVAL:                  'XMLQUERYVAL';
+XMLQUERY:                     'XMLQUERY';
+XMLROOT:                      'XMLROOT';
+XMLSCHEMA:                    'XMLSCHEMA';
+XMLSERIALIZE:                 'XMLSERIALIZE';
+XMLTABLE:                     'XMLTABLE';
+XMLTRANSFORMBLOB:             'XMLTRANSFORMBLOB';
+XMLTRANSFORM:                 'XMLTRANSFORM';
+XMLTYPE:                      'XMLTYPE';
+XML:                          'XML';
+XPATHTABLE:                   'XPATHTABLE';
+XS_SYS_CONTEXT:               'XS_SYS_CONTEXT';
+XS:                           'XS';
+XTRANSPORT:                   'XTRANSPORT';
+YEARS:                        'YEARS';
+YEAR:                         'YEAR';
+YES:                          'YES';
+YMINTERVAL_UNCONSTRAINED:     'YMINTERVAL_UNCONSTRAINED';
+ZONEMAP:                      'ZONEMAP';
+ZONE:                         'ZONE';
+PREDICTION:                   'PREDICTION';
+PREDICTION_BOUNDS:            'PREDICTION_BOUNDS';
+PREDICTION_COST:              'PREDICTION_COST';
+PREDICTION_DETAILS:           'PREDICTION_DETAILS';
+PREDICTION_PROBABILITY:       'PREDICTION_PROBABILITY';
+PREDICTION_SET:               'PREDICTION_SET';
+
+CUME_DIST:                    'CUME_DIST';
+DENSE_RANK:                   'DENSE_RANK';
+LISTAGG:                      'LISTAGG';
+PERCENT_RANK:                 'PERCENT_RANK';
+PERCENTILE_CONT:              'PERCENTILE_CONT';
+PERCENTILE_DISC:              'PERCENTILE_DISC';
+RANK:                         'RANK';
+
+AVG:                          'AVG';
+CORR:                         'CORR';
+COVAR_:                       'COVAR_';
+DECODE:                       'DECODE';
+LAG:                          'LAG';
+LEAD:                         'LEAD';
+MAX:                          'MAX';
+MEDIAN:                       'MEDIAN';
+MIN:                          'MIN';
+NTILE:                        'NTILE';
+NVL:                          'NVL';
+RATIO_TO_REPORT:              'RATIO_TO_REPORT';
+REGR_:                        'REGR_';
+ROUND:                        'ROUND';
+ROW_NUMBER:                   'ROW_NUMBER';
+SUBSTR:                       'SUBSTR';
+TO_CHAR:                      'TO_CHAR';
+TRIM:                         'TRIM';
+SUM:                          'SUM';
+STDDEV:                       'STDDEV';
+VAR_:                         'VAR_';
+VARIANCE:                     'VARIANCE';
+LEAST:                        'LEAST';
+GREATEST:                     'GREATEST';
+TO_DATE:                      'TO_DATE';
+REM:                          'REM';
+REMARK:                       'REMARK';
+
+// Rule #358 <NATIONAL_CHAR_STRING_LIT> - subtoken typecast in <REGULAR_ID>, it also incorporates <character_representation>
+//  Lowercase 'n' is a usual addition to the standard
+
+NATIONAL_CHAR_STRING_LIT: 'N' '\'' (~('\'' | '\r' | '\n' ) | '\'' '\'' | NEWLINE)* '\'';
+
+//  Rule #040 <BIT_STRING_LIT> - subtoken typecast in <REGULAR_ID>
+//  Lowercase 'b' is a usual addition to the standard
+
+BIT_STRING_LIT: 'B' ('\'' [01]* '\'')+;
+
+//  Rule #284 <HEX_STRING_LIT> - subtoken typecast in <REGULAR_ID>
+//  Lowercase 'x' is a usual addition to the standard
+
+HEX_STRING_LIT: 'X' ('\'' [A-F0-9]* '\'')+;
+DOUBLE_PERIOD:  '..';
+PERIOD:         '.';
+
+//{ Rule #238 <EXACT_NUM_LIT>
+//  This rule is a bit tricky - it resolves the ambiguity with <PERIOD>
+//  It also incorporates <mantisa> and <exponent> for the <APPROXIMATE_NUM_LIT>
+//  Rule #501 <signed_integer> was incorporated directly in the token <APPROXIMATE_NUM_LIT>
+//  See also the rule #617 <unsigned_num_lit>
+/*
+    : (
+            UNSIGNED_INTEGER
+            ( '.' UNSIGNED_INTEGER
+            | {$type = UNSIGNED_INTEGER;}
+            ) ( E ('+' | '-')? UNSIGNED_INTEGER {$type = APPROXIMATE_NUM_LIT;} )?
+    | '.' UNSIGNED_INTEGER ( E ('+' | '-')? UNSIGNED_INTEGER {$type = APPROXIMATE_NUM_LIT;} )?
+    )
+    (D | F)?
+    ;*/
+
+UNSIGNED_INTEGER:    [0-9]+;
+APPROXIMATE_NUM_LIT: FLOAT_FRAGMENT ('E' ('+'|'-')? (FLOAT_FRAGMENT | [0-9]+))? ('D' | 'F')?;
+
+// Rule #--- <CHAR_STRING> is a base for Rule #065 <char_string_lit> , it incorporates <character_representation>
+// and a superfluous subtoken typecasting of the "QUOTE"
+CHAR_STRING: '\''  (~('\'' | '\r' | '\n') | '\'' '\'' | NEWLINE)* '\'';
+
+// See https://livesql.oracle.com/apex/livesql/file/content_CIREYU9EA54EOKQ7LAMZKRF6P.html
+// TODO: context sensitive string quotes (any characted after quote)
+CHAR_STRING_PERL    : 'Q' '\'' (QS_ANGLE | QS_BRACE | QS_BRACK | QS_PAREN | QS_EXCLAM | QS_SHARP | QS_QUOTE | QS_DQUOTE) '\'' -> type(CHAR_STRING);
+fragment QS_ANGLE   : '<' .*? '>';
+fragment QS_BRACE   : '{' .*? '}';
+fragment QS_BRACK   : '[' .*? ']';
+fragment QS_PAREN   : '(' .*? ')';
+fragment QS_EXCLAM  : '!' .*? '!';
+fragment QS_SHARP   : '#' .*? '#';
+fragment QS_QUOTE   : '\'' .*? '\'';
+fragment QS_DQUOTE  : '"' .*? '"';
+
+DELIMITED_ID: '"' (~('"' | '\r' | '\n') | '"' '"')+ '"' ;
+
+PERCENT:                   '%';
+AMPERSAND:                 '&';
+LEFT_PAREN:                '(';
+RIGHT_PAREN:               ')';
+DOUBLE_ASTERISK:           '**';
+ASTERISK:                  '*';
+PLUS_SIGN:                 '+';
+MINUS_SIGN:                '-';
+COMMA:                     ',';
+SOLIDUS:                   '/';
+AT_SIGN:                   '@';
+ASSIGN_OP:                 ':=';
+
+BINDVAR
+    : ':' SIMPLE_LETTER  (SIMPLE_LETTER | [0-9] | '_')*
+    | ':' DELIMITED_ID  // not used in SQL but spotted in v$sqltext when using cursor_sharing
+    | ':' UNSIGNED_INTEGER
+    | QUESTION_MARK // not in SQL, not in Oracle, not in OCI, use this for JDBC
+    ;
+
+NOT_EQUAL_OP:              '!='
+            |              '<>'
+            |              '^='
+            |              '~='
+            ;
+CARRET_OPERATOR_PART:      '^';
+TILDE_OPERATOR_PART:       '~';
+EXCLAMATION_OPERATOR_PART: '!';
+GREATER_THAN_OP:           '>';
+LESS_THAN_OP:              '<';
+COLON:                     ':';
+SEMICOLON:                 ';';
+
+BAR:       '|';
+EQUALS_OP: '=';
+
+LEFT_BRACKET:  '[';
+RIGHT_BRACKET: ']';
+
+INTRODUCER: '_';
+
+// Comments https://docs.oracle.com/cd/E11882_01/server.112/e41084/sql_elements006.htm
+
+SINGLE_LINE_COMMENT: '--' ~('\r' | '\n')* NEWLINE_EOF                 -> channel(HIDDEN);
+MULTI_LINE_COMMENT:  '/*' .*? '*/'                                    -> channel(HIDDEN);
+// https://docs.oracle.com/cd/E11882_01/server.112/e16604/ch_twelve034.htm#SQPUG054
+REMARK_COMMENT:  (REM  | {IsNewlineAtPos(-4)}? REMARK) (' ' ~('\r' | '\n')*)? NEWLINE_EOF -> channel(HIDDEN);
+
+// https://docs.oracle.com/cd/E11882_01/server.112/e16604/ch_twelve032.htm#SQPUG052
+PROMPT_MESSAGE:      'PRO' {IsNewlineAtPos(-4)}? 'MPT'? (' ' ~('\r' | '\n')*)? NEWLINE_EOF;
+
+// TODO: should starts with newline
+START_CMD
+    //: 'STA' 'RT'? SPACE ~('\r' | '\n')* NEWLINE_EOF
+    // https://docs.oracle.com/cd/B19306_01/server.102/b14357/ch12002.htm
+    // https://docs.oracle.com/cd/B19306_01/server.102/b14357/ch12003.htm
+    : '@' {IsNewlineAtPos(-2)}? '@'? ~('\r' | '\n')* NEWLINE_EOF
+    ;
+
+REGULAR_ID: SIMPLE_LETTER (SIMPLE_LETTER | '$' | '_' | '#' | [0-9])* | IdentifierStart IdentifierPart*;
+
+SPACES: [ \t\r\n]+ -> channel(HIDDEN);
+
+// Fragment rules
+
+fragment NEWLINE_EOF    : NEWLINE | EOF;
+fragment QUESTION_MARK  : '?';
+fragment SIMPLE_LETTER  : [A-Z];
+fragment FLOAT_FRAGMENT : UNSIGNED_INTEGER* '.'? UNSIGNED_INTEGER+;
+fragment NEWLINE        : '\r'? '\n';
+fragment SPACE          : [ \t];
+
+fragment IdentifierStart
+	: [\u0024]
+	| [\u0041-\u005A]
+	| [\u005F]
+	| [\u0061-\u007A]
+	| [\u00A2-\u00A5]
+	| [\u00AA]
+	| [\u00B5]
+	| [\u00BA]
+	| [\u00C0-\u00D6]
+	| [\u00D8-\u00F6]
+	| [\u00F8-\u02C1]
+	| [\u02C6-\u02D1]
+	| [\u02E0-\u02E4]
+	| [\u02EC]
+	| [\u02EE]
+	| [\u0370-\u0374]
+	| [\u0376-\u0377]
+	| [\u037A-\u037D]
+	| [\u037F]
+	| [\u0386]
+	| [\u0388-\u038A]
+	| [\u038C]
+	| [\u038E-\u03A1]
+	| [\u03A3-\u03F5]
+	| [\u03F7-\u0481]
+	| [\u048A-\u052F]
+	| [\u0531-\u0556]
+	| [\u0559]
+	| [\u0561-\u0587]
+	| [\u058F]
+	| [\u05D0-\u05EA]
+	| [\u05F0-\u05F2]
+	| [\u060B]
+	| [\u0620-\u064A]
+	| [\u066E-\u066F]
+	| [\u0671-\u06D3]
+	| [\u06D5]
+	| [\u06E5-\u06E6]
+	| [\u06EE-\u06EF]
+	| [\u06FA-\u06FC]
+	| [\u06FF]
+	| [\u0710]
+	| [\u0712-\u072F]
+	| [\u074D-\u07A5]
+	| [\u07B1]
+	| [\u07CA-\u07EA]
+	| [\u07F4-\u07F5]
+	| [\u07FA]
+	| [\u0800-\u0815]
+	| [\u081A]
+	| [\u0824]
+	| [\u0828]
+	| [\u0840-\u0858]
+	| [\u0860-\u086A]
+	| [\u08A0-\u08B4]
+	| [\u08B6-\u08BD]
+	| [\u0904-\u0939]
+	| [\u093D]
+	| [\u0950]
+	| [\u0958-\u0961]
+	| [\u0971-\u0980]
+	| [\u0985-\u098C]
+	| [\u098F-\u0990]
+	| [\u0993-\u09A8]
+	| [\u09AA-\u09B0]
+	| [\u09B2]
+	| [\u09B6-\u09B9]
+	| [\u09BD]
+	| [\u09CE]
+	| [\u09DC-\u09DD]
+	| [\u09DF-\u09E1]
+	| [\u09F0-\u09F3]
+	| [\u09FB-\u09FC]
+	| [\u0A05-\u0A0A]
+	| [\u0A0F-\u0A10]
+	| [\u0A13-\u0A28]
+	| [\u0A2A-\u0A30]
+	| [\u0A32-\u0A33]
+	| [\u0A35-\u0A36]
+	| [\u0A38-\u0A39]
+	| [\u0A59-\u0A5C]
+	| [\u0A5E]
+	| [\u0A72-\u0A74]
+	| [\u0A85-\u0A8D]
+	| [\u0A8F-\u0A91]
+	| [\u0A93-\u0AA8]
+	| [\u0AAA-\u0AB0]
+	| [\u0AB2-\u0AB3]
+	| [\u0AB5-\u0AB9]
+	| [\u0ABD]
+	| [\u0AD0]
+	| [\u0AE0-\u0AE1]
+	| [\u0AF1]
+	| [\u0AF9]
+	| [\u0B05-\u0B0C]
+	| [\u0B0F-\u0B10]
+	| [\u0B13-\u0B28]
+	| [\u0B2A-\u0B30]
+	| [\u0B32-\u0B33]
+	| [\u0B35-\u0B39]
+	| [\u0B3D]
+	| [\u0B5C-\u0B5D]
+	| [\u0B5F-\u0B61]
+	| [\u0B71]
+	| [\u0B83]
+	| [\u0B85-\u0B8A]
+	| [\u0B8E-\u0B90]
+	| [\u0B92-\u0B95]
+	| [\u0B99-\u0B9A]
+	| [\u0B9C]
+	| [\u0B9E-\u0B9F]
+	| [\u0BA3-\u0BA4]
+	| [\u0BA8-\u0BAA]
+	| [\u0BAE-\u0BB9]
+	| [\u0BD0]
+	| [\u0BF9]
+	| [\u0C05-\u0C0C]
+	| [\u0C0E-\u0C10]
+	| [\u0C12-\u0C28]
+	| [\u0C2A-\u0C39]
+	| [\u0C3D]
+	| [\u0C58-\u0C5A]
+	| [\u0C60-\u0C61]
+	| [\u0C80]
+	| [\u0C85-\u0C8C]
+	| [\u0C8E-\u0C90]
+	| [\u0C92-\u0CA8]
+	| [\u0CAA-\u0CB3]
+	| [\u0CB5-\u0CB9]
+	| [\u0CBD]
+	| [\u0CDE]
+	| [\u0CE0-\u0CE1]
+	| [\u0CF1-\u0CF2]
+	| [\u0D05-\u0D0C]
+	| [\u0D0E-\u0D10]
+	| [\u0D12-\u0D3A]
+	| [\u0D3D]
+	| [\u0D4E]
+	| [\u0D54-\u0D56]
+	| [\u0D5F-\u0D61]
+	| [\u0D7A-\u0D7F]
+	| [\u0D85-\u0D96]
+	| [\u0D9A-\u0DB1]
+	| [\u0DB3-\u0DBB]
+	| [\u0DBD]
+	| [\u0DC0-\u0DC6]
+	| [\u0E01-\u0E30]
+	| [\u0E32-\u0E33]
+	| [\u0E3F-\u0E46]
+	| [\u0E81-\u0E82]
+	| [\u0E84]
+	| [\u0E87-\u0E88]
+	| [\u0E8A]
+	| [\u0E8D]
+	| [\u0E94-\u0E97]
+	| [\u0E99-\u0E9F]
+	| [\u0EA1-\u0EA3]
+	| [\u0EA5]
+	| [\u0EA7]
+	| [\u0EAA-\u0EAB]
+	| [\u0EAD-\u0EB0]
+	| [\u0EB2-\u0EB3]
+	| [\u0EBD]
+	| [\u0EC0-\u0EC4]
+	| [\u0EC6]
+	| [\u0EDC-\u0EDF]
+	| [\u0F00]
+	| [\u0F40-\u0F47]
+	| [\u0F49-\u0F6C]
+	| [\u0F88-\u0F8C]
+	| [\u1000-\u102A]
+	| [\u103F]
+	| [\u1050-\u1055]
+	| [\u105A-\u105D]
+	| [\u1061]
+	| [\u1065-\u1066]
+	| [\u106E-\u1070]
+	| [\u1075-\u1081]
+	| [\u108E]
+	| [\u10A0-\u10C5]
+	| [\u10C7]
+	| [\u10CD]
+	| [\u10D0-\u10FA]
+	| [\u10FC-\u1248]
+	| [\u124A-\u124D]
+	| [\u1250-\u1256]
+	| [\u1258]
+	| [\u125A-\u125D]
+	| [\u1260-\u1288]
+	| [\u128A-\u128D]
+	| [\u1290-\u12B0]
+	| [\u12B2-\u12B5]
+	| [\u12B8-\u12BE]
+	| [\u12C0]
+	| [\u12C2-\u12C5]
+	| [\u12C8-\u12D6]
+	| [\u12D8-\u1310]
+	| [\u1312-\u1315]
+	| [\u1318-\u135A]
+	| [\u1380-\u138F]
+	| [\u13A0-\u13F5]
+	| [\u13F8-\u13FD]
+	| [\u1401-\u166C]
+	| [\u166F-\u167F]
+	| [\u1681-\u169A]
+	| [\u16A0-\u16EA]
+	| [\u16EE-\u16F8]
+	| [\u1700-\u170C]
+	| [\u170E-\u1711]
+	| [\u1720-\u1731]
+	| [\u1740-\u1751]
+	| [\u1760-\u176C]
+	| [\u176E-\u1770]
+	| [\u1780-\u17B3]
+	| [\u17D7]
+	| [\u17DB-\u17DC]
+	| [\u1820-\u1877]
+	| [\u1880-\u1884]
+	| [\u1887-\u18A8]
+	| [\u18AA]
+	| [\u18B0-\u18F5]
+	| [\u1900-\u191E]
+	| [\u1950-\u196D]
+	| [\u1970-\u1974]
+	| [\u1980-\u19AB]
+	| [\u19B0-\u19C9]
+	| [\u1A00-\u1A16]
+	| [\u1A20-\u1A54]
+	| [\u1AA7]
+	| [\u1B05-\u1B33]
+	| [\u1B45-\u1B4B]
+	| [\u1B83-\u1BA0]
+	| [\u1BAE-\u1BAF]
+	| [\u1BBA-\u1BE5]
+	| [\u1C00-\u1C23]
+	| [\u1C4D-\u1C4F]
+	| [\u1C5A-\u1C7D]
+	| [\u1C80-\u1C88]
+	| [\u1CE9-\u1CEC]
+	| [\u1CEE-\u1CF1]
+	| [\u1CF5-\u1CF6]
+	| [\u1D00-\u1DBF]
+	| [\u1E00-\u1F15]
+	| [\u1F18-\u1F1D]
+	| [\u1F20-\u1F45]
+	| [\u1F48-\u1F4D]
+	| [\u1F50-\u1F57]
+	| [\u1F59]
+	| [\u1F5B]
+	| [\u1F5D]
+	| [\u1F5F-\u1F7D]
+	| [\u1F80-\u1FB4]
+	| [\u1FB6-\u1FBC]
+	| [\u1FBE]
+	| [\u1FC2-\u1FC4]
+	| [\u1FC6-\u1FCC]
+	| [\u1FD0-\u1FD3]
+	| [\u1FD6-\u1FDB]
+	| [\u1FE0-\u1FEC]
+	| [\u1FF2-\u1FF4]
+	| [\u1FF6-\u1FFC]
+	| [\u203F-\u2040]
+	| [\u2054]
+	| [\u2071]
+	| [\u207F]
+	| [\u2090-\u209C]
+	| [\u20A0-\u20BF]
+	| [\u2102]
+	| [\u2107]
+	| [\u210A-\u2113]
+	| [\u2115]
+	| [\u2119-\u211D]
+	| [\u2124]
+	| [\u2126]
+	| [\u2128]
+	| [\u212A-\u212D]
+	| [\u212F-\u2139]
+	| [\u213C-\u213F]
+	| [\u2145-\u2149]
+	| [\u214E]
+	| [\u2160-\u2188]
+	| [\u2C00-\u2C2E]
+	| [\u2C30-\u2C5E]
+	| [\u2C60-\u2CE4]
+	| [\u2CEB-\u2CEE]
+	| [\u2CF2-\u2CF3]
+	| [\u2D00-\u2D25]
+	| [\u2D27]
+	| [\u2D2D]
+	| [\u2D30-\u2D67]
+	| [\u2D6F]
+	| [\u2D80-\u2D96]
+	| [\u2DA0-\u2DA6]
+	| [\u2DA8-\u2DAE]
+	| [\u2DB0-\u2DB6]
+	| [\u2DB8-\u2DBE]
+	| [\u2DC0-\u2DC6]
+	| [\u2DC8-\u2DCE]
+	| [\u2DD0-\u2DD6]
+	| [\u2DD8-\u2DDE]
+	| [\u2E2F]
+	| [\u3005-\u3007]       //中文〇
+	| [\u3021-\u3029]
+	| [\u3031-\u3035]
+	| [\u3038-\u303C]
+	| [\u3041-\u3096]
+	| [\u309D-\u309F]
+	| [\u30A1-\u30FA]
+	| [\u30FC-\u30FF]
+	| [\u3105-\u312E]       //汉语注音
+	| [\u3131-\u318E]
+	| [\u31A0-\u31BA]       //注音扩展
+	| [\u31F0-\u31FF]
+	| [\u3400-\u4DB5]       //中文扩展A
+	| [\u4E00-\u9FEA]       //基本汉字，补充
+	| [\uA000-\uA48C]
+	| [\uA4D0-\uA4FD]
+	| [\uA500-\uA60C]
+	| [\uA610-\uA61F]
+	| [\uA62A-\uA62B]
+	| [\uA640-\uA66E]
+	| [\uA67F-\uA69D]
+	| [\uA6A0-\uA6EF]
+	| [\uA717-\uA71F]
+	| [\uA722-\uA788]
+	| [\uA78B-\uA7AE]
+	| [\uA7B0-\uA7B7]
+	| [\uA7F7-\uA801]
+	| [\uA803-\uA805]
+	| [\uA807-\uA80A]
+	| [\uA80C-\uA822]
+	| [\uA838]
+	| [\uA840-\uA873]
+	| [\uA882-\uA8B3]
+	| [\uA8F2-\uA8F7]
+	| [\uA8FB]
+	| [\uA8FD]
+	| [\uA90A-\uA925]
+	| [\uA930-\uA946]
+	| [\uA960-\uA97C]
+	| [\uA984-\uA9B2]
+	| [\uA9CF]
+	| [\uA9E0-\uA9E4]
+	| [\uA9E6-\uA9EF]
+	| [\uA9FA-\uA9FE]
+	| [\uAA00-\uAA28]
+	| [\uAA40-\uAA42]
+	| [\uAA44-\uAA4B]
+	| [\uAA60-\uAA76]
+	| [\uAA7A]
+	| [\uAA7E-\uAAAF]
+	| [\uAAB1]
+	| [\uAAB5-\uAAB6]
+	| [\uAAB9-\uAABD]
+	| [\uAAC0]
+	| [\uAAC2]
+	| [\uAADB-\uAADD]
+	| [\uAAE0-\uAAEA]
+	| [\uAAF2-\uAAF4]
+	| [\uAB01-\uAB06]
+	| [\uAB09-\uAB0E]
+	| [\uAB11-\uAB16]
+	| [\uAB20-\uAB26]
+	| [\uAB28-\uAB2E]
+	| [\uAB30-\uAB5A]
+	| [\uAB5C-\uAB65]
+	| [\uAB70-\uABE2]
+	| [\uAC00-\uD7A3]
+	| [\uD7B0-\uD7C6]
+	| [\uD7CB-\uD7FB]
+	| [\uF900-\uFA6D]       //兼容汉字
+	| [\uFA70-\uFAD9]
+	| [\uFB00-\uFB06]
+	| [\uFB13-\uFB17]
+	| [\uFB1D]
+	| [\uFB1F-\uFB28]
+	| [\uFB2A-\uFB36]
+	| [\uFB38-\uFB3C]
+	| [\uFB3E]
+	| [\uFB40-\uFB41]
+	| [\uFB43-\uFB44]
+	| [\uFB46-\uFBB1]
+	| [\uFBD3-\uFD3D]
+	| [\uFD50-\uFD8F]
+	| [\uFD92-\uFDC7]
+	| [\uFDF0-\uFDFC]
+	| [\uFE33-\uFE34]
+	| [\uFE4D-\uFE4F]
+	| [\uFE69]
+	| [\uFE70-\uFE74]
+	| [\uFE76-\uFEFC]
+	| [\uFF04]
+	| [\uFF21-\uFF3A]
+	| [\uFF3F]
+	| [\uFF41-\uFF5A]
+	| [\uFF66-\uFFBE]
+	| [\uFFC2-\uFFC7]
+	| [\uFFCA-\uFFCF]
+	| [\uFFD2-\uFFD7]
+	| [\uFFDA-\uFFDC]
+	| [\uFFE0-\uFFE1]
+	| [\uFFE5-\uFFE6]
+	;
+
+fragment IdentifierPart
+	: IdentifierStart
+	| [\u0030-\u0039]
+	| [\u007F-\u009F]
+	| [\u00AD]
+	| [\u0300-\u036F]
+	| [\u0483-\u0487]
+	| [\u0591-\u05BD]
+	| [\u05BF]
+	| [\u05C1-\u05C2]
+	| [\u05C4-\u05C5]
+	| [\u05C7]
+	| [\u0600-\u0605]
+	| [\u0610-\u061A]
+	| [\u061C]
+	| [\u064B-\u0669]
+	| [\u0670]
+	| [\u06D6-\u06DD]
+	| [\u06DF-\u06E4]
+	| [\u06E7-\u06E8]
+	| [\u06EA-\u06ED]
+	| [\u06F0-\u06F9]
+	| [\u070F]
+	| [\u0711]
+	| [\u0730-\u074A]
+	| [\u07A6-\u07B0]
+	| [\u07C0-\u07C9]
+	| [\u07EB-\u07F3]
+	| [\u0816-\u0819]
+	| [\u081B-\u0823]
+	| [\u0825-\u0827]
+	| [\u0829-\u082D]
+	| [\u0859-\u085B]
+	| [\u08D4-\u0903]
+	| [\u093A-\u093C]
+	| [\u093E-\u094F]
+	| [\u0951-\u0957]
+	| [\u0962-\u0963]
+	| [\u0966-\u096F]
+	| [\u0981-\u0983]
+	| [\u09BC]
+	| [\u09BE-\u09C4]
+	| [\u09C7-\u09C8]
+	| [\u09CB-\u09CD]
+	| [\u09D7]
+	| [\u09E2-\u09E3]
+	| [\u09E6-\u09EF]
+	| [\u0A01-\u0A03]
+	| [\u0A3C]
+	| [\u0A3E-\u0A42]
+	| [\u0A47-\u0A48]
+	| [\u0A4B-\u0A4D]
+	| [\u0A51]
+	| [\u0A66-\u0A71]
+	| [\u0A75]
+	| [\u0A81-\u0A83]
+	| [\u0ABC]
+	| [\u0ABE-\u0AC5]
+	| [\u0AC7-\u0AC9]
+	| [\u0ACB-\u0ACD]
+	| [\u0AE2-\u0AE3]
+	| [\u0AE6-\u0AEF]
+	| [\u0AFA-\u0AFF]
+	| [\u0B01-\u0B03]
+	| [\u0B3C]
+	| [\u0B3E-\u0B44]
+	| [\u0B47-\u0B48]
+	| [\u0B4B-\u0B4D]
+	| [\u0B56-\u0B57]
+	| [\u0B62-\u0B63]
+	| [\u0B66-\u0B6F]
+	| [\u0B82]
+	| [\u0BBE-\u0BC2]
+	| [\u0BC6-\u0BC8]
+	| [\u0BCA-\u0BCD]
+	| [\u0BD7]
+	| [\u0BE6-\u0BEF]
+	| [\u0C00-\u0C03]
+	| [\u0C3E-\u0C44]
+	| [\u0C46-\u0C48]
+	| [\u0C4A-\u0C4D]
+	| [\u0C55-\u0C56]
+	| [\u0C62-\u0C63]
+	| [\u0C66-\u0C6F]
+	| [\u0C81-\u0C83]
+	| [\u0CBC]
+	| [\u0CBE-\u0CC4]
+	| [\u0CC6-\u0CC8]
+	| [\u0CCA-\u0CCD]
+	| [\u0CD5-\u0CD6]
+	| [\u0CE2-\u0CE3]
+	| [\u0CE6-\u0CEF]
+	| [\u0D00-\u0D03]
+	| [\u0D3B-\u0D3C]
+	| [\u0D3E-\u0D44]
+	| [\u0D46-\u0D48]
+	| [\u0D4A-\u0D4D]
+	| [\u0D57]
+	| [\u0D62-\u0D63]
+	| [\u0D66-\u0D6F]
+	| [\u0D82-\u0D83]
+	| [\u0DCA]
+	| [\u0DCF-\u0DD4]
+	| [\u0DD6]
+	| [\u0DD8-\u0DDF]
+	| [\u0DE6-\u0DEF]
+	| [\u0DF2-\u0DF3]
+	| [\u0E31]
+	| [\u0E34-\u0E3A]
+	| [\u0E47-\u0E4E]
+	| [\u0E50-\u0E59]
+	| [\u0EB1]
+	| [\u0EB4-\u0EB9]
+	| [\u0EBB-\u0EBC]
+	| [\u0EC8-\u0ECD]
+	| [\u0ED0-\u0ED9]
+	| [\u0F18-\u0F19]
+	| [\u0F20-\u0F29]
+	| [\u0F35]
+	| [\u0F37]
+	| [\u0F39]
+	| [\u0F3E-\u0F3F]
+	| [\u0F71-\u0F84]
+	| [\u0F86-\u0F87]
+	| [\u0F8D-\u0F97]
+	| [\u0F99-\u0FBC]
+	| [\u0FC6]
+	| [\u102B-\u103E]
+	| [\u1040-\u1049]
+	| [\u1056-\u1059]
+	| [\u105E-\u1060]
+	| [\u1062-\u1064]
+	| [\u1067-\u106D]
+	| [\u1071-\u1074]
+	| [\u1082-\u108D]
+	| [\u108F-\u109D]
+	| [\u135D-\u135F]
+	| [\u1712-\u1714]
+	| [\u1732-\u1734]
+	| [\u1752-\u1753]
+	| [\u1772-\u1773]
+	| [\u17B4-\u17D3]
+	| [\u17DD]
+	| [\u17E0-\u17E9]
+	| [\u180B-\u180E]
+	| [\u1810-\u1819]
+	| [\u1885-\u1886]
+	| [\u18A9]
+	| [\u1920-\u192B]
+	| [\u1930-\u193B]
+	| [\u1946-\u194F]
+	| [\u19D0-\u19D9]
+	| [\u1A17-\u1A1B]
+	| [\u1A55-\u1A5E]
+	| [\u1A60-\u1A7C]
+	| [\u1A7F-\u1A89]
+	| [\u1A90-\u1A99]
+	| [\u1AB0-\u1ABD]
+	| [\u1B00-\u1B04]
+	| [\u1B34-\u1B44]
+	| [\u1B50-\u1B59]
+	| [\u1B6B-\u1B73]
+	| [\u1B80-\u1B82]
+	| [\u1BA1-\u1BAD]
+	| [\u1BB0-\u1BB9]
+	| [\u1BE6-\u1BF3]
+	| [\u1C24-\u1C37]
+	| [\u1C40-\u1C49]
+	| [\u1C50-\u1C59]
+	| [\u1CD0-\u1CD2]
+	| [\u1CD4-\u1CE8]
+	| [\u1CED]
+	| [\u1CF2-\u1CF4]
+	| [\u1CF7-\u1CF9]
+	| [\u1DC0-\u1DF9]
+	| [\u1DFB-\u1DFF]
+	| [\u200B-\u200F]
+	| [\u202A-\u202E]
+	| [\u2060-\u2064]
+	| [\u2066-\u206F]
+	| [\u20D0-\u20DC]
+	| [\u20E1]
+	| [\u20E5-\u20F0]
+	| [\u2CEF-\u2CF1]
+	| [\u2D7F]
+	| [\u2DE0-\u2DFF]
+	| [\u302A-\u302F]
+	| [\u3099-\u309A]
+	| [\uA620-\uA629]
+	| [\uA66F]
+	| [\uA674-\uA67D]
+	| [\uA69E-\uA69F]
+	| [\uA6F0-\uA6F1]
+	| [\uA802]
+	| [\uA806]
+	| [\uA80B]
+	| [\uA823-\uA827]
+	| [\uA880-\uA881]
+	| [\uA8B4-\uA8C5]
+	| [\uA8D0-\uA8D9]
+	| [\uA8E0-\uA8F1]
+	| [\uA900-\uA909]
+	| [\uA926-\uA92D]
+	| [\uA947-\uA953]
+	| [\uA980-\uA983]
+	| [\uA9B3-\uA9C0]
+	| [\uA9D0-\uA9D9]
+	| [\uA9E5]
+	| [\uA9F0-\uA9F9]
+	| [\uAA29-\uAA36]
+	| [\uAA43]
+	| [\uAA4C-\uAA4D]
+	| [\uAA50-\uAA59]
+	| [\uAA7B-\uAA7D]
+	| [\uAAB0]
+	| [\uAAB2-\uAAB4]
+	| [\uAAB7-\uAAB8]
+	| [\uAABE-\uAABF]
+	| [\uAAC1]
+	| [\uAAEB-\uAAEF]
+	| [\uAAF5-\uAAF6]
+	| [\uABE3-\uABEA]
+	| [\uABEC-\uABED]
+	| [\uABF0-\uABF9]
+	| [\uFB1E]
+	| [\uFE00-\uFE0F]
+	| [\uFE20-\uFE2F]
+	| [\uFEFF]
+	| [\uFF10-\uFF19]
+	| [\uFFF9-\uFFFB]
+	;

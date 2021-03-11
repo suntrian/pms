@@ -1,1 +1,0 @@
-package org.sunt.sqlanalysis.grammar.tsql;
