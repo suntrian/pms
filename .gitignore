@@ -10,6 +10,7 @@
 *.nar
 *.ear
 *.zip
+!src/test/resources/**/*.zip
 *.tar.gz
 *.rar
 
