@@ -1,15 +1,12 @@
-package org.sunt.intelquery.hanlp
+package org.sunt.intelquery.tokenizer.hanlp
 
 import com.hankcs.hanlp.HanLP
 import com.hankcs.hanlp.corpus.tag.Nature
 import com.hankcs.hanlp.dictionary.CustomDictionary
-import com.hankcs.hanlp.model.crf.CRFLexicalAnalyzer
 import com.hankcs.hanlp.seg.Dijkstra.DijkstraSegment
 import com.hankcs.hanlp.seg.NShort.NShortSegment
-import com.hankcs.hanlp.tokenizer.NLPTokenizer
 import com.hankcs.hanlp.tokenizer.SpeedTokenizer
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 

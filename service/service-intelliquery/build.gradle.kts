@@ -9,5 +9,5 @@ dependencies {
 
     implementation(project(":module:module-query"))
     testImplementation("com.hankcs:hanlp:portable-1.8.0")
-    
+    testImplementation("com.janeluo:ikanalyzer:2012_u6")
 }
