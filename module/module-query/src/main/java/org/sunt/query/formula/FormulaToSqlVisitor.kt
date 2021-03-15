@@ -61,7 +61,7 @@ class FormulaToSqlVisitor(
             //相等判断时，数据类型可不一致
         } else {
             if (!(left.dataType.isAssignableFrom(right.dataType) || right.dataType.isAssignableFrom(left.dataType))) {
-                throw ParamTypeMismatchException(right.expression, left.dataType, right.dataType)
+                throw ParamTypeMismatchException(right.origin, left.dataType, right.dataType)
             }
         }
         with(predStmt) {
@@ -122,13 +122,13 @@ class FormulaToSqlVisitor(
                 mathStmt.dataType = DataType.STRING
                 return mathStmt
             } else {
-                throw ParamTypeMismatchException(ctx.text, DataType.DECIMAL, DataType.STRING)
+                throw ParamTypeMismatchException(left.origin, DataType.DECIMAL, DataType.STRING)
             }
         } else {
             if (!left.dataType.isNumeric()) {
-                throw ParamTypeMismatchException("${left.expression}要求为数字类型")
+                throw ParamTypeMismatchException("${left.origin}要求为数字类型")
             } else if (!right.dataType.isNumeric()) {
-                throw ParamTypeMismatchException("${right.expression}要求为数字类型")
+                throw ParamTypeMismatchException("${right.origin}要求为数字类型")
             }
         }
 
@@ -434,7 +434,7 @@ class FormulaToSqlVisitor(
                 //参数匹配
                 try {
                     val score =
-                        expectArg.match(actualArg.expression, actualArg.dataType, actualArg.token, genericRealType)
+                        expectArg.match(actualArg.origin, actualArg.dataType, actualArg.token, genericRealType)
                     if (expectArg.genericType != null && genericRealType == null) {
                         genericTypeMap[expectArg.genericType!!] = actualArg.dataType
                     }

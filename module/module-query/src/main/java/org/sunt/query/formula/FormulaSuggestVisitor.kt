@@ -45,9 +45,8 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitFunctionStatement(ctx: FunctionStatementContext): StatementInfo {
-        val functionNameNode = ctx.identity().IDENTITY()
         val functionNameStmt = visitIdentity(ctx.identity())
-        val functionName = functionNameNode.text
+        val functionName = ctx.identity().text
 
         @Suppress("UNCHECKED_CAST")
         val functionDefines = (
@@ -227,7 +226,7 @@ class FormulaSuggestVisitor(
                 val expectDataType = expectArg.genericType
                     ?.let { genericTypeMap[candidate]?.get(expectArg.genericType) }
                 try {
-                    expectArg.match(paramStmt.expression, paramStmt.dataType, paramStmt.token, expectDataType)
+                    expectArg.match(paramStmt.origin, paramStmt.dataType, paramStmt.token, expectDataType)
                     if (expectArg.genericType != null && expectDataType == null) {
                         genericTypeMap.putIfAbsent(candidate, mutableMapOf())
                         genericTypeMap[candidate]!![expectArg.genericType!!] = paramStmt.dataType
@@ -334,7 +333,7 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitIdentity(ctx: IdentityContext): StatementInfo {
-        val identity = ctx.IDENTITY()
+        val identity = ctx.start
         val text = identity.text
         val functions = functionMap[text] ?: aliasFunctionNameMap[text]?.let { functionMap[it] } ?: emptyList()
         val isFuncName = functions.isNotEmpty()
@@ -351,7 +350,7 @@ class FormulaSuggestVisitor(
                     status = TokenStatus.UNKNOWN
                     comment = "期待[" + currentOptValueCandidates.joinToString(", ") + "]"
                     leftPart = identity.takeIf { isCursorToken(it) || isCursorTokenEnd(it) }
-                        ?.let { it.text.substring(0, cursor - it.symbol.startIndex) }
+                        ?.let { it.text.substring(0, cursor - it.startIndex) }
                 })
             }
             val tokenSuggestion = TokenSuggestion.ofThis(identity).apply {
@@ -360,7 +359,7 @@ class FormulaSuggestVisitor(
                 status = TokenStatus.UNKNOWN
                 comment = "未识别的内容:$text"
                 leftPart = identity.takeIf { isCursorToken(it) || isCursorTokenEnd(it) }
-                    ?.let { it.text.substring(0, cursor - it.symbol.startIndex) }
+                    ?.let { it.text.substring(0, cursor - it.startIndex) }
             }
             this.tokenSuggestions.add(tokenSuggestion)
             return StatementInfo(ctx).apply {
@@ -382,7 +381,7 @@ class FormulaSuggestVisitor(
                     status = TokenStatus.NORMAL
                     scopes = currentOptValueCandidates.map { TokenItem.RESERVED(it) }.toSet()
                     dataTypes = setOf(DataType.ANY)
-                    leftPart = text.substring(0, cursor - identity.symbol.startIndex)
+                    leftPart = text.substring(0, cursor - identity.startIndex)
                 })
             } else {
                 //光标所在节点时，推荐匹配的函数或者字段
@@ -391,7 +390,7 @@ class FormulaSuggestVisitor(
                     status = TokenStatus.NORMAL
                     scopes = setOf(TokenItem.FUNCTION(), TokenItem.COLUMN())
                     dataTypes = currentDataTypeCandidates
-                    leftPart = text.substring(0, cursor - identity.symbol.startIndex)
+                    leftPart = text.substring(0, cursor - identity.startIndex)
                 })
             }
             if (isFuncName && isCursorTokenEnd(identity)) {

@@ -299,7 +299,7 @@ abstract class AbstractFormulaVisitor(
             if (expectedType.any { it == stmt.dataType }) {
                 return true
             }
-            throw ParamTypeMismatchException(stmt.expression, expectedType[0], stmt.dataType)
+            throw ParamTypeMismatchException(stmt.origin, expectedType[0], stmt.dataType)
         }
 
         @JvmStatic
