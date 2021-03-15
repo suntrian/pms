@@ -13,4 +13,9 @@ class ParsedFormula(
     var payload:Any = Unit
     var relatedColumns = emptyList<Column>()
 
+    override fun toString(): String {
+        return "ParsedFormula(expression='$expression', formula='$formula', dataType=$dataType, formulaType=$formulaType, payload=$payload, relatedColumns=$relatedColumns)"
+    }
+
+
 }

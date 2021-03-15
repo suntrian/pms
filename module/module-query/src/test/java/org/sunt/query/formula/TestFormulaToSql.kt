@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.sunt.query.define.DataType
 import org.sunt.query.define.SqlDialect
-import org.sunt.query.formula.function.StatementInfo
 import org.sunt.query.formula.support.AllMatchColumn
 import org.sunt.query.formula.support.ExactColumn
 import org.sunt.query.formula.support.TestColumn
@@ -207,6 +206,7 @@ class TestFormulaToSql {
         val formula = "STDDEV_OVER(abcd, [], [bcde])"
         val stmt = helper.toSql(formula, SqlDialect.HIVE)
         println(stmt.expression)
+        println(stmt)
         Assertions.assertEquals("STDDEV(abcd) OVER ( ORDER BY bcde)".removeBlank(), stmt.expression.removeBlank())
 
     }
@@ -216,10 +216,12 @@ class TestFormulaToSql {
         val helper = FormulaHelper.of(AllMatchColumn(mapOf("abcd" to DataType.STRING)))
         val stmt1 = helper.toSql("GROUP_CONCAT(abcd, ',', bcde, cdef)", SqlDialect.HIVE);
         println(stmt1.expression)
+        println(stmt1)
         Assertions.assertEquals("GROUP_CONCAT(abcd, ',')", stmt1.expression)
 
         val stmt2 = helper.toSql("GROUP_CONCAT(abcd, bcde, cdef, defg)", SqlDialect.HIVE);
         println(stmt2.expression)
+        println(stmt2)
         Assertions.assertEquals("GROUP_CONCAT(abcd)", stmt2.expression)
 
     }

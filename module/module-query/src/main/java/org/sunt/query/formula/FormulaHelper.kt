@@ -3,8 +3,8 @@ package org.sunt.query.formula
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.TokenStreamRewriter
+import org.slf4j.LoggerFactory
 import org.sunt.query.define.SqlDialect
-import org.sunt.query.formula.function.StatementInfo
 import org.sunt.query.formula.parser.FormulaLexer
 import org.sunt.query.formula.parser.FormulaParser
 import org.sunt.query.formula.suggestion.FormulaSuggestion
@@ -25,7 +25,9 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
             val rewriter = TokenStreamRewriter(tokens)
             val parser = FormulaParser(tokens)
             val toSqlVisitor = FormulaToSqlVisitor(vendor, columnInterface, rewriter)
-            return toSqlVisitor.visitFormula(parser.formula())
+            val parsedFormula = toSqlVisitor.visitFormula(parser.formula())
+            log.trace("解析{} Formula: {}; 生成Sql: {}", vendor, expression, parsedFormula.formula)
+            return parsedFormula
         } finally {
             if (set) {
                 CurrentContainer.remove()
@@ -48,7 +50,9 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
             parser.removeErrorListeners()
             parser.addErrorListener(suggestVisitor)
             parser.errorHandler = SuggestErrorStrategy()
-            return suggestVisitor.visitFormula(parser.formula())
+            val formulaSuggestion = suggestVisitor.visitFormula(parser.formula())
+            log.trace("推荐{} Formula: {}; 生成tokens: {}", vendor, expression, formulaSuggestion.tokens.joinToString("") { it.text })
+            return formulaSuggestion
         } finally {
             if (set) {
                 CurrentContainer.remove()
@@ -59,6 +63,7 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
 
     companion object {
 
+        private val log = LoggerFactory.getLogger(FormulaHelper::class.java)
         private val CurrentContainer = ThreadLocal<FormulaHelper>()
 
         @JvmStatic

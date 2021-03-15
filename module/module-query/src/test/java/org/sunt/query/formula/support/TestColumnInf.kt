@@ -13,7 +13,7 @@ class AllMatchColumn(private val map: Map<String, DataType>) : ColumnInterface {
 
     override fun getColumnByName(name: String): Column? {
         println("请求字段NAME:${name}")
-        return TestColumn("", name, name, map[name] ?: DataType.STRING)
+        return TestColumn(name, name, name, map[name] ?: DataType.STRING)
     }
 
 }
@@ -35,7 +35,7 @@ class RestrictColumn(private val map: Map<String, DataType>) : ColumnInterface {
             println("未找到字段${name}")
             return null
         }
-        return TestColumn("", name, name, map[name] ?: DataType.STRING)
+        return TestColumn(name, name, name, map[name] ?: DataType.STRING)
     }
 
 }

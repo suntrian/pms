@@ -3,7 +3,6 @@ package org.sunt.query.formula
 
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
-import org.antlr.v4.runtime.TokenStreamRewriter
 import org.antlr.v4.runtime.misc.IntervalSet
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.sunt.query.define.DataType
@@ -48,7 +47,8 @@ class FormulaSuggestVisitor(
     override fun visitFunctionStatement(ctx: FunctionStatementContext): StatementInfo {
         val functionNameStmt = visitIdentity(ctx.identity())
         val functionName = ctx.identity().text
-
+        this.formulaTokens.add(FormulaToken.from(ctx.L_PARENTHESES()))
+        this.formulaTokens.add(FormulaToken.from(ctx.R_PARENTHESES()))
         @Suppress("UNCHECKED_CAST")
         val functionDefines = (
                 if (functionNameStmt.token.scope == TokenScope.FUNCTION && functionNameStmt.payload is List<*>)
@@ -143,6 +143,7 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitFunctionParams(ctx: FunctionParamsContext): List<StatementInfo> {
+        ctx.COMMA()?.forEach{ this.formulaTokens.add(FormulaToken.from(it)) }
         var lastUnVisitedArg = ctx.functionParam().size
         val result = ArrayList<StatementInfo>(lastUnVisitedArg)
 
@@ -203,12 +204,12 @@ class FormulaSuggestVisitor(
             if (currentDataTypes.isEmpty()) {
                 //参数过多
                 this.tokenSuggestions.add(TokenSuggestion.ofThis(paramCtx).apply {
-                    status = TokenStatus.ERROR
+                    status = TokenStatus.REDUNDANT
                     comment = "多余的参数:" + paramCtx.text
                 })
                 result.add(StatementInfo(paramCtx).apply {
                     expression = paramCtx.text
-                    status = TokenStatus.ERROR
+                    status = TokenStatus.REDUNDANT
                 })
 
                 continue
@@ -325,7 +326,7 @@ class FormulaSuggestVisitor(
         } else if (ctx.COMMA(lastUnVisitedArg - 1) != null) {
             //多余的,
             this.tokenSuggestions.add(TokenSuggestion.ofThis(ctx.COMMA(lastUnVisitedArg - 1)).apply {
-                status = TokenStatus.ERROR
+                status = TokenStatus.REDUNDANT
                 comment = "多余的,"
             })
         }
@@ -414,7 +415,6 @@ class FormulaSuggestVisitor(
                     status = TokenStatus.NORMAL
                     dataType = column!!.dataType
                     payload = column!!
-                    this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(identity).apply { scope = TokenItem.COLUMN() })
                 }
                 isReserved -> {
                     expression = text.toUpperCase()
@@ -452,7 +452,6 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitMathExpression(ctx: MathExpressionContext): StatementInfo {
-        this.formulaTokens.add(FormulaToken.from(ctx.op))
         return visitOperatorExpression(ctx, ctx.op, ctx.statement(0), ctx.statement(1))
     }
 
@@ -522,10 +521,16 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitInPredicate(ctx: InPredicateContext): StatementInfo {
+        this.formulaTokens.add(FormulaToken.from(ctx.NOT()))
+        this.formulaTokens.add(FormulaToken.from(ctx.IN()))
+        this.formulaTokens.add(FormulaToken.from(ctx.L_PARENTHESES()))
+        this.formulaTokens.add(FormulaToken.from(ctx.R_PARENTHESES()))
         TODO("Not yet implemented")
     }
 
     override fun visitParenthesesExpression(ctx: ParenthesesExpressionContext): StatementInfo {
+        this.formulaTokens.add(FormulaToken.from(ctx.L_PARENTHESES()))
+        this.formulaTokens.add(FormulaToken.from(ctx.R_PARENTHESES()))
         var expStatus = TokenStatus.NORMAL
         val stmt = if (ctx.statement()?.isValid() == true) visitStatement(ctx.statement())
         else {
@@ -580,6 +585,7 @@ class FormulaSuggestVisitor(
 
     override fun visitSquareExpression(ctx: SquareExpressionContext): StatementInfo {
         this.formulaTokens.add(FormulaToken.from(ctx.L_SQUARE()))
+        this.formulaTokens.add(FormulaToken.from(ctx.R_SQUARE()))
         val lastToken = if (ctx.statements()?.isEmpty != false) {
             if (isCursorTokenEnd(ctx.L_SQUARE())) {
                 this.tokenSuggestions.add(TokenSuggestion.ofNext(ctx.L_SQUARE()).apply {
@@ -611,6 +617,7 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitIfnullExpression(ctx: IfnullExpressionContext): StatementInfo {
+        this.formulaTokens.add(FormulaToken.from(ctx.IFNULL()))
         if (ctx.statement(1)?.isValid() != true) {
             tokenSuggestions.add(TokenSuggestion.ofNext(ctx.IFNULL()).apply {
                 status = TokenStatus.EXPECTED
@@ -626,6 +633,47 @@ class FormulaSuggestVisitor(
             expression = left.expression + ", " + (right?.expression ?: "")
             if (ctx.parent !is IfnullExpressionContext) {
                 expression = "COALESCE($expression)"
+            }
+        }
+    }
+
+    override fun visitStatements(ctx: StatementsContext): List<StatementInfo> {
+        ctx.COMMA()?.forEach { this.formulaTokens.add(FormulaToken.from(it)) }
+        return super.visitStatements(ctx)
+    }
+
+    override fun visitColumnId(ctx: ColumnIdContext): StatementInfo {
+        return super.visitColumnId(ctx).apply {
+            if (this.payload is Column) {
+                this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx))
+            } else {
+                this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx).apply {
+                    status = TokenStatus.UNKNOWN
+                })
+            }
+        }
+    }
+
+    override fun visitColumnName(ctx: ColumnNameContext): StatementInfo {
+        return super.visitColumnName(ctx).apply {
+            if (this.payload is Column) {
+                this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx, (this.payload as Column).id))
+            } else if (status.privilege >= TokenStatus.EXPECTED.privilege){
+                this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx).apply {
+                    status = TokenStatus.UNKNOWN
+                })
+            }
+        }
+    }
+
+    override fun visitColumnIdentity(ctx: ColumnIdentityContext): StatementInfo {
+        return super.visitColumnIdentity(ctx).apply {
+            if (this.payload is Column) {
+                this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx, (this.payload as Column).id))
+            } else if (status.privilege >= TokenStatus.EXPECTED.privilege){
+                this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx).apply {
+                    status = TokenStatus.UNKNOWN
+                })
             }
         }
     }

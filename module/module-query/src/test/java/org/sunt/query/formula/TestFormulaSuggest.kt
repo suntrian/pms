@@ -1,11 +1,10 @@
-package org.sunt.formula
+package org.sunt.query.formula
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.sunt.query.define.DataType
 import org.sunt.query.define.SqlDialect
-import org.sunt.query.formula.FormulaHelper
 import org.sunt.query.formula.function.TokenItem
 import org.sunt.query.formula.function.TokenStatus
 import org.sunt.query.formula.suggestion.FormulaSuggestion
@@ -82,7 +81,7 @@ class TestFormulaSuggest {
             .suggest("CEIL(abcd, )", "CEIL(abcd,".length, SqlDialect.HIVE)
         log.info("{}", suggestion11)
         Assertions.assertEquals(1, suggestion11.suggestions.size)
-        Assertions.assertTrue(suggestion11.suggestions[0].status == TokenStatus.ERROR)
+        Assertions.assertTrue(suggestion11.suggestions[0].status == TokenStatus.REDUNDANT)
         Assertions.assertTrue(suggestion11.suggestions[0].comment == "多余的,")
 
         val suggestion12 = FormulaHelper.of(RestrictColumn(mapOf("abcd" to DataType.STRING)))
@@ -331,19 +330,19 @@ class TestFormulaSuggest {
             .suggest("IFNULL(abcd, cdef, 0", "IFNULL(abcd, c".length, SqlDialect.HIVE)
         log.info("{}", suggestion)
         Assertions.assertEquals(2, suggestion.suggestions.size)
-        Assertions.assertTrue(suggestion.suggestions[0].status == TokenStatus.ERROR)
+        Assertions.assertTrue(suggestion.suggestions[0].status == TokenStatus.REDUNDANT)
 
         suggestion = FormulaHelper.of(AllMatchColumn(emptyMap()))
             .suggest("IFNULL(abcd, cdef, 0, '1234')", "IFNULL(abcd, cdef, 0".length, SqlDialect.HIVE)
         log.info("{}", suggestion)
         Assertions.assertEquals(2, suggestion.suggestions.size)
-        Assertions.assertTrue(suggestion.suggestions.all { it.status == TokenStatus.ERROR })
+        Assertions.assertTrue(suggestion.suggestions.all { it.status == TokenStatus.REDUNDANT })
 
         suggestion = FormulaHelper.of(AllMatchColumn(emptyMap()))
             .suggest("CURRENT_DATETIME(abcd, cdef, 0)", "CURRENT_DATETIME(abcd, c".length, SqlDialect.HIVE)
         log.info("{}", suggestion)
         Assertions.assertEquals(3, suggestion.suggestions.size)
-        Assertions.assertTrue(suggestion.suggestions.all { it.status == TokenStatus.ERROR })
+        Assertions.assertTrue(suggestion.suggestions.all { it.status == TokenStatus.REDUNDANT })
 
 
     }

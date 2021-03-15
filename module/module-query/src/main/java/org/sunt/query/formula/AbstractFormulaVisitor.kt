@@ -129,7 +129,7 @@ abstract class AbstractFormulaVisitor(
         return when (val columnCtx = ctx.column()) {
             is ColumnIdContext -> visitColumnId(columnCtx)
             is ColumnNameContext -> visitColumnName(columnCtx)
-            is ColumnIdentityContext -> visitIdentity(columnCtx.identity())
+            is ColumnIdentityContext -> visitColumnIdentity(columnCtx)
             else -> throw WillNeverHappenException("Not Expected Here")
         }
     }

@@ -7,7 +7,6 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.sunt.query.formula.function.TokenItem
 import org.sunt.query.formula.function.TokenStatus
 import org.sunt.query.formula.parser.FormulaParser.*
-import org.sunt.query.model.metadata.Column
 
 data class FormulaToken private constructor(
     var text: String,
@@ -29,8 +28,8 @@ data class FormulaToken private constructor(
         val ErrorNode = FormulaToken("", -1, -1, -1)
 
         @JvmStatic
-        fun from(node: TerminalNode): FormulaToken {
-            if (node is ErrorNode) {
+        fun from(node: TerminalNode?): FormulaToken {
+            if (node == null || node is ErrorNode) {
                 return ErrorNode
             }
             return from(node.symbol)

@@ -11,5 +11,7 @@ class TestColumn @JvmOverloads constructor(
     override val format: String = "",
 ) : Column {
 
-
+    override fun toString(): String {
+        return "TestColumn(id='$id', name='$name', expression='$expression', dataType=$dataType, format='$format')"
+    }
 }

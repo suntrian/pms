@@ -402,7 +402,7 @@ class FormulaToSqlVisitor(
     override fun visitColumnName(ctx: ColumnNameContext): StatementInfo {
         return super.visitColumnName(ctx).also {
             if (it.payload is Column) {
-                rewriter.replace(ctx.start.startIndex, ctx.stop.stopIndex, "#" + (it.payload as Column).id)
+                rewriter.replace(ctx.start, ctx.stop, "#" + (it.payload as Column).id)
                 this.relatedColumns.add(it.payload as Column)
             }
         }
@@ -411,7 +411,7 @@ class FormulaToSqlVisitor(
     override fun visitColumnIdentity(ctx: ColumnIdentityContext): StatementInfo {
         return super.visitColumnIdentity(ctx).also {
             if (it.payload is Column) {
-                rewriter.replace(ctx.start.startIndex, ctx.stop.stopIndex, "#" + (it.payload as Column).id)
+                rewriter.replace(ctx.start, ctx.stop, "#" + (it.payload as Column).id)
                 this.relatedColumns.add(it.payload as Column)
             }
         }
