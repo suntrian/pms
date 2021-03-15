@@ -237,7 +237,7 @@ class TestFormulaToSql {
                 )
             )
         )
-        var stmt: StatementInfo
+        var stmt: ParsedFormula
         stmt = helper.toSql("YEAR(abcd)", SqlDialect.HIVE)
         println(stmt.expression)
         Assertions.assertEquals("YEAR(abcd)", stmt.expression)

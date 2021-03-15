@@ -11,6 +11,7 @@ import org.sunt.query.formula.function.FunctionDefinition
 import org.sunt.query.formula.function.StatementInfo
 import org.sunt.query.formula.function.TokenStatus
 import org.sunt.query.formula.parser.FormulaParser.*
+import org.sunt.query.model.metadata.Column
 import org.sunt.query.model.metadata.ColumnInterface
 import java.util.*
 import kotlin.Comparator
@@ -20,14 +21,19 @@ import kotlin.collections.HashMap
 class FormulaToSqlVisitor(
     product: SqlDialect,
     columnInterface: ColumnInterface,
-    rewriter: TokenStreamRewriter
-) : AbstractFormulaVisitor(product, columnInterface, rewriter) {
+    private val rewriter: TokenStreamRewriter
+) : AbstractFormulaVisitor(product, columnInterface) {
 
-    var formulaType = FormulaType.NORMAL
-    val groupBys = mutableListOf<StatementInfo>()
+    private var formulaType = FormulaType.NORMAL
+    private val groupBys = mutableListOf<StatementInfo>()
+    private val relatedColumns = mutableListOf<Column>()
 
-    override fun visitFormula(ctx: FormulaContext): StatementInfo {
-        return visitStatement(ctx.statement())
+    override fun visitFormula(ctx: FormulaContext): ParsedFormula {
+        val stmt = visitStatement(ctx.statement())
+        return ParsedFormula(stmt.expression, rewriter.text, stmt.dataType, formulaType).also {
+            it.payload = stmt.payload
+            it.relatedColumns = relatedColumns
+        }
     }
 
     override fun visitParenthesesExpression(ctx: ParenthesesExpressionContext): StatementInfo {
@@ -383,6 +389,32 @@ class FormulaToSqlVisitor(
             return stmt;
         }
         throw java.lang.IllegalStateException("Not Expected Here")
+    }
+
+    override fun visitColumnId(ctx: ColumnIdContext): StatementInfo {
+        return super.visitColumnId(ctx).also {
+            if (it.payload is Column) {
+                this.relatedColumns.add(it.payload as Column)
+            }
+        }
+    }
+
+    override fun visitColumnName(ctx: ColumnNameContext): StatementInfo {
+        return super.visitColumnName(ctx).also {
+            if (it.payload is Column) {
+                rewriter.replace(ctx.start.startIndex, ctx.stop.stopIndex, "#" + (it.payload as Column).id)
+                this.relatedColumns.add(it.payload as Column)
+            }
+        }
+    }
+
+    override fun visitColumnIdentity(ctx: ColumnIdentityContext): StatementInfo {
+        return super.visitColumnIdentity(ctx).also {
+            if (it.payload is Column) {
+                rewriter.replace(ctx.start.startIndex, ctx.stop.stopIndex, "#" + (it.payload as Column).id)
+                this.relatedColumns.add(it.payload as Column)
+            }
+        }
     }
 
     private fun figureFunctionDefine(

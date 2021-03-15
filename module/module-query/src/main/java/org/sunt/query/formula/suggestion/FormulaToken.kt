@@ -1,14 +1,16 @@
 package org.sunt.query.formula.suggestion
 
+import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
-import org.sunt.query.formula.function.FunctionDefinition
-import org.sunt.query.formula.function.FunctionDefinitionParser
+import org.antlr.v4.runtime.tree.ErrorNode
+import org.antlr.v4.runtime.tree.TerminalNode
 import org.sunt.query.formula.function.TokenItem
 import org.sunt.query.formula.function.TokenStatus
 import org.sunt.query.formula.parser.FormulaParser.*
+import org.sunt.query.model.metadata.Column
 
-class FormulaToken private constructor(
-    val text: String,
+data class FormulaToken private constructor(
+    var text: String,
     val start: Int,
     val stop: Int,
     val index: Int
@@ -24,6 +26,16 @@ class FormulaToken private constructor(
 
     companion object {
 
+        val ErrorNode = FormulaToken("", -1, -1, -1)
+
+        @JvmStatic
+        fun from(node: TerminalNode): FormulaToken {
+            if (node is ErrorNode) {
+                return ErrorNode
+            }
+            return from(node.symbol)
+        }
+
         @JvmStatic
         fun from(token: Token): FormulaToken {
             val formulaToken = FormulaToken(token)
@@ -31,9 +43,11 @@ class FormulaToken private constructor(
             with(formulaToken) {
                 when (token.type) {
                     L_PARENTHESES, R_PARENTHESES -> scope = TokenItem.PARENTHESES(text)
+                    L_BRACE, R_BRACE -> scope = TokenItem.BRACE(text)
+                    L_SQUARE, R_SQUARE -> scope = TokenItem.SQUARE(text)
                     CASE, WHEN, THEN, ELSE, END -> scope = TokenItem.RESERVED(text)
                     COMMA -> scope = TokenItem.COMMA()
-                    GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, EQUAL, NOT_EQUAL -> scope = TokenItem.CMP_OPERATOR(text)
+                    GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, EQUAL, NOT_EQUAL, LIKE, IN, IFNULL -> scope = TokenItem.CMP_OPERATOR(text)
                     PLUS, MINUS, DIV, MUL, POWER, MOD -> scope = TokenItem.CAL_OPERATOR(text)
                     AND, OR, XOR -> scope = TokenItem.LOG_OPERATOR(text)
                     BOOL, INTEGER, FLOAT, STRING, NULL -> TokenItem.CONSTANT(text)
@@ -44,23 +58,38 @@ class FormulaToken private constructor(
                     COLUMN_NAME -> {
                         scope = TokenItem.COLUMN()
                     }
-                    IDENTITY -> {
-                        var functions: List<FunctionDefinition> = emptyList()
-                        if (FunctionDefinitionParser.loadFunctions()[text]?.also { functions = it }
-                                ?.isNotEmpty() == true) {
-                            scope = TokenItem.FUNCTION(text)
-                            comment = functions[0].description
-                        } else {
-                            scope = TokenItem.COLUMN(text)
-                        }
-                    }
                     else -> {
                         scope = TokenItem.NONE()
-                        comment = "未处理的Token类型"
+                        comment = "未知的Token类型"
                     }
                 }
             }
 
+            return formulaToken
+        }
+
+        @JvmStatic
+        fun from(ctx: ParserRuleContext, columnId:String? = null): FormulaToken {
+            val formulaToken = FormulaToken(ctx.text, ctx.start.startIndex, ctx.stop.stopIndex, ctx.start.tokenIndex)
+            with(formulaToken) {
+                when(ctx) {
+                    is ColumnIdContext-> {
+                        scope = TokenItem.COLUMN()
+                        id = ctx.COLUMN_ID().text.substring(1)
+                    }
+                    is ColumnNameContext -> {
+                        scope = TokenItem.COLUMN()
+                        id = columnId?:ctx.HINT()?.let { HintParser.parse(it.text) }?.get("id")?.toString()
+                        text = ctx.COLUMN_NAME().text+ HintParser.generateHint(columnId, ctx.COLUMN_NAME().text)
+                    }
+                    is ColumnIdentityContext -> {
+                        scope = TokenItem.COLUMN()
+                        id = columnId?:ctx.HINT()?.let { HintParser.parse(it.text) }?.get("id")?.toString()
+                        text = ctx.identity().text + HintParser.generateHint(columnId, ctx.identity().text)
+                    }
+                    else -> from(ctx.start)
+                }
+            }
             return formulaToken
         }
 

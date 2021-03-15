@@ -17,6 +17,7 @@ class TestHanLP {
         @BeforeAll
         @JvmStatic
         fun addDict() {
+            HanLP.Config.DEBUG = true
             CustomDictionary.add("自工切")
             var word = CustomDictionary.get("自工切")
             println("WORD: $word")
@@ -29,14 +30,14 @@ class TestHanLP {
 
     @ParameterizedTest(name = "{0}")
     @CsvSource(
-        "小明 最大的年纪 性别是男 工作单位",
-        """按用户性别分组 以年龄排序 to_date(生日, 'yyyy-MM-dd'）晚于10年前""",
-        "group_AVG(收入, 毕业学校, YEAR(毕业日期))",
-        "自工切切肝灶会跳舞吗？有没有一首歌会让你想起我 ",
+//        "小明 最大的年纪 性别是男 工作单位",
+//        """按用户性别分组 以年龄排序 to_date(生日, 'yyyy-MM-dd'）晚于10年前""",
+//        "group_AVG(收入, 毕业学校, YEAR(毕业日期))",
+        "自工切切肝灶朱大肠会跳舞吗？有没有一首歌会让你想起我 ",
         delimiter = '|'
     )
     fun testHanLP(sentence: String) {
-        println("SENTENCE:$sentence")
+        println("\nSENTENCE:$sentence")
         val firstCharSeq = HanLP.convertToPinyinFirstCharString(sentence, "-", true)
         println(firstCharSeq)
         val pinyin = HanLP.convertToPinyinString(sentence, "-", true)

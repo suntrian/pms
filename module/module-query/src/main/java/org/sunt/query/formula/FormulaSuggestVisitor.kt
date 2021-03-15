@@ -12,6 +12,7 @@ import org.sunt.query.exception.ParamTypeMismatchException
 import org.sunt.query.formula.function.*
 import org.sunt.query.formula.parser.FormulaParser.*
 import org.sunt.query.formula.suggestion.FormulaSuggestion
+import org.sunt.query.formula.suggestion.FormulaToken
 import org.sunt.query.formula.suggestion.TokenSuggestion
 import org.sunt.query.model.metadata.Column
 import org.sunt.query.model.metadata.ColumnInterface
@@ -27,11 +28,11 @@ private typealias GenericsMap = MutableMap<FunctionDefinition, MutableMap<String
 class FormulaSuggestVisitor(
     product: SqlDialect,
     columnInterface: ColumnInterface,
-    rewriter: TokenStreamRewriter,
     private val cursor: Int
-) : AbstractFormulaVisitor(product, columnInterface, rewriter) {
+) : AbstractFormulaVisitor(product, columnInterface) {
 
     private val tokenSuggestions: MutableList<TokenSuggestion> = mutableListOf()
+    private val formulaTokens = mutableSetOf<FormulaToken>()
 
     override fun visitFormula(ctx: FormulaContext): FormulaSuggestion {
         visitStatement(ctx.statement())
@@ -39,8 +40,8 @@ class FormulaSuggestVisitor(
             this.tokenSuggestions.addAll(this.syntaxErrors.map { suggestFromSyntaxError(it, this.cursor) })
         }
         return FormulaSuggestion().also {
-            it.expression = rewriter.text
             it.suggestions = this.tokenSuggestions
+            it.tokens = this.formulaTokens.sortedBy { tok->tok.start }
         }
     }
 
@@ -362,6 +363,7 @@ class FormulaSuggestVisitor(
                     ?.let { it.text.substring(0, cursor - it.startIndex) }
             }
             this.tokenSuggestions.add(tokenSuggestion)
+            this.formulaTokens.add(FormulaToken.from(identity).apply { status = TokenStatus.UNKNOWN })
             return StatementInfo(ctx).apply {
                 status = TokenStatus.UNKNOWN
                 dataType = DataType.ANY
@@ -372,8 +374,6 @@ class FormulaSuggestVisitor(
                 }
             }
 
-        } else if (isColName) {
-            rewriter.replace(ctx.start, ctx.stop, convertColumnExpression(column!!))
         }
         if (isCursorToken(identity) || isCursorTokenEnd(identity)) {
             if (isReserved) {
@@ -414,6 +414,7 @@ class FormulaSuggestVisitor(
                     status = TokenStatus.NORMAL
                     dataType = column!!.dataType
                     payload = column!!
+                    this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(identity).apply { scope = TokenItem.COLUMN() })
                 }
                 isReserved -> {
                     expression = text.toUpperCase()
@@ -421,6 +422,7 @@ class FormulaSuggestVisitor(
                     status = TokenStatus.NORMAL
                     dataType = DataType.NONE
                     payload = expression
+                    this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(identity).apply { scope = TokenItem.RESERVED(text) })
                 }
                 isFuncName -> {
                     expression = text
@@ -428,6 +430,7 @@ class FormulaSuggestVisitor(
                     status = TokenStatus.EXPECTED
                     dataType = functions[0].dataType
                     payload = functions
+                    this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(identity).apply { scope = TokenItem.FUNCTION() })
                 }
             }
         }
@@ -444,10 +447,12 @@ class FormulaSuggestVisitor(
                 })
             }
         }
+        this.formulaTokens.add(FormulaToken.from(ctx))
         return super.visitConstant(ctx)
     }
 
     override fun visitMathExpression(ctx: MathExpressionContext): StatementInfo {
+        this.formulaTokens.add(FormulaToken.from(ctx.op))
         return visitOperatorExpression(ctx, ctx.op, ctx.statement(0), ctx.statement(1))
     }
 
@@ -489,6 +494,7 @@ class FormulaSuggestVisitor(
         val left = recordCurrent(expectedTypesToReturnType.first, emptySet()) {
             visitStatement(leftCtx)
         }
+        this.formulaTokens.add(FormulaToken.from(op))
         val right = if (rightCtx?.isValid() == true) recordCurrent(expectedTypesToReturnType.first, emptySet()) {
             visitStatement(rightCtx)
         } else null
@@ -552,6 +558,7 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitNotPredicate(ctx: NotPredicateContext): StatementInfo {
+        this.formulaTokens.add(FormulaToken.from(ctx.NOT()))
         val pred = if (ctx.statement()?.isValid() != true) {
             this.tokenSuggestions.add(TokenSuggestion.ofNext(ctx.NOT())
                 .apply {
@@ -572,6 +579,7 @@ class FormulaSuggestVisitor(
     }
 
     override fun visitSquareExpression(ctx: SquareExpressionContext): StatementInfo {
+        this.formulaTokens.add(FormulaToken.from(ctx.L_SQUARE()))
         val lastToken = if (ctx.statements()?.isEmpty != false) {
             if (isCursorTokenEnd(ctx.L_SQUARE())) {
                 this.tokenSuggestions.add(TokenSuggestion.ofNext(ctx.L_SQUARE()).apply {

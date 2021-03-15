@@ -19,6 +19,7 @@ import org.sunt.query.formula.function.TokenStatus
 import org.sunt.query.formula.parser.FormulaBaseVisitor
 import org.sunt.query.formula.parser.FormulaParser
 import org.sunt.query.formula.parser.FormulaParser.*
+import org.sunt.query.formula.suggestion.HintParser
 import org.sunt.query.model.metadata.Column
 import org.sunt.query.model.metadata.ColumnInterface
 import java.util.*
@@ -33,7 +34,6 @@ internal fun ParserRuleContext.isValid(): Boolean = this.exception == null
 abstract class AbstractFormulaVisitor(
     protected val dialect: SqlDialect,
     protected val columnInterface: ColumnInterface,
-    protected val rewriter: TokenStreamRewriter
 ) : FormulaBaseVisitor<Any?>(), ANTLRErrorListener {
 
     protected val functionMap: Map<String, List<FunctionDefinition>> = loadFunctions(dialect)
@@ -174,7 +174,13 @@ abstract class AbstractFormulaVisitor(
     }
 
     override fun visitColumnName(ctx: ColumnNameContext): StatementInfo {
-        return getColumnStmt(ctx, columnInterface.getColumnByName(ctx.text.trim('`')))
+        return getColumnStmt(ctx, ctx.COLUMN_NAME().text, ctx.HINT())
+            ?: getColumnStmt(ctx, columnInterface.getColumnByName(ctx.text.trim('`')))
+    }
+
+    override fun visitColumnIdentity(ctx: ColumnIdentityContext): StatementInfo {
+        return getColumnStmt(ctx, ctx.identity().text, ctx.HINT())
+            ?: visitIdentity(ctx.identity())
     }
 
     override fun visitIdentity(ctx: IdentityContext): StatementInfo {
@@ -211,6 +217,16 @@ abstract class AbstractFormulaVisitor(
         return stmt
     }
 
+    private fun getColumnStmt(ctx: ParserRuleContext, name: String, hintNode: TerminalNode?): StatementInfo? {
+        if (hintNode == null) return null
+        val hintMap = HintParser.parse(hintNode.text)
+        if (name != hintMap["name"]) {
+            return null
+        }
+        val id = hintMap["id"]?.toString() ?: return null
+        return getColumnStmt(ctx, columnInterface.getColumnById(id))
+    }
+
     private fun getColumnStmt(ctx: ParserRuleContext, column: Column?): StatementInfo {
         val colStmt = StatementInfo(ctx)
         with(colStmt) {
@@ -220,7 +236,6 @@ abstract class AbstractFormulaVisitor(
                 expression = ctx.text
                 dataType = DataType.NONE
             } else {
-                rewriter.replace(ctx.start, ctx.stop, convertColumnExpression(column))
                 status = TokenStatus.NORMAL
                 dataType = column.dataType
                 expression = column.expression
@@ -229,8 +244,6 @@ abstract class AbstractFormulaVisitor(
         }
         return colStmt
     }
-
-    protected fun convertColumnExpression(column: Column): String = "${column.name}@(${column.id})"
 
     protected val syntaxErrors: MutableList<SyntaxError> = mutableListOf()
 

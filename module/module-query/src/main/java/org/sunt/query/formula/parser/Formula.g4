@@ -97,9 +97,9 @@ constant
     ;
 
 column
-    : COLUMN_ID         # columnId
-    | COLUMN_NAME       # columnName
-    | identity          # columnIdentity
+    : COLUMN_ID              # columnId
+    | COLUMN_NAME HINT?      # columnName
+    | identity    HINT?      # columnIdentity
     ;
 
 identity
@@ -155,6 +155,7 @@ COLUMN_ID: SHARP (DIGIT|ALPHA)+ ;
 IDENTITY: (ALPHA | DIGIT | CHINESE)+ ;
 COLUMN_NAME: BACK_QUOTE ANY BACK_QUOTE;
 
+HINT: '/*+' .*? '*/';
 WS: BLANK+                      -> skip;
 LINE_COMMENT: '//'~[\r\n]*      -> skip;
 BLOCK_COMMENT: '/*' .*? '*/'    -> channel(HIDDEN);

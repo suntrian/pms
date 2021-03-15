@@ -14,7 +14,7 @@ import org.sunt.query.model.metadata.ColumnInterface
 
 class FormulaHelper private constructor(private val columnInterface: ColumnInterface) {
 
-    fun toSql(expression: String, vendor: SqlDialect): StatementInfo {
+    fun toSql(expression: String, vendor: SqlDialect): ParsedFormula {
         val set = if (CurrentContainer.get() == null) {
             CurrentContainer.set(this)
             true
@@ -41,10 +41,10 @@ class FormulaHelper private constructor(private val columnInterface: ColumnInter
         try {
             val lexer = FormulaLexer(CharStreams.fromString(expression))
             val tokens = CommonTokenStream(lexer)
-            val rewriter = TokenStreamRewriter(tokens)
+            //val rewriter = TokenStreamRewriter(tokens)
             val parser = FormulaParser(tokens)
             val correctCursor = if (cursor < 0 || cursor > expression.length) expression.length else cursor
-            val suggestVisitor = FormulaSuggestVisitor(vendor, columnInterface, rewriter, correctCursor)
+            val suggestVisitor = FormulaSuggestVisitor(vendor, columnInterface, correctCursor)
             parser.removeErrorListeners()
             parser.addErrorListener(suggestVisitor)
             parser.errorHandler = SuggestErrorStrategy()

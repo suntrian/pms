@@ -61,8 +61,8 @@ filter
 
 
 sort
-    : ('按'|'以') statement '升序' '排序'?                                            # ASC
-    | ('按'|'以') statement '降序' '排序'?                                            # DESC
+    : ('按'|'以')? statement '升序' '排序'?                                            # ASC
+    | ('按'|'以')? statement '降序' '排序'?                                            # DESC
     ;
 
 limit
