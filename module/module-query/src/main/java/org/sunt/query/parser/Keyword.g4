@@ -59,6 +59,8 @@ static {
                              "AUX_HE: '和' | '与'" +
                              "AUX_DE: '的'" +
                              "AUX_MIN: '名的' | '名'" +
+                             "LOGIC_OR:  '或者' | '或' " +
+                             "LOGIC_AND: '并且' | '而且' | '且'" +
                              "'介于'"
         ;
     Pattern patern = Pattern.compile("'([^']+?)'");
@@ -98,14 +100,18 @@ group
     ;
 
 filter
-    : segment (GREATEST | LEATEST)                                                                      # mostFilter
-    | segment (GREATER | LESS | GREATER_EQUAL | LESS_EQUAL | EQUAL | NOT_EQUAL | CONTAINS) segment      # compareFilter
-    | segment (AUX_ZAI | '介于') segment AUX_HE segment INSIDE                                           # betweenFilter
-    | segment (START_WITH | END_WITH) segment                                                           # stringFilter
-    | segment AUX_YI segment (START | END)                                                              # stringFilter
-    | segment (LAST_YEAR | LAST_QUARTER | LAST_MONTH | LAST_WEEK | LAST_DAY)                            # lastDateFilter
-    | segment AUX_ZAI segment (BEFORE | AFTER)                                                          # compareDateFilter
+    : segment op=(GREATEST | LEATEST)                                                                      # mostFilter
+    | segment op=(GREATER | LESS | GREATER_EQUAL | LESS_EQUAL | EQUAL | NOT_EQUAL | CONTAINS) segment      # compareFilter
+    | segment op=(AUX_ZAI | '介于') segment AUX_HE segment INSIDE                                           # betweenFilter
+    | segment op=(START_WITH | END_WITH) segment                                                           # stringFilter
+    | segment op=AUX_YI segment (START | END)                                                              # stringFilter
+    | segment op=(LAST_YEAR | LAST_QUARTER | LAST_MONTH | LAST_WEEK | LAST_DAY)                            # lastDateFilter
+    | segment AUX_ZAI segment op=(BEFORE | AFTER)                                                          # compareDateFilter
+    | filter op=LOGIC_AND filter                                                                           # logicAndFilter
+    | filter op=LOGIC_OR filter                                                                            # logicOrFilter
     ;
+
+
 
 sort
     : AUX_YI? segment (ASC | DESC)
@@ -169,3 +175,5 @@ AUX_YI: '按'|'以';
 AUX_HE: '和' | '与';
 AUX_DE: '的';
 AUX_MIN: '名的' | '名';
+LOGIC_OR:  '或者' | '或' ;
+LOGIC_AND: '并且' | '而且' | '且' ;

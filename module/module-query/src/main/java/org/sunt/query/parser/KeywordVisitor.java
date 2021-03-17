@@ -43,6 +43,20 @@ public interface KeywordVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitGroup(KeywordParser.GroupContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code compareDateFilter}
+	 * labeled alternative in {@link KeywordParser#filter}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCompareDateFilter(KeywordParser.CompareDateFilterContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code logicOrFilter}
+	 * labeled alternative in {@link KeywordParser#filter}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLogicOrFilter(KeywordParser.LogicOrFilterContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code mostFilter}
 	 * labeled alternative in {@link KeywordParser#filter}.
 	 * @param ctx the parse tree
@@ -50,19 +64,19 @@ public interface KeywordVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitMostFilter(KeywordParser.MostFilterContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code compareFilter}
-	 * labeled alternative in {@link KeywordParser#filter}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitCompareFilter(KeywordParser.CompareFilterContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code betweenFilter}
 	 * labeled alternative in {@link KeywordParser#filter}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitBetweenFilter(KeywordParser.BetweenFilterContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code compareFilter}
+	 * labeled alternative in {@link KeywordParser#filter}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCompareFilter(KeywordParser.CompareFilterContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code stringFilter}
 	 * labeled alternative in {@link KeywordParser#filter}.
@@ -78,12 +92,12 @@ public interface KeywordVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitLastDateFilter(KeywordParser.LastDateFilterContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code compareDateFilter}
+	 * Visit a parse tree produced by the {@code logicAndFilter}
 	 * labeled alternative in {@link KeywordParser#filter}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCompareDateFilter(KeywordParser.CompareDateFilterContext ctx);
+	T visitLogicAndFilter(KeywordParser.LogicAndFilterContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link KeywordParser#sort}.
 	 * @param ctx the parse tree
