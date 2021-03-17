@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.4.21"
+    kotlin("jvm")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
