@@ -658,7 +658,7 @@ class FormulaSuggestVisitor(
         return super.visitColumnName(ctx).apply {
             if (this.payload is Column) {
                 this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx, (this.payload as Column).id))
-            } else if (status.privilege >= TokenStatus.EXPECTED.privilege){
+            } else {
                 this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx).apply {
                     status = TokenStatus.UNKNOWN
                 })
@@ -671,8 +671,8 @@ class FormulaSuggestVisitor(
             if (this.payload is Column) {
                 this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx, (this.payload as Column).id))
             } else if (status.privilege >= TokenStatus.EXPECTED.privilege){
-                this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx).apply {
-                    status = TokenStatus.UNKNOWN
+                this@FormulaSuggestVisitor.formulaTokens.add(FormulaToken.from(ctx).also {
+                    it.status = this.status
                 })
             }
         }

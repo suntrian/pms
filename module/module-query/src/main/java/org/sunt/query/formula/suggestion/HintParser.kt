@@ -101,4 +101,9 @@ internal object HintParser {
         if (id == null || name == null) return ""
         return "/*+id=${id},name=${name}*/"
     }
+
+    fun generateHint(map: Map<String, String?>): String {
+        return map.filter { it.value != null }.entries
+            .joinToString(",", "/*+", "*/"){ "${it.key}=${it.value}" }
+    }
 }
