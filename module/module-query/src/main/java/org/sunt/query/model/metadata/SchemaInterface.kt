@@ -7,4 +7,6 @@ interface SchemaInterface : ColumnInterface {
     override fun getColumnByName(name: String): IColumn?
 
     fun getTableRelation(first: ITable, second: ITable): List<TableRelation>
+
+
 }
