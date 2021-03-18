@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap
 object FunctionDefinitionParser {
 
     private val log = LoggerFactory.getLogger(FunctionDefinitionParser.javaClass)
-    private val functionDefUri = URI("classpath://function/function.kt")
+    private val functionDefUri = URI("classpath://definition/function.kt")
     private val dialectCache: MutableMap<SqlDialect, Map<String, List<FunctionDefinition>>> = ConcurrentHashMap()
 
     @JvmStatic
