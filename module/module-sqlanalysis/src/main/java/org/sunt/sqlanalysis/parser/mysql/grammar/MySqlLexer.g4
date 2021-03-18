@@ -33,7 +33,7 @@ SPACE:                               [ \t\r\n]+    -> channel(HIDDEN);
 SPEC_MYSQL_COMMENT:                  '/*!' .+? '*/' -> channel(MYSQLCOMMENT);
 COMMENT_INPUT:                       '/*' .*? '*/' -> channel(HIDDEN);
 LINE_COMMENT:                        (
-                                       ('-- ' | '#') ~[\r\n]* ('\r'? '\n' | EOF)
+                                       ('--' [ \t] | '#') ~[\r\n]* ('\r'? '\n' | EOF)
                                        | '--' ('\r'? '\n' | EOF)
                                      ) -> channel(HIDDEN);
 
@@ -301,7 +301,6 @@ VAR_POP:                             'VAR_POP';
 VAR_SAMP:                            'VAR_SAMP';
 VARIANCE:                            'VARIANCE';
 
-
 // Common function Keywords
 
 CURRENT_DATE:                        'CURRENT_DATE';
@@ -323,8 +322,6 @@ TRIM:                                'TRIM';
 UTC_DATE:                            'UTC_DATE';
 UTC_TIME:                            'UTC_TIME';
 UTC_TIMESTAMP:                       'UTC_TIMESTAMP';
-
-
 
 // Keywords, but can be ID
 // Common Keywords, but can be ID
@@ -1207,6 +1204,11 @@ STRING_USER_NAME:                    (
                                      (
                                        SQUOTA_STRING | DQUOTA_STRING
                                        | BQUOTA_STRING | ID_LITERAL
+                                       | IP_ADDRESS
+                                     );
+IP_ADDRESS:                          (
+                                       [0-9]+ '.' [0-9.]+
+                                       | [0-9A-F:]+ ':' [0-9A-F:]+
                                      );
 LOCAL_ID:                            '@'
                                 (
