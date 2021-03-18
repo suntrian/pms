@@ -2,6 +2,7 @@ package org.sunt.sqlanalysis.parser.mysql
 
 import org.antlr.v4.runtime.TokenStream
 import org.sunt.sqlanalysis.model.Table
+import org.sunt.sqlanalysis.parser.SqlParseListener
 
 /*
 import java.util.*
@@ -17,9 +18,10 @@ import org.sunt.sqlanalysis.parser.mysql.grammar.MySqlParser.*
 import org.sunt.sqlanalysis.parser.mysql.grammar.MySqlParserBaseListener
 
 
-internal class MysqlSqlParseListener(private val tokens: TokenStream): MySqlParserBaseListener() {
+internal class MysqlSqlParseListener(override val tokenStream: TokenStream): MySqlParserBaseListener(), SqlParseListener {
 
-    val tables: MutableList<Table> = mutableListOf()
+    override val tables: MutableList<Table> = mutableListOf()
+
 /*
     private var withTables: Map<String, SelectTable> = emptyMap()
 
