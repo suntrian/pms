@@ -1,4 +1,4 @@
-package org.sunt.query.util
+package org.sunt.query.model.util
 
 import java.util.*
 

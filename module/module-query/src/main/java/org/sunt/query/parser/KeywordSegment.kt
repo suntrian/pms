@@ -1,7 +1,8 @@
 package org.sunt.query.parser
 
 import org.sunt.query.formula.suggestion.HintParser
-import org.sunt.query.util.CharTrie
+import org.sunt.query.model.terms.*
+import org.sunt.query.model.util.CharTrie
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -49,8 +50,8 @@ object KeywordSegment {
     private const val MODE_BLOCK_COMMENT = '8'.toByte()
 
     @JvmStatic
-    fun tokenize(text: String): String {
-        val tokens = ArrayList<String>(text.length/4)
+    fun segment(text: String): TermList {
+        val tokens = ArrayList<LinkedTerm>(text.length/4)
         val chars = StringBuilder(text.length)
         var curMode = MODE_INITIAL
         val modeStack = Stack<Byte>()
@@ -59,22 +60,34 @@ object KeywordSegment {
 
         var lastTrieNode: CharTrie.CharNode<ReservedType>? = null
 
+        fun addToken(text: String) {
+            val term = when(curMode) {
+                MODE_INITIAL -> UnknownTerm(text)
+                MODE_IDENTITY -> IdentityTerm(text)
+                MODE_FORMULA -> FormulaTerm(text)
+                MODE_STRING -> StringTerm(text)
+                MODE_LINE_COMMENT, MODE_BLOCK_COMMENT -> CommentTerm(text)
+                else -> UnknownTerm(text)
+            }
+            tokens.add(term)
+        }
+
         fun resetChars() {
             lastTrieNode = null
             if (chars.isNotEmpty()){
-                tokens.add(chars.toString())
+                addToken(chars.toString())
                 chars.clear()
             }
         }
         fun matchReserved(trieNode: CharTrie.CharNode<ReservedType>) {
             val matchedKey = trieNode.key
             if ( matchedKey.length < chars.length) {
-                tokens.add(chars.substring(0, chars.length-matchedKey.length))
+                addToken(chars.substring(0, chars.length-matchedKey.length))
             }
             if (trieNode.value?.equals(ReservedType.FUNCTION) == true) {
-                tokens.add(matchedKey+HintParser.generateHint(mapOf("type" to "function", "name" to reservedFunction[matchedKey])))
+                tokens.add(ReservedTerm(matchedKey+HintParser.generateHint(mapOf("type" to "function", "name" to reservedFunction[matchedKey]))))
             } else {
-                tokens.add(matchedKey)
+                tokens.add(ReservedTerm(matchedKey))
             }
         }
         fun isAlpha(char: Char): Boolean {
@@ -106,7 +119,7 @@ object KeywordSegment {
             when {
                 " ;\r\n".indexOf(char)>=0 -> {
                     resetChars()
-                    tokens.add(char.toString())
+                    tokens.add(SplitterTerm(char))
                     if (';' == char) {
                         curMode = MODE_INITIAL
                         modeStack.clear()
@@ -158,17 +171,17 @@ object KeywordSegment {
                                     lastMatchedToken = i
                                     val token = tokens[i]
                                     if (token.length == seg.length) {
-                                        val realFieldName = tokens.subList(i, tokens.size).joinToString(separator = "")
+                                        val realFieldName = tokens.subList(i, tokens.size).joinToString(separator = ""){ it.text }
                                         if (realFieldName != fieldName) {
                                             chars.clear()
                                         } else matched = true
                                         break
                                     } else if (token.length > seg.length) {
-                                        val realFieldName = token.substring(token.length-seg.length) + tokens.subList(i+1, tokens.size).joinToString("")
+                                        val realFieldName = token.text.substring(token.length-seg.length) + tokens.subList(i+1, tokens.size).joinToString(""){ it.text }
                                         if (realFieldName != fieldName) {
                                             chars.clear()
                                         } else {
-                                            tokens[i] = token.substring(0, token.length-seg.length)
+                                            tokens[i] = UnknownTerm(token.text.substring(0, token.length-seg.length))
                                             matched = true
                                         }
                                         break
@@ -179,9 +192,9 @@ object KeywordSegment {
                                 if (matched) {
                                     if (lastMatchedToken != tokens.size-1) {
                                         for (i in tokens.size-1 downTo lastMatchedToken+1) tokens.removeAt(i)
-                                        tokens.add(fieldName+chars)
+                                        tokens.add(IdentityTerm(fieldName+chars))
                                     } else {
-                                        tokens[lastMatchedToken] = tokens[lastMatchedToken] + chars
+                                        tokens[lastMatchedToken] = IdentityTerm(tokens[lastMatchedToken].text + chars)
                                     }
                                     chars.clear()
                                 }
@@ -259,10 +272,10 @@ object KeywordSegment {
             if (lastTrieNode!=null && lastTrieNode!!.eow) {
                 matchReserved(lastTrieNode!!)
             } else {
-                tokens.add(chars.toString())
+                addToken(chars.toString())
             }
         }
-        return tokens/*.filterNot { it.isBlank() }*/.joinToString(" ")
+        return TermList(tokens)
     }
 
 }
