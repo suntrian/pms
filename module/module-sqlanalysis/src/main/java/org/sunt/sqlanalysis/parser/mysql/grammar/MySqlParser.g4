@@ -43,10 +43,15 @@ sqlStatement
     : ddlStatement | dmlStatement | transactionStatement
     | replicationStatement | preparedStatement
     | administrationStatement | utilityStatement
+    | delimiterStatement
     ;
 
 emptyStatement
     : SEMI
+    ;
+
+delimiterStatement
+    : DELIMITER .+?
     ;
 
 ddlStatement
@@ -2331,11 +2336,7 @@ passwordFunctionClause
     ;
 
 functionArgs
-    : (constant | fullColumnName | functionCall | expression)
-    (
-      ','
-      (constant | fullColumnName | functionCall | expression)
-    )*
+    : functionArg (',' functionArg)*
     ;
 
 functionArg

@@ -72,14 +72,13 @@ internal class HiveSqlParseListener(override val tokenStream: TokenStream) : Hiv
                 val columnName = colDefConst.identifier().getRawText()
                 val dataType = visitColType(colDefConst.colType())
                 val columnComment = colDefConst.StringLiteral()?.text?.trim('\'', '"')
-                val createField = CreateField(colDefConst.getRawText())
-                        .setComment(columnComment)
-                        .setDataType(dataType)
-                        .setPartitionField(fieldIndex >= partitionFieldIndex)
-                        .setColumnName(columnName)
-                        .apply {
-                            setPosition(colDefConst.identifier())
-                        }
+                val createField = CreateField(colDefConst.getRawText()).apply {
+                    comment = columnComment
+                    setDataType(dataType)
+                    isPartitionField = fieldIndex >= partitionFieldIndex
+                    setColumnName(columnName)
+                    setPosition(colDefConst.identifier())
+                }
                 createTable.addField(createField)
 //                        val constraint: ColumnConstraintContext
 //                        if ( colDefConst.columnConstraint().also { constraint = it } != null ) {

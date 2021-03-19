@@ -7,7 +7,6 @@ import org.sunt.sqlanalysis.parser.CaseCharStream
 import org.sunt.sqlanalysis.parser.ErrorListener
 import org.sunt.sqlanalysis.parser.ErrorStrategy
 import org.sunt.sqlanalysis.parser.SqlParser
-import org.sunt.sqlanalysis.parser.hive.HiveParser
 import org.sunt.sqlanalysis.parser.mysql.grammar.MySqlLexer
 import org.sunt.sqlanalysis.parser.mysql.grammar.MySqlParser
 
@@ -57,7 +56,7 @@ internal class MysqlParser
 
         private val log = LoggerFactory.getLogger(MysqlParser::class.java)
 
-        @JvmField val INSTANCE = HiveParser(ErrorStrategy.SWALLOW)
+        @JvmField val INSTANCE = MysqlParser(ErrorStrategy.SWALLOW)
 
     }
 

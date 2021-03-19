@@ -59,11 +59,6 @@ public class CreateField extends SelectExpr {
         return this;
     }
 
-    public CreateField setDataType(DataType dataType) {
-        this.dataType = dataType;
-        return this;
-    }
-
     public CreateField setPartitionField(boolean partitionField) {
         this.partitionField = partitionField;
         return this;
@@ -153,10 +148,11 @@ public class CreateField extends SelectExpr {
 
     @Override
     public CreateField clone() {
-        return new CreateField(expression)
+        CreateField field = new CreateField(expression)
                 .setColumnName(columnName)
-                .setDataType(dataType)
                 .setPartitionField(partitionField)
                 .setComment(comment);
+        field.setDataType(dataType);
+        return field;
     }
 }

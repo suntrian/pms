@@ -9,6 +9,8 @@ public class UpdateTable extends LandTable implements AliasItem {
 
     private Expression where;
 
+    private Table sourceTable;
+
     public UpdateTable(String tableName) {
         super(tableName);
     }
@@ -29,9 +31,14 @@ public class UpdateTable extends LandTable implements AliasItem {
 
     @Override
     public List<? extends Table> getSourceTable() {
-        return Collections.singletonList(new PhysicalTable(getTableName().getFullName()));
+        return sourceTable!=null
+                ? Collections.singletonList(sourceTable)
+                : Collections.singletonList(new PhysicalTable(getTableName().getFullName()));
     }
 
+    public void setSourceTable(Table sourceTable) {
+        this.sourceTable = sourceTable;
+    }
 
     @Override
     public String toString() {

@@ -385,6 +385,7 @@ DEALLOCATE:                          'DEALLOCATE';
 DEFAULT_AUTH:                        'DEFAULT_AUTH';
 DEFINER:                             'DEFINER';
 DELAY_KEY_WRITE:                     'DELAY_KEY_WRITE';
+DELIMITER:                           'DELIMITER';
 DES_KEY_FILE:                        'DES_KEY_FILE';
 DIRECTORY:                           'DIRECTORY';
 DISABLE:                             'DISABLE';

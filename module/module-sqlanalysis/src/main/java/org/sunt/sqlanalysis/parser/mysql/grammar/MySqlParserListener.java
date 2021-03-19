@@ -48,6 +48,16 @@ public interface MySqlParserListener extends ParseTreeListener {
 	 */
 	void exitEmptyStatement(MySqlParser.EmptyStatementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MySqlParser#delimiterStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterDelimiterStatement(MySqlParser.DelimiterStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MySqlParser#delimiterStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitDelimiterStatement(MySqlParser.DelimiterStatementContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link MySqlParser#ddlStatement}.
 	 * @param ctx the parse tree
 	 */

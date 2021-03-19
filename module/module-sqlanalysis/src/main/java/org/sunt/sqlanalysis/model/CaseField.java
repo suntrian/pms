@@ -17,11 +17,6 @@ public class CaseField extends SelectExpr{
         super(expression);
     }
 
-    @Override
-    public DataType getDataType() {
-        return null;
-    }
-
     public CaseField feed(Expression caseExpr, List<WhenThen> whenThenList, Expression elseExpr) {
         this.caseExpr = caseExpr;
         this.whenExpr = whenThenList;

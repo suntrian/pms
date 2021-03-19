@@ -42,6 +42,7 @@ public class WindowField extends FunctionField{
 
     @Override
     public DataType getDataType() {
+        //TODO
         return null;
     }
 

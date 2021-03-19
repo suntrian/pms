@@ -9,6 +9,8 @@ public class DeleteTable extends LandTable implements AliasItem {
 
     private Expression where;
 
+    private FromItem sourceTable;
+
     public DeleteTable(String tableName) {
         super(tableName);
     }
@@ -32,9 +34,15 @@ public class DeleteTable extends LandTable implements AliasItem {
         return "DELETE FROM " + getTableName() + (getAlias().isEmpty()?"": " "+getAlias()) + (where!=null?" WHERE " + where:"");
     }
 
+    public void setSourceTable(FromItem sourceTable) {
+        this.sourceTable = sourceTable;
+    }
+
     @Override
     public List<? extends Table> getSourceTable() {
-        return Collections.singletonList(new PhysicalTable(getTableName().getFullName()));
+        return this.sourceTable!=null
+                ? Collections.singletonList(this.sourceTable)
+                : Collections.singletonList(new PhysicalTable(getTableName().getFullName()));
     }
 
     @Override

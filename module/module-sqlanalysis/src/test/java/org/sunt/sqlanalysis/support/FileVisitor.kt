@@ -46,4 +46,8 @@ object FileVisitor {
         return files.stream().map { Arguments.arguments(it.path, FileUtils.readFileToString(it, encode)) }
     }
 
+    fun visitFile(filePath: String, encode: Charset = Charset.defaultCharset()): String {
+        return FileUtils.readFileToString(File(filePath), encode)
+    }
+
 }

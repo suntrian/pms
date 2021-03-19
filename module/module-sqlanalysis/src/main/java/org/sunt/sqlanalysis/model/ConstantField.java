@@ -12,12 +12,6 @@ public class ConstantField extends SelectExpr{
     }
 
     @Override
-    public DataType getDataType() {
-        return null;
-    }
-
-
-    @Override
     public ConstantField clone() {
         return new ConstantField(expression);
     }

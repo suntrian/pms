@@ -10,7 +10,10 @@ public enum  JoinType {
     UNIQUE("UNIQUEJOIN"),
     LEFT_SEMI("LEFT SEMI JOIN"),
     ANTI("ANTI JOIN"),
-    NATURAL("NATURAL JOIN");
+    NATURAL("NATURAL JOIN"),
+    NATURAL_LEFT("NATURAL LEFT JOIN"),
+    NATURAL_RIGHT("NATURAL RIGHT JOIN"),
+    STRAIGHT("STRAIGHT JOIN");
 
     private final String symbol;
 

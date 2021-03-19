@@ -24,11 +24,6 @@ public class FunctionField extends SelectExpr {
         return Collections.unmodifiableList(params);
     }
 
-    @Override
-    public DataType getDataType() {
-        return null;
-    }
-
     public FunctionField feed(String functionName, List<Expression> params) {
         this.functionName = functionName;
         this.params = params.stream().filter(Objects::nonNull).collect(Collectors.toList());

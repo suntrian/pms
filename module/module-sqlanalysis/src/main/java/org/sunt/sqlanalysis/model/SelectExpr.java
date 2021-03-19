@@ -11,6 +11,8 @@ public abstract class SelectExpr implements SelectItem{
 
     protected Alias alias;
 
+    protected DataType dataType;
+
     protected SelectExpr(String expression) {
         this.expression = expression;
     }
@@ -34,7 +36,13 @@ public abstract class SelectExpr implements SelectItem{
         this.alias = alias;
     }
 
-    public abstract DataType getDataType();
+    public DataType getDataType(){
+        return this.dataType;
+    }
+
+    public void setDataType(DataType dataType) {
+        this.dataType = dataType;
+    }
 
     @Override
     public String toString() {
