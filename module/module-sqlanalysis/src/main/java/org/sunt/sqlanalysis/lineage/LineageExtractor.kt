@@ -6,17 +6,14 @@ import org.sunt.sqlanalysis.model.*
 import java.util.*
 import kotlin.math.min
 
-infix fun RelationType.priorTo (relType: RelationType) : Boolean {
-    return this.relevance >= relType.relevance
-}
-
 object LineageExtractor{
 
     @JvmOverloads
     fun extract(table: Table, targetFields: List<SelectItem> = emptyList()): List<LineageNode> {
         return when (table) {
             is CreateTable -> {
-                if (table.sourceTable.isEmpty() || table.sourceTable.all { it is EmptyTable }) {
+                if (table.sourceTable.isEmpty() || table.sourceTable.all { it is EmptyTable }
+                    || table.sourceTable.all { it == null }) {
                     return emptyList()
                 }
                 val srcTable = table.sourceTable[0]
@@ -36,7 +33,8 @@ object LineageExtractor{
                 return toNodes
             }
             is InsertTable -> {
-                if (table.sourceTable.isEmpty() || table.sourceTable.all { it is EmptyTable }) {
+                if (table.sourceTable.isEmpty() || table.sourceTable.all { it is EmptyTable }
+                    || table.sourceTable.all{ it == null }) {
                     return emptyList()
                 }
                 val toNodes = if (!table.isRealFields){
@@ -111,7 +109,7 @@ object LineageExtractor{
                 return toNodes
             }
             is SelectTable -> {
-                val srcTable = table.sourceTable[0]
+                val srcTable = table.sourceTable[0] ?: return emptyList()
                 val srcNodes = mutableListOf<LineageNode>()
                 for (field in table.fields) {
                     val srcNode = LineageNode(field, table).also { srcNodes.add(it) }
