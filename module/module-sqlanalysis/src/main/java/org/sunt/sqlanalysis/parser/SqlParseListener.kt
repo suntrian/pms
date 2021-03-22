@@ -26,6 +26,11 @@ internal interface SqlParseListener {
         setTokenPos(ctx.start.tokenIndex, ctx.stop.tokenIndex)
     }
 
+    fun Expression.setPosition(token: Token) {
+        setCharPos(token.startIndex, token.stopIndex)
+        setTokenPos(token.tokenIndex, token.tokenIndex)
+    }
+
     fun Expression.setPosition(start: Token, stop: Token) {
         setCharPos(start.startIndex, stop.stopIndex)
         setTokenPos(start.tokenIndex, stop.tokenIndex)

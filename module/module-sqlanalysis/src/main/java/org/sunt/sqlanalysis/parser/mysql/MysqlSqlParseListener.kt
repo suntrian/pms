@@ -126,6 +126,7 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
             val variableField = VariableField(variable).apply {
                 val dataTypeLengthPrecision = dataType(ctx.dataType())
                 dataType = DataType.of(dataTypeLengthPrecision.first)
+                setPosition(uidContext)
             }
             if (currentBlock != null && currentBlock is AnonymousTable) {
                 (currentBlock as AnonymousTable).addField(variableField)
@@ -209,6 +210,7 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
                                 }
                             }
                         }
+                        setPosition(createDefinition.uid())
                     }
                     createFields.add(createField)
                 }
@@ -533,18 +535,23 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
     private fun selectElements(selects: SelectElementsContext): List<SelectExpr> {
         val fields = mutableListOf<SelectExpr>()
         if (selects.star != null) {
-            fields.add(AsteriskField("*"))
+            fields.add(AsteriskField("*").apply {
+                setPosition(selects.star)
+            })
         }
         for (selectElementContext in selects.selectElement()) {
             when (selectElementContext) {
                 is SelectStarElementContext -> {
-                    fields.add(AtomicField.of(selectElementContext.getRawText()))
+                    fields.add(AtomicField.of(selectElementContext.getRawText()).apply {
+                        setPosition(selectElementContext)
+                    })
                 }
                 is SelectColumnElementContext -> {
                     fields.add(AtomicField.of(selectElementContext.fullColumnName().getRawText()).apply {
                         if (selectElementContext.uid() != null) {
                             alias = Alias(selectElementContext.uid().getRawText(), selectElementContext.AS() != null)
                         }
+                        setPosition(selectElementContext.fullColumnName())
                     })
                 }
                 is SelectFunctionElementContext -> {
@@ -552,6 +559,7 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
                         if (selectElementContext.uid() != null) {
                             alias = Alias(selectElementContext.uid().getRawText(), selectElementContext.AS() != null)
                         }
+                        setPosition(selectElementContext.functionCall())
                     })
                 }
                 is SelectExpressionElementContext -> {
@@ -559,6 +567,7 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
                         if (selectElementContext.uid() != null) {
                             alias = Alias(selectElementContext.uid().getRawText(), selectElementContext.AS() != null)
                         }
+                        setPosition(selectElementContext.expression())
                     })
                 }
                 else -> {
@@ -749,6 +758,8 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
                 }
             }
             else -> throw WillNeverHappenException()
+        }.apply {
+            setPosition(functionCall)
         }
     }
 
@@ -778,7 +789,8 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
             }
             is PredicateExpressionContext -> predicate(expression.predicate())
             else -> throw WillNeverHappenException("will not come here")
-
+        }.apply {
+            setPosition(expression)
         }
     }
 
@@ -817,6 +829,8 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
             is JsonExpressionAtomContext -> BinaryOperatorField(ctx.getRawText())
                 .feed(expressionAtom(ctx.left), JsonOperator.of(ctx.jsonOperator().text), expressionAtom(ctx.right))
             else -> throw WillNeverHappenException()
+        }.apply {
+            setPosition(ctx)
         }
     }
 
@@ -874,6 +888,8 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
             is JsonMemberOfPredicateContext -> BinaryOperatorField(ctx.getRawText())
                 .feed(predicate(ctx.predicate(0)), PredicateOperator.MEMBER_OF, predicate(ctx.predicate(1)))
             else -> throw WillNeverHappenException()
+        }.apply {
+            setPosition(ctx)
         }
     }
 
@@ -888,6 +904,8 @@ internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : My
             arg.expression() != null -> expression(arg.expression())
             arg.functionCall() != null -> functionCall(arg.functionCall())
             else -> throw WillNeverHappenException()
+        }. apply {
+            setPosition(arg)
         }
     }
 
