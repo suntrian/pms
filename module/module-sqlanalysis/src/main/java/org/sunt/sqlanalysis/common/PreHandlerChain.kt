@@ -7,6 +7,7 @@ object PreHandlerChain : PreHandler {
     private val handlers: MutableList<PreHandler> = CopyOnWriteArrayList()
 
     init {
+        handlers.add(Utf8BomPreHandler)
         handlers.add(PlaceholderPreHandler("%d{yyyyMMdd}//%d{yyyyMM}"))
     }
 

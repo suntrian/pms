@@ -10,11 +10,13 @@ object SqlSplit {
     private const val MODE_M_COMMENT = 2 //多行注释
     private const val MODE_IN_SQL = 3
     private const val MODE_STRING = 4
+
     private const val SQL_TYPE_CREATE = 10
     private const val SQL_TYPE_INSERT = 11
     private const val SQL_TYPE_DELETE = 12
     private const val SQL_TYPE_SELECT = 13
     private const val SQL_TYPE_OTHERS = 14
+
     private const val STMT_CREATE_TABLE_UNCERTAIN = 100
     private const val STMT_CREATE_TABLE_AS_SELECT = 101
     private const val STMT_CREATE_PROCEDURE_FUNCTION = 102
@@ -26,6 +28,7 @@ object SqlSplit {
     private const val STMT_DELETE_FROM_TABLE_PLAIN = 122
     private const val STMT_SELECT_FROM_TABLE = 130
     private const val STMT_OTHER_STATEMENT = 109
+
     private const val DELIMITER = ";"
 
     @JvmStatic
@@ -153,11 +156,16 @@ object SqlSplit {
                     curMode = MODE_IN_SQL
                     stmtType = STMT_DELETE_FROM_TABLE_UNCERTAIN
                 }
+                "DROP" -> if (curMode == MODE_OUT_SQL) {
+                    sqlType = SQL_TYPE_OTHERS
+                    curMode = MODE_IN_SQL
+                    stmtType = STMT_OTHER_STATEMENT
+                }
                 "PROCEDURE", "FUNCTION" -> {
                     if (sqlType == SQL_TYPE_CREATE) {
                         stmtType = STMT_CREATE_PROCEDURE_FUNCTION
+                        break@OUT
                     }
-                    break@OUT
                 }
                 else -> if (curMode == MODE_OUT_SQL) {
                     curMode = MODE_IN_SQL
@@ -174,7 +182,7 @@ object SqlSplit {
             }
         }
         if (stmtType == STMT_CREATE_PROCEDURE_FUNCTION) {
-            result.add(stmtType to content)
+            return listOf (stmtType to content)
         } else if (sqlBuilder.isNotEmpty()) {
             result.add(stmtType to sqlBuilder.toString())
         }

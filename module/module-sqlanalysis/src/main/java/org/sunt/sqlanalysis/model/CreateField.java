@@ -6,8 +6,6 @@ public class CreateField extends SelectExpr {
 
     private String comment;
 
-    private DataType dataType;
-
     private Integer dataLength;
 
     private Integer dataPrecision;
@@ -39,11 +37,6 @@ public class CreateField extends SelectExpr {
 
     public String getComment() {
         return comment;
-    }
-
-    @Override
-    public DataType getDataType() {
-        return dataType;
     }
 
     public String getColumnName() {
