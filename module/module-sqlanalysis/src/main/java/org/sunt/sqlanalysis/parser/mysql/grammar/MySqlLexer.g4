@@ -25,7 +25,12 @@ THE SOFTWARE.
 
 lexer grammar MySqlLexer;
 
+tokens { DELIM }
 channels { MYSQLCOMMENT, ERRORCHANNEL }
+
+options {
+    superClass = MySqlBaseLexer;
+}
 
 // SKIP
 
@@ -385,7 +390,7 @@ DEALLOCATE:                          'DEALLOCATE';
 DEFAULT_AUTH:                        'DEFAULT_AUTH';
 DEFINER:                             'DEFINER';
 DELAY_KEY_WRITE:                     'DELAY_KEY_WRITE';
-DELIMITER:                           'DELIMITER';
+DELIMITER:                           'DELIMITER'    -> pushMode(Delimiter);
 DES_KEY_FILE:                        'DES_KEY_FILE';
 DIRECTORY:                           'DIRECTORY';
 DISABLE:                             'DISABLE';
@@ -1251,3 +1256,8 @@ fragment BIT_STRING_L:               'B' '\'' [01]+ '\'';
 // Last tokens must generate Errors
 
 ERROR_RECONGNIGION:                  .    -> channel(ERRORCHANNEL);
+
+mode Delimiter;
+BLANK:                          [ \t] -> channel(HIDDEN);
+DelimiterSymbol:                ~[ \t\r\n]+{ setDelimiter(getText()); } -> type(DELIM);
+NEWLINE:                        [\r\n] -> popMode;

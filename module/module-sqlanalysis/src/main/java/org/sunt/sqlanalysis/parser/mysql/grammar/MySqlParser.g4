@@ -35,8 +35,8 @@ root
     ;
 
 sqlStatements
-    : (sqlStatement MINUSMINUS? SEMI? | emptyStatement)*
-    (sqlStatement (MINUSMINUS? SEMI)? | emptyStatement)
+    : (sqlStatement MINUSMINUS? (SEMI | DELIM)? | emptyStatement)*
+    (sqlStatement (MINUSMINUS? (SEMI | DELIM))? | emptyStatement)
     ;
 
 sqlStatement
@@ -47,11 +47,11 @@ sqlStatement
     ;
 
 emptyStatement
-    : SEMI
+    : SEMI | DELIM
     ;
 
 delimiterStatement
-    : DELIMITER .+?
+    : DELIMITER DELIM NEWLINE
     ;
 
 ddlStatement
