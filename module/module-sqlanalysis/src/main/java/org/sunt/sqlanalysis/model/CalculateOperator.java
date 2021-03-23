@@ -8,6 +8,7 @@ public enum CalculateOperator implements Operator {
     DIVIDE("/"), //小数
     PLUS("+"),
     MINUS("-"),
+    MINUSMINUS("--"),
     CONCAT("||");
 
     private final String symbol;

@@ -64,6 +64,18 @@ public class MySqlParserBaseListener implements MySqlParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterDelimiterStatement(MySqlParser.DelimiterStatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDelimiterStatement(MySqlParser.DelimiterStatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterDdlStatement(MySqlParser.DdlStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -1763,6 +1775,18 @@ public class MySqlParserBaseListener implements MySqlParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitAlterByDropColumn(MySqlParser.AlterByDropColumnContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAlterByDropConstraintCheck(MySqlParser.AlterByDropConstraintCheckContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAlterByDropConstraintCheck(MySqlParser.AlterByDropConstraintCheckContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -6280,18 +6304,6 @@ public class MySqlParserBaseListener implements MySqlParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterSubqueryExpessionAtom(MySqlParser.SubqueryExpessionAtomContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitSubqueryExpessionAtom(MySqlParser.SubqueryExpessionAtomContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterMysqlVariableExpressionAtom(MySqlParser.MysqlVariableExpressionAtomContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -6340,6 +6352,18 @@ public class MySqlParserBaseListener implements MySqlParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterExistsExpressionAtom(MySqlParser.ExistsExpressionAtomContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExistsExpressionAtom(MySqlParser.ExistsExpressionAtomContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterIntervalExpressionAtom(MySqlParser.IntervalExpressionAtomContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -6364,13 +6388,13 @@ public class MySqlParserBaseListener implements MySqlParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExistsExpessionAtom(MySqlParser.ExistsExpessionAtomContext ctx) { }
+	@Override public void enterSubqueryExpressionAtom(MySqlParser.SubqueryExpressionAtomContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitExistsExpessionAtom(MySqlParser.ExistsExpessionAtomContext ctx) { }
+	@Override public void exitSubqueryExpressionAtom(MySqlParser.SubqueryExpressionAtomContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -7,6 +7,8 @@ import java.util.Objects;
 
 public class TableName implements Serializable {
 
+    private static final long serialVersionUID = -5258410497607206663L;
+
     protected String category;
 
     protected String schema;

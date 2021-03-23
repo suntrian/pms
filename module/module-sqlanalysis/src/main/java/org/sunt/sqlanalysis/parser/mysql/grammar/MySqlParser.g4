@@ -35,18 +35,23 @@ root
     ;
 
 sqlStatements
-    : (sqlStatement MINUSMINUS? SEMI? | emptyStatement)*
-    (sqlStatement (MINUSMINUS? SEMI)? | emptyStatement)
+    : (sqlStatement MINUSMINUS? (SEMI | DELIM)? | emptyStatement)*
+    (sqlStatement (MINUSMINUS? (SEMI | DELIM))? | emptyStatement)
     ;
 
 sqlStatement
     : ddlStatement | dmlStatement | transactionStatement
     | replicationStatement | preparedStatement
     | administrationStatement | utilityStatement
+    | delimiterStatement
     ;
 
 emptyStatement
-    : SEMI
+    : SEMI | DELIM
+    ;
+
+delimiterStatement
+    : DELIMITER DELIM NEWLINE
     ;
 
 ddlStatement
@@ -619,6 +624,7 @@ alterSpecification
     | MODIFY COLUMN?
       uid columnDefinition (FIRST | AFTER uid)?                     #alterByModifyColumn
     | DROP COLUMN? uid RESTRICT?                                    #alterByDropColumn
+    | DROP (CONSTRAINT | CHECK) uid                                 #alterByDropConstraintCheck
     | DROP PRIMARY KEY                                              #alterByDropPrimaryKey
     | RENAME indexFormat=(INDEX | KEY) uid TO uid                   #alterByRenameIndex
     | ALTER INDEX uid (VISIBLE | INVISIBLE)                         #alterByAlterIndexVisibility
@@ -1084,7 +1090,7 @@ limitClause
     ;
 
 limitClauseAtom
-	: decimalLiteral | mysqlVariable
+	: decimalLiteral | mysqlVariable | simpleId
 	;
 
 
@@ -1626,7 +1632,7 @@ checksumTable
 
 optimizeTable
     : OPTIMIZE actionOption=(NO_WRITE_TO_BINLOG | LOCAL)?
-      TABLE tables
+      (TABLE | TABLES) tables
     ;
 
 repairTable
@@ -1873,7 +1879,7 @@ signalConditionInformation
           | TABLE_NAME
           | COLUMN_NAME
           | CURSOR_NAME
-        ) '=' ( stringLiteral | DECIMAL_LITERAL )
+        ) '=' ( stringLiteral | DECIMAL_LITERAL | mysqlVariable | simpleId )
     ;
 
 diagnosticsStatement
@@ -2052,9 +2058,10 @@ dataType
       CHAR | CHARACTER | VARCHAR | TINYTEXT | TEXT | MEDIUMTEXT | LONGTEXT
        | NCHAR | NVARCHAR | LONG
       )
+      VARYING?
       lengthOneDimension? BINARY?
       ((CHARACTER SET | CHARSET) charsetName)?
-      (COLLATE collationName)?                                      #stringDataType
+      (COLLATE collationName | BINARY)?                             #stringDataType
     | NATIONAL typeName=(VARCHAR | CHARACTER)
       lengthOneDimension? BINARY?                                   #nationalStringDataType
     | NCHAR typeName=VARCHAR
@@ -2158,7 +2165,7 @@ userVariables
 //    Common Expressons
 
 defaultValue
-    : (NULL_LITERAL | unaryOperator? constant | currentTimestamp) (ON UPDATE currentTimestamp)?
+    : (NULL_LITERAL | unaryOperator? constant | currentTimestamp | '(' expression ')') (ON UPDATE currentTimestamp)?
     ;
 
 currentTimestamp
@@ -2194,7 +2201,7 @@ specificFunction
     : (
       CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP
       | CURRENT_USER | LOCALTIME
-      )                                                             #simpleFunctionCall
+      ) ('(' ')')?                                                  #simpleFunctionCall
     | CONVERT '(' expression separator=',' convertedDataType ')'    #dataTypeFunctionCall
     | CONVERT '(' expression USING charsetName ')'                  #dataTypeFunctionCall
     | CAST '(' expression AS convertedDataType ')'                  #dataTypeFunctionCall
@@ -2329,11 +2336,7 @@ passwordFunctionClause
     ;
 
 functionArgs
-    : (constant | fullColumnName | functionCall | expression)
-    (
-      ','
-      (constant | fullColumnName | functionCall | expression)
-    )*
+    : functionArg (',' functionArg)*
     ;
 
 functionArg
@@ -2377,8 +2380,8 @@ expressionAtom
     | BINARY expressionAtom                                         #binaryExpressionAtom
     | '(' expression (',' expression)* ')'                          #nestedExpressionAtom
     | ROW '(' expression (',' expression)+ ')'                      #nestedRowExpressionAtom
-    | EXISTS '(' selectStatement ')'                                #existsExpessionAtom
-    | '(' selectStatement ')'                                       #subqueryExpessionAtom
+    | EXISTS '(' selectStatement ')'                                #existsExpressionAtom
+    | '(' selectStatement ')'                                       #subqueryExpressionAtom
     | INTERVAL expression intervalType                              #intervalExpressionAtom
     | left=expressionAtom bitOperator right=expressionAtom          #bitExpressionAtom
     | left=expressionAtom mathOperator right=expressionAtom         #mathExpressionAtom
@@ -2443,7 +2446,7 @@ dataTypeBase
 keywordsCanBeId
     : ACCOUNT | ACTION | AFTER | AGGREGATE | ALGORITHM | ANY
     | AT | AUDIT_ADMIN | AUTHORS | AUTOCOMMIT | AUTOEXTEND_SIZE
-    | AUTO_INCREMENT | AVG_ROW_LENGTH | BACKUP_ADMIN | BEGIN | BINLOG | BINLOG_ADMIN | BINLOG_ENCRYPTION_ADMIN | BIT
+    | AUTO_INCREMENT | AVG | AVG_ROW_LENGTH | BACKUP_ADMIN | BEGIN | BINLOG | BINLOG_ADMIN | BINLOG_ENCRYPTION_ADMIN | BIT | BIT_AND | BIT_OR | BIT_XOR
     | BLOCK | BOOL | BOOLEAN | BTREE | CACHE | CASCADED | CHAIN | CHANGED
     | CHANNEL | CHECKSUM | PAGE_CHECKSUM | CATALOG_NAME | CIPHER
     | CLASS_ORIGIN | CLIENT | CLONE_ADMIN | CLOSE | COALESCE | CODE
@@ -2451,7 +2454,7 @@ keywordsCanBeId
     | COMPLETION | COMPRESSED | COMPRESSION | CONCURRENT
     | CONNECTION | CONNECTION_ADMIN | CONSISTENT | CONSTRAINT_CATALOG | CONSTRAINT_NAME
     | CONSTRAINT_SCHEMA | CONTAINS | CONTEXT
-    | CONTRIBUTORS | COPY | CPU | CURRENT | CURSOR_NAME
+    | CONTRIBUTORS | COPY | COUNT | CPU | CURRENT | CURSOR_NAME
     | DATA | DATAFILE | DEALLOCATE
     | DEFAULT_AUTH | DEFINER | DELAY_KEY_WRITE | DES_KEY_FILE | DIAGNOSTICS | DIRECTORY
     | DISABLE | DISCARD | DISK | DO | DUMPFILE | DUPLICATE
@@ -2459,7 +2462,7 @@ keywordsCanBeId
     | ERROR | ERRORS | ESCAPE | EVEN | EVENT | EVENTS | EVERY
     | EXCHANGE | EXCLUSIVE | EXPIRE | EXPORT | EXTENDED | EXTENT_SIZE | FAST | FAULTS
     | FIELDS | FILE_BLOCK_SIZE | FILTER | FIREWALL_ADMIN | FIREWALL_USER | FIRST | FIXED | FLUSH
-    | FOLLOWS | FOUND | FULL | FUNCTION | GENERAL | GLOBAL | GRANTS
+    | FOLLOWS | FOUND | FULL | FUNCTION | GENERAL | GLOBAL | GRANTS | GROUP_CONCAT
     | GROUP_REPLICATION | GROUP_REPLICATION_ADMIN | HANDLER | HASH | HELP | HOST | HOSTS | IDENTIFIED
     | IGNORE_SERVER_IDS | IMPORT | INDEXES | INITIAL_SIZE | INNODB_REDO_LOG_ARCHIVE
     | INPLACE | INSERT_METHOD | INSTALL | INSTANCE | INTERNAL | INVOKER | IO
@@ -2474,10 +2477,10 @@ keywordsCanBeId
     | MASTER_SSL_CRL | MASTER_SSL_CRLPATH | MASTER_SSL_KEY
     | MASTER_TLS_VERSION | MASTER_USER
     | MAX_CONNECTIONS_PER_HOUR | MAX_QUERIES_PER_HOUR
-    | MAX_ROWS | MAX_SIZE | MAX_UPDATES_PER_HOUR
+    | MAX | MAX_ROWS | MAX_SIZE | MAX_UPDATES_PER_HOUR
     | MAX_USER_CONNECTIONS | MEDIUM | MEMBER | MEMORY | MERGE | MESSAGE_TEXT
     | MID | MIGRATE
-    | MIN_ROWS | MODE | MODIFY | MUTEX | MYSQL | MYSQL_ERRNO | NAME | NAMES
+    | MIN | MIN_ROWS | MODE | MODIFY | MUTEX | MYSQL | MYSQL_ERRNO | NAME | NAMES
     | NCHAR | NDB_STORED_USER | NEVER | NEXT | NO | NODEGROUP | NONE | NUMBER | OFFLINE | OFFSET
     | OF | OJ | OLD_PASSWORD | ONE | ONLINE | ONLY | OPEN | OPTIMIZER_COSTS
     | OPTIONS | OWNER | PACK_KEYS | PAGE | PARSER | PARTIAL
@@ -2498,13 +2501,13 @@ keywordsCanBeId
     | SQL_AFTER_GTIDS | SQL_AFTER_MTS_GAPS | SQL_BEFORE_GTIDS
     | SQL_BUFFER_RESULT | SQL_CACHE | SQL_NO_CACHE | SQL_THREAD
     | STACKED | START | STARTS | STATS_AUTO_RECALC | STATS_PERSISTENT
-    | STATS_SAMPLE_PAGES | STATUS | STOP | STORAGE | STRING
-    | SUBCLASS_ORIGIN | SUBJECT | SUBPARTITION | SUBPARTITIONS | SUSPEND | SWAPS
+    | STATS_SAMPLE_PAGES | STATUS | STD | STDDEV | STDDEV_POP | STDDEV_SAMP | STOP | STORAGE | STRING
+    | SUBCLASS_ORIGIN | SUBJECT | SUBPARTITION | SUBPARTITIONS | SUM | SUSPEND | SWAPS
     | SWITCHES | SYSTEM_VARIABLES_ADMIN | TABLE_NAME | TABLESPACE | TABLE_ENCRYPTION_ADMIN
     | TEMPORARY | TEMPTABLE | THAN | TRADITIONAL
     | TRANSACTION | TRANSACTIONAL | TRIGGERS | TRUNCATE | UNDEFINED | UNDOFILE
     | UNDO_BUFFER_SIZE | UNINSTALL | UNKNOWN | UNTIL | UPGRADE | USER | USE_FRM | USER_RESOURCES
-    | VALIDATION | VALUE | VARIABLES | VERSION_TOKEN_ADMIN | VIEW | WAIT | WARNINGS | WITHOUT
+    | VALIDATION | VALUE | VAR_POP | VAR_SAMP | VARIABLES | VARIANCE | VERSION_TOKEN_ADMIN | VIEW | WAIT | WARNINGS | WITHOUT
     | WORK | WRAPPER | X509 | XA | XA_RECOVER_ADMIN | XML
     ;
 
@@ -2556,7 +2559,7 @@ functionNameBase
     | POSITION| POW | POWER | QUARTER | QUOTE | RADIANS | RAND
     | RANDOM_BYTES | RELEASE_LOCK | REVERSE | ROUND
     | ROW_COUNT | RPAD | RTRIM | SECOND | SEC_TO_TIME
-    | SESSION_USER | SESSION_VARIABLES_ADMIN
+    | SCHEMA | SESSION_USER | SESSION_VARIABLES_ADMIN
     | SHA | SHA1 | SHA2 | SIGN | SIN | SLEEP
     | SOUNDEX | SQL_THREAD_WAIT_AFTER_GTIDS | SQRT | SRID
     | STARTPOINT | STRCMP | STR_TO_DATE | ST_AREA | ST_ASBINARY

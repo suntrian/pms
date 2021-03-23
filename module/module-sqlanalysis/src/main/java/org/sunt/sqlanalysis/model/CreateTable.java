@@ -83,7 +83,11 @@ public class CreateTable extends LandTable{
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder( "CREATE ").append(materialized?"MATERIALIZED ":"").append(view?"VIEW ":"TABLE ").append(getTableName());
+        StringBuilder builder = new StringBuilder( "CREATE ")
+                .append(temporary?"TEMPORARY ": "")
+                .append(materialized?"MATERIALIZED ":"")
+                .append(view?"VIEW ":"TABLE ")
+                .append(getTableName());
         List<CreateField> partitionFields = new LinkedList<>();
         if (!getFields().isEmpty() && getFields().stream().anyMatch(i->i instanceof CreateField)) {
             builder.append(" (\n");

@@ -6,7 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.platform.commons.util.ReflectionUtils
 import org.sunt.query.parser.KeywordSegment
-import org.sunt.query.util.CharTrie
+import org.sunt.query.model.util.CharTrie
 
 class TestKeywordSegment {
 
@@ -20,9 +20,9 @@ class TestKeywordSegment {
     )
     fun testKeywordSegment(keywords: String, expected: String){
         println("测试： $keywords -> $expected")
-        val segments = KeywordSegment.tokenize(keywords)
+        val segments = KeywordSegment.segment(keywords)
         println(segments)
-        Assertions.assertEquals(expected, segments)
+        Assertions.assertEquals(expected, segments.toString())
     }
 
     @ParameterizedTest
@@ -33,16 +33,16 @@ class TestKeywordSegment {
     )
     fun testReservedFunction(keywords: String, expected: String) {
         println("测试： $keywords -> $expected")
-        val segments = KeywordSegment.tokenize(keywords)
+        val segments = KeywordSegment.segment(keywords)
         println(segments)
-        Assertions.assertEquals(expected, segments)
+        Assertions.assertEquals(expected, segments.toString())
     }
 
     @Test
     fun testEmptySegment() {
-        val segments = KeywordSegment.tokenize("  ")
+        val segments = KeywordSegment.segment("  ")
         println(segments)
-        Assertions.assertEquals("   ", segments)
+        Assertions.assertEquals("   ", segments.toString())
     }
 
     @Test

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.sunt.sqlanalysis.exception.IllegalSyntaxException
 import org.sunt.sqlanalysis.exception.WillNeverHappenException
 import org.sunt.sqlanalysis.model.*
+import org.sunt.sqlanalysis.parser.SqlParseListener
 import org.sunt.sqlanalysis.parser.hive.grammar.HiveParser.*
 import org.sunt.sqlanalysis.parser.hive.grammar.HiveParserBaseListener
 import java.util.*
@@ -14,22 +15,13 @@ import kotlin.collections.ArrayList
 
 /** @see <a href="https://github.com/JetBrains/kotlin/blob/master/compiler/frontend/src/org/jetbrains/kotlin/diagnostics/rendering/DefaultErrorMessages.java" */
 @Suppress("UNUSED_VALUE", "UNUSED_EXPRESSION", "UNUSED_VARIABLE")
-internal class HiveSqlParseListener(private val tokens: TokenStream) : HiveParserBaseListener() {
+internal class HiveSqlParseListener(override val tokenStream: TokenStream) : HiveParserBaseListener(), SqlParseListener {
 
-    val tables: MutableList<Table> = mutableListOf()
+    override val tables: MutableList<Table> = mutableListOf()
 
     private var withTables: Map<String, SelectTable> = emptyMap()
 
     private var windowFunctions: Map<String, WindowField> = emptyMap()
-
-    private fun ParserRuleContext.getRawText(): String {
-        return tokens.getText(start, stop)
-    }
-
-    private fun Expression.setPosition(ctx: ParserRuleContext) {
-        setCharPos(ctx.start.startIndex, ctx.stop.stopIndex+1)
-        setTokenPos(ctx.start.tokenIndex, ctx.stop.tokenIndex)
-    }
 
     private fun getTableName(ctx: TableNameContext): String {
         return ctx.identifier().map { it.text.trim('`') }.joinToString(".")
@@ -80,14 +72,13 @@ internal class HiveSqlParseListener(private val tokens: TokenStream) : HiveParse
                 val columnName = colDefConst.identifier().getRawText()
                 val dataType = visitColType(colDefConst.colType())
                 val columnComment = colDefConst.StringLiteral()?.text?.trim('\'', '"')
-                val createField = CreateField(colDefConst.getRawText())
-                        .setComment(columnComment)
-                        .setDataType(dataType)
-                        .setPartitionField(fieldIndex >= partitionFieldIndex)
-                        .setColumnName(columnName)
-                        .apply {
-                            setPosition(colDefConst.identifier())
-                        }
+                val createField = CreateField(colDefConst.getRawText()).apply {
+                    comment = columnComment
+                    setDataType(dataType)
+                    isPartitionField = fieldIndex >= partitionFieldIndex
+                    setColumnName(columnName)
+                    setPosition(colDefConst.identifier())
+                }
                 createTable.addField(createField)
 //                        val constraint: ColumnConstraintContext
 //                        if ( colDefConst.columnConstraint().also { constraint = it } != null ) {

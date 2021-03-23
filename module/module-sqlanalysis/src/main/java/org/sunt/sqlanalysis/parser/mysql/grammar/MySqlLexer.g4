@@ -25,7 +25,12 @@ THE SOFTWARE.
 
 lexer grammar MySqlLexer;
 
+tokens { DELIM }
 channels { MYSQLCOMMENT, ERRORCHANNEL }
+
+options {
+    superClass = MySqlBaseLexer;
+}
 
 // SKIP
 
@@ -33,7 +38,7 @@ SPACE:                               [ \t\r\n]+    -> channel(HIDDEN);
 SPEC_MYSQL_COMMENT:                  '/*!' .+? '*/' -> channel(MYSQLCOMMENT);
 COMMENT_INPUT:                       '/*' .*? '*/' -> channel(HIDDEN);
 LINE_COMMENT:                        (
-                                       ('-- ' | '#') ~[\r\n]* ('\r'? '\n' | EOF)
+                                       ('--' [ \t] | '#') ~[\r\n]* ('\r'? '\n' | EOF)
                                        | '--' ('\r'? '\n' | EOF)
                                      ) -> channel(HIDDEN);
 
@@ -301,7 +306,6 @@ VAR_POP:                             'VAR_POP';
 VAR_SAMP:                            'VAR_SAMP';
 VARIANCE:                            'VARIANCE';
 
-
 // Common function Keywords
 
 CURRENT_DATE:                        'CURRENT_DATE';
@@ -323,8 +327,6 @@ TRIM:                                'TRIM';
 UTC_DATE:                            'UTC_DATE';
 UTC_TIME:                            'UTC_TIME';
 UTC_TIMESTAMP:                       'UTC_TIMESTAMP';
-
-
 
 // Keywords, but can be ID
 // Common Keywords, but can be ID
@@ -388,6 +390,7 @@ DEALLOCATE:                          'DEALLOCATE';
 DEFAULT_AUTH:                        'DEFAULT_AUTH';
 DEFINER:                             'DEFINER';
 DELAY_KEY_WRITE:                     'DELAY_KEY_WRITE';
+DELIMITER:                           'DELIMITER'    -> pushMode(Delimiter);
 DES_KEY_FILE:                        'DES_KEY_FILE';
 DIRECTORY:                           'DIRECTORY';
 DISABLE:                             'DISABLE';
@@ -1207,6 +1210,11 @@ STRING_USER_NAME:                    (
                                      (
                                        SQUOTA_STRING | DQUOTA_STRING
                                        | BQUOTA_STRING | ID_LITERAL
+                                       | IP_ADDRESS
+                                     );
+IP_ADDRESS:                          (
+                                       [0-9]+ '.' [0-9.]+
+                                       | [0-9A-F:]+ ':' [0-9A-F:]+
                                      );
 LOCAL_ID:                            '@'
                                 (
@@ -1248,3 +1256,8 @@ fragment BIT_STRING_L:               'B' '\'' [01]+ '\'';
 // Last tokens must generate Errors
 
 ERROR_RECONGNIGION:                  .    -> channel(ERRORCHANNEL);
+
+mode Delimiter;
+BLANK:                          [ \t] -> channel(HIDDEN);
+DelimiterSymbol:                ~[ \t\r\n]+{ setDelimiter(getText()); } -> type(DELIM);
+NEWLINE:                        [\r\n] -> popMode;

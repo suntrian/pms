@@ -28,6 +28,7 @@ public enum PredicateOperator implements Operator{
     NOT_LIKE_ANY("NOT LIKE ANY"),
     LIKE_ALL("LIKE ALL"),
     NOT_LIKE_ALL("NOT LIKE ALL"),
+    SOUNDS_LIKE("SOUNDS LIKE"),
 
     EXISTS("EXISTS"),
     NOT_EXISTS("NOT EXISTS"),

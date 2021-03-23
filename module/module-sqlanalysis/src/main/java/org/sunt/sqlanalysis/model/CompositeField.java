@@ -8,23 +8,30 @@ import java.util.stream.Collectors;
 
 public class CompositeField extends SelectExpr {
 
-    private List<SelectItem> fields = Collections.emptyList();
+    private List<Expression> fields = Collections.emptyList();
+
+    private boolean wrapParenthesis = false;
 
     public CompositeField(String expression) {
         super(expression);
     }
 
-    public CompositeField feed(List<SelectItem> fields) {
+    public CompositeField(String expression, boolean wrapParenthesis) {
+        super(expression);
+        this.wrapParenthesis = wrapParenthesis;
+    }
+
+    public CompositeField feed(List<Expression> fields) {
         this.fields = fields.stream().filter(Objects::nonNull).collect(Collectors.toList());
         return this;
     }
 
-    public CompositeField feed(SelectItem... fields) {
+    public CompositeField feed(Expression... fields) {
         this.fields = Arrays.stream(fields).filter(Objects::nonNull).collect(Collectors.toList());
         return this;
     }
 
-    public List<SelectItem> getFields() {
+    public List<Expression> getFields() {
         return fields;
     }
 
@@ -35,7 +42,7 @@ public class CompositeField extends SelectExpr {
 
     @Override
     public SelectExpr clone() {
-        return new CompositeField(this.expression).feed(this.fields.stream().map(SelectItem::clone).collect(Collectors.toList()));
+        return new CompositeField(this.expression).feed(this.fields.stream().map(Expression::clone).collect(Collectors.toList()));
     }
 
 }

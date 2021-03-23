@@ -32,6 +32,14 @@ public class GroupByExpr implements Expression{
         return sqlBuilder.toString();
     }
 
+    public List<SelectItem> getFields() {
+        return fields;
+    }
+
+    public Expression getHaving() {
+        return having;
+    }
+
     @Override
     public String getExpression() {
         return toString();

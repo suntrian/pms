@@ -6,8 +6,6 @@ public class CreateField extends SelectExpr {
 
     private String comment;
 
-    private DataType dataType;
-
     private Integer dataLength;
 
     private Integer dataPrecision;
@@ -41,11 +39,6 @@ public class CreateField extends SelectExpr {
         return comment;
     }
 
-    @Override
-    public DataType getDataType() {
-        return dataType;
-    }
-
     public String getColumnName() {
         return columnName;
     }
@@ -56,11 +49,6 @@ public class CreateField extends SelectExpr {
 
     public CreateField setComment(String comment) {
         this.comment = comment;
-        return this;
-    }
-
-    public CreateField setDataType(DataType dataType) {
-        this.dataType = dataType;
         return this;
     }
 
@@ -153,10 +141,11 @@ public class CreateField extends SelectExpr {
 
     @Override
     public CreateField clone() {
-        return new CreateField(expression)
+        CreateField field = new CreateField(expression)
                 .setColumnName(columnName)
-                .setDataType(dataType)
                 .setPartitionField(partitionField)
                 .setComment(comment);
+        field.setDataType(dataType);
+        return field;
     }
 }

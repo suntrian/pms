@@ -1,4 +1,4 @@
-package org.sunt.query.util
+package org.sunt.query.model.util
 
 interface Trie<V> : MutableMap<String, V> {
 

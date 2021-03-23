@@ -1,6 +1,6 @@
 @file:Suppress("FunctionName")
 
-package function
+package definition
 
 import org.sunt.query.formula.function.parser.*
 import java.time.LocalDate
@@ -16,7 +16,7 @@ typealias None = Unit
  * kotlin supress warning
  * @see <href>https://github.com/JetBrains/kotlin/blob/master/compiler/frontend/src/org/jetbrains/kotlin/diagnostics/rendering/DefaultErrorMessages.java</href>
  */
-@Suppress("REDUNDANT_MODIFIER", "UNUSED_EXPRESSION", "UNUSED_PARAMETER")
+@Suppress("REDUNDANT_MODIFIER", "UNUSED_EXPRESSION", "UNUSED_PARAMETER", "INCOMPATIBLE_MODIFIERS", "PRIVATE_FUNCTION_WITH_NO_BODY")
 interface Common {
 
     @Description(
@@ -916,19 +916,19 @@ CUME_DIST_OVER
     ): Double
 
     @Translate("$0")
-    private fun LIST(vararg item: Any): List<Any> = emptyList()
+    private fun LIST(vararg item: Any): List<Any>
 
     @Translate("$0")
-    private fun PARTITION_BY(vararg item: Any): List<Any> = emptyList()
+    private fun PARTITION_BY(vararg item: Any): List<Any>
 
     @Translate("$0")
     private fun ORDER_BY(
         @Suggest("COLUMN")
         @Suggest("FUNCTION", "ORDER_ITEM") vararg item: Any
-    ): List<Any> = emptyList()
+    ): List<Any>
 
     @Translate("$1 $2")
-    private fun <T> ORDER_ITEM(item: T, @Reserved("ASC", "DESC") order: Unit): T? = null
+    private fun <T> ORDER_ITEM(item: T, @Reserved("ASC", "DESC") order: Unit): T?
 }
 
 interface Hive : Common {

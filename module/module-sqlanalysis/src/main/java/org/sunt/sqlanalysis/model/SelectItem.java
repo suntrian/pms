@@ -7,4 +7,5 @@ public interface SelectItem extends Expression, AliasItem {
     @Override
     SelectItem clone();
 
+    DataType getDataType();
 }

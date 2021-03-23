@@ -1,92 +1,116 @@
 package org.sunt.sqlanalysis.parser.mysql
 
+import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.TokenStream
+import org.antlr.v4.runtime.tree.TerminalNode
 import org.sunt.sqlanalysis.model.Table
+import org.sunt.sqlanalysis.parser.SqlParseListener
 
-/*
 import java.util.*
-import org.sunt.sqlanalysis.exception.SqlParseException
 import org.sunt.sqlanalysis.exception.WillNeverHappenException
 import org.sunt.sqlanalysis.model.*
 import org.sunt.sqlanalysis.model.DeleteTable
 import org.sunt.sqlanalysis.model.InsertTable
 import org.sunt.sqlanalysis.model.SelectTable
 import org.sunt.sqlanalysis.parser.mysql.grammar.MySqlParser.*
- */
 
 import org.sunt.sqlanalysis.parser.mysql.grammar.MySqlParserBaseListener
 
 
-internal class MysqlSqlParseListener(private val tokens: TokenStream): MySqlParserBaseListener() {
+internal class MysqlSqlParseListener(override val tokenStream: TokenStream) : MySqlParserBaseListener(),
+    SqlParseListener {
 
-    val tables: MutableList<Table> = mutableListOf()
-/*
-    private var withTables: Map<String, SelectTable> = emptyMap()
+    override val tables: MutableList<Table> = mutableListOf()
+
+    //private var withTables: Map<String, SelectTable> = emptyMap()
 
     private val variables: MutableMap<String, MutableList<Expression>> = TreeMap(String.CASE_INSENSITIVE_ORDER)
 
     private var currentBlock: Table? = null
 
-    override fun exitDmlStatement(ctx: DmlStatementContext) {
-        when {
-            ctx.selectStatement() != null -> {
-                this.tables.add(select(ctx.selectStatement()))
+    override fun exitInsertStatement(ctx: InsertStatementContext) {
+        val tableName = ctx.tableName().getRawText()
+        val insertTable = InsertTable(tableName).apply {
+            if (ctx.columns != null) {
+                addFields(ctx.columns.uid().map { AtomicField(it.text) })
+                this.isRealFields = true
             }
-            ctx.insertStatement() != null -> {
-                val tableName = ctx.insertStatement().tableName().text
-                val insertTable = InsertTable(tableName)
-                this.tables.add(insertTable)
+            if (ctx.insertStatementValue().selectStatement() != null) {
+                val selectTable = select(ctx.insertStatementValue().selectStatement())
+                setSourceTable(selectTable)
             }
-            ctx.deleteStatement() != null -> {
-                val deleteStatementContext = ctx.deleteStatement()
-                when {
-                    deleteStatementContext.singleDeleteStatement() != null -> {
-                        val tableName = deleteStatementContext.singleDeleteStatement().tableName().text
-                        val deleteTable = DeleteTable(tableName)
-                        this.tables.add(deleteTable)
-                    }
-                    deleteStatementContext.multipleDeleteStatement() != null -> {
-                        val tables = tableSources(deleteStatementContext.multipleDeleteStatement().tableSources())
-                        for (table in tables) {
-                            this.tables.add(DeleteTable(table.label))
-                        }
-                    }
+        }
+        this.tables.add(insertTable)
+    }
+
+    override fun exitDeleteStatement(ctx: DeleteStatementContext) {
+        if (ctx.singleDeleteStatement() != null) {
+            val tableName = ctx.singleDeleteStatement().tableName().getRawText()
+            val deleteTable = DeleteTable(tableName).apply {
+                where = ctx.singleDeleteStatement().expression()?.let { expression(it) }
+            }
+            this.tables.add(deleteTable)
+        } else if (ctx.multipleDeleteStatement() != null) {
+            val sourceTable = tableSources(ctx.multipleDeleteStatement().tableSources())
+            for (tableNameContext in ctx.multipleDeleteStatement().tableName()) {
+                val deleteTable = DeleteTable(tableNameContext.getRawText(),
+                    ctx.multipleDeleteStatement().expression()?.let { expression(it) }).apply {
+                    this.setSourceTable(sourceTable)
                 }
-            }
-            ctx.updateStatement() != null -> {
-                val updateStatementContext = ctx.updateStatement()
-                when {
-                    updateStatementContext.singleUpdateStatement() != null -> {
-                        val tableName = updateStatementContext.singleUpdateStatement().tableName().text
-                        this.tables.add(UpdateTable(tableName).also { table -> updateStatementContext.singleUpdateStatement().uid()?.let { table.alias = it.text } })
-                    }
-                    updateStatementContext.multipleUpdateStatement() != null -> {
-                        val tables = tableSources(updateStatementContext.multipleUpdateStatement().tableSources())
-                        for (table in tables) {
-                            this.tables.add(UpdateTable(table.label))
-                        }
-                    }
-                }
-            }
-            ctx.replaceStatement() != null -> {
-                val tableName = ctx.replaceStatement().tableName().text
-                this.tables.add(UpdateTable(tableName))
+                this.tables.add(deleteTable)
             }
         }
     }
 
-    override fun exitDdlStatement(ctx: DdlStatementContext) {
-        when {
-            ctx.createTable() != null -> this.tables.add(createTable(ctx.createTable()))
-            ctx.createView() != null -> {
-            }
-            ctx.createProcedure() != null -> {
-            }
-            ctx.createFunction() != null -> {
-            }
+    override fun exitUpdateStatement(ctx: UpdateStatementContext) {
+        if (ctx.singleUpdateStatement() != null) {
+            val tableName = ctx.singleUpdateStatement().tableName().getRawText()
+            this.tables.add(UpdateTable(tableName).also { table ->
+                ctx.singleUpdateStatement().uid()?.let { table.alias = Alias(it.text) }
+                table.where = ctx.singleUpdateStatement().expression()?.let { expression(it) }
+            })
+        } else if (ctx.multipleUpdateStatement() != null) {
+            val sourceTable = tableSources(ctx.multipleUpdateStatement().tableSources())
+            this.tables.add(UpdateTable("").apply {
+                setSourceTable(sourceTable)
+                this.where = ctx.multipleUpdateStatement().expression()?.let { expression(it) }
+            })
         }
     }
 
+    override fun exitReplaceStatement(ctx: ReplaceStatementContext) {
+        val tableName = ctx.tableName().getRawText()
+        val updateTable = UpdateTable(tableName).apply {
+            if (ctx.insertStatementValue().selectStatement() != null) {
+                setSourceTable(select(ctx.insertStatementValue().selectStatement()))
+            }
+        }
+        this.tables.add(updateTable)
+    }
+
+    override fun exitSimpleSelect(ctx: SimpleSelectContext) {
+        if (ctx.parent is DmlStatementContext) {
+            this.tables.add(select(ctx))
+        }
+    }
+
+    override fun exitParenthesisSelect(ctx: ParenthesisSelectContext) {
+        if (ctx.parent is DmlStatementContext) {
+            this.tables.add(select(ctx))
+        }
+    }
+
+    override fun exitUnionSelect(ctx: UnionSelectContext) {
+        if (ctx.parent is DmlStatementContext) {
+            this.tables.add(select(ctx))
+        }
+    }
+
+    override fun exitUnionParenthesisSelect(ctx: UnionParenthesisSelectContext) {
+        if (ctx.parent is DmlStatementContext) {
+            this.tables.add(select(ctx))
+        }
+    }
 
     override fun enterCreateProcedure(ctx: CreateProcedureContext) {
         ctx.fullId()?.text?.let { procedureName -> currentBlock = AnonymousTable(procedureName) }
@@ -96,72 +120,66 @@ internal class MysqlSqlParseListener(private val tokens: TokenStream): MySqlPars
         this.currentBlock = null
     }
 
-    override fun exitDeclareVariable(ctx: DeclareVariableContext?) {
-        for (uidContext in ctx?.uidList()?.uid() ?: emptyList()) {
+    override fun exitDeclareVariable(ctx: DeclareVariableContext) {
+        for (uidContext in ctx.uidList()?.uid() ?: emptyList()) {
             val variable = uidContext.text
-            val variableField = VariableField(variable, if (currentBlock != null && currentBlock is AnonymousTable) currentBlock as AnonymousTable else AnonymousTable(""))
+            val variableField = VariableField(variable).apply {
+                val dataTypeLengthPrecision = dataType(ctx.dataType())
+                dataType = DataType.of(dataTypeLengthPrecision.first)
+                setPosition(uidContext)
+            }
+            if (currentBlock != null && currentBlock is AnonymousTable) {
+                (currentBlock as AnonymousTable).addField(variableField)
+            }
             this.variables[variable] = mutableListOf(variableField)
         }
     }
 
-    private fun createTable(ctx: CreateTableContext): CreateTable {
-        return when (ctx) {
-            is CopyCreateTableContext -> {
-                // create table like
-                val tableName = ctx.tableName(0).text
-                val createTable = CreateTable(tableName).also {
-                    it.isTemporary = (ctx.TEMPORARY() != null)
-                }
-                val likeTable = PhysicalTable(ctx.tableName(1).text)
-                createTable.setSourceTable(likeTable)
-                createTable
-            }
-            is QueryCreateTableContext -> {
-                // create table as select
-                val tableName = ctx.tableName().text
-                val createTable = CreateTable(tableName).also {
-                    it.isTemporary = ctx.TEMPORARY() != null
-                    it.comment = ctx.tableOption().filterIsInstance(TableOptionCommentContext::class.java)
-                        .map { i -> i.STRING_LITERAL()?.text }.firstOrNull()
-                }
-                val selectTable = select(ctx.selectStatement())
-                if (ctx.createDefinitions()?.createDefinition()?.isNotEmpty() == true) {
-                    val createFields = createDefinitions(ctx.createDefinitions(), createTable)
-                    if (createFields.size != selectTable.fields.size) {
-                        //todo check asterisk field
-                    } else {
-                        for (i in createFields.indices) {
-                            createFields[i].getRelated().add(Relation(RelationType.DIRECTCOPY, selectTable.fields[i]))
-                        }
-                    }
-                } else {
-                    val createFields = AsteriskField(createTable)
-                    createFields.getRelated().addAll(selectTable.fields.map { Relation(RelationType.DIRECTCOPY, it) })
-                }
-                this.tables.add(createTable)
-                createTable
-            }
-            is ColumnCreateTableContext -> {
-                val tableName = ctx.tableName().text
-                val createTable = CreateTable(tableName).also { it ->
-                    with(it) {
-                        isColumnCreateTable = true
-                        temporary = ctx.TEMPORARY() != null
-                        comment = ctx.tableOption().filterIsInstance(TableOptionCommentContext::class.java)
-                            .map { i -> i.STRING_LITERAL()?.text }
-                            .firstOrNull()
-                        createDefinitions(ctx.createDefinitions(), it)
-                    }
-                }
-                createTable
-            }
-            else -> {
-                throw WillNeverHappenException("")
-            }
+    override fun exitCopyCreateTable(ctx: CopyCreateTableContext) {
+        // create table like
+        val tableName = ctx.tableName(0).text
+        val createTable = CreateTable(tableName).also {
+            it.isTemporary = (ctx.TEMPORARY() != null)
+            val likeTable = PhysicalTable(ctx.tableName(1).text)
+                .addField(AsteriskField("*").setPhysical(true))
+            it.setSourceTable(likeTable)
+            it.addField(AsteriskField("*"))
         }
+        this.tables.add(createTable)
     }
 
-    private fun createDefinitions(ctx: CreateDefinitionsContext, createTable: CreateTable): List<CreateField> {
+    override fun exitQueryCreateTable(ctx: QueryCreateTableContext) {
+        // create table as select
+        val tableName = ctx.tableName().text
+        val createTable = CreateTable(tableName).also {
+            it.isTemporary = ctx.TEMPORARY() != null
+            it.comment = ctx.tableOption().filterIsInstance(TableOptionCommentContext::class.java)
+                .map { i -> i.STRING_LITERAL()?.text }.firstOrNull()
+            it.setSourceTable(select(ctx.selectStatement()))
+        }
+        if (ctx.createDefinitions()?.createDefinition()?.isNotEmpty() == true) {
+            val createFields = createDefinitions(ctx.createDefinitions())
+            createTable.addField(createFields)
+        } else {
+            val createField = AsteriskField("*")
+            createTable.addField(createField)
+        }
+        this.tables.add(createTable)
+    }
+
+    override fun exitColumnCreateTable(ctx: ColumnCreateTableContext) {
+        val tableName = ctx.tableName().text
+        val createTable = CreateTable(tableName).also {
+            it.isTemporary = ctx.TEMPORARY() != null
+            it.comment = ctx.tableOption().filterIsInstance(TableOptionCommentContext::class.java)
+                .map { i -> i.STRING_LITERAL()?.text }
+                .firstOrNull()
+            it.addField(createDefinitions(ctx.createDefinitions()))
+        }
+        this.tables.add(createTable)
+    }
+
+    private fun createDefinitions(ctx: CreateDefinitionsContext): List<CreateField> {
         val createFields = mutableListOf<CreateField>()
         val primaryKeys = mutableListOf<String>()
         val uniqueKeys = mutableListOf<String>()
@@ -171,25 +189,28 @@ internal class MysqlSqlParseListener(private val tokens: TokenStream): MySqlPars
             when (createDefinition) {
                 is ColumnDeclarationContext -> {
                     val fieldName = createDefinition.uid().text
-                    val createField = CreateField(fieldName, createTable)
-                    with(createField) {
+                    val createField = CreateField(fieldName).apply {
                         val dataTypeLengthPrecision = dataType(createDefinition.columnDefinition().dataType())
                         dataType = DataType.of(dataTypeLengthPrecision.first)
                         dataLength = dataTypeLengthPrecision.second
                         dataPrecision = dataTypeLengthPrecision.third
                         for (columnConstraintContext in createDefinition.columnDefinition().columnConstraint()) {
                             when (columnConstraintContext) {
-                                is NullColumnConstraintContext -> isNullable = columnConstraintContext.nullNotnull().NOT() == null
-                                is DefaultColumnConstraintContext -> defaultValue = columnConstraintContext.defaultValue().text
-                                is AutoIncrementColumnConstraintContext -> isAutoIncrement = columnConstraintContext.AUTO_INCREMENT() != null
+                                is NullColumnConstraintContext -> isNullable =
+                                    columnConstraintContext.nullNotnull().NOT() == null
+                                is DefaultColumnConstraintContext -> defaultValue =
+                                    columnConstraintContext.defaultValue().text
+                                is AutoIncrementColumnConstraintContext -> isAutoIncrement =
+                                    columnConstraintContext.AUTO_INCREMENT() != null
                                 is PrimaryKeyColumnConstraintContext -> isPrimaryKey = true
                                 is UniqueKeyColumnConstraintContext -> isUnique = true
-                                is CommentColumnConstraintContext -> comment = columnConstraintContext.STRING_LITERAL().text
+                                is CommentColumnConstraintContext -> comment =
+                                    columnConstraintContext.STRING_LITERAL().text
                                 is ReferenceDefinitionContext -> {/* todo */
                                 }
                             }
                         }
-
+                        setPosition(createDefinition.uid())
                     }
                     createFields.add(createField)
                 }
@@ -247,13 +268,28 @@ internal class MysqlSqlParseListener(private val tokens: TokenStream): MySqlPars
 
     private fun dataType(ctx: DataTypeContext): Triple<String, Int?, Int?> {
         return when (ctx) {
-            is StringDataTypeContext -> Triple(ctx.typeName.text, ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt(), null)
-            is NationalStringDataTypeContext -> Triple(ctx.typeName.text, ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt(), null)
-            is NationalVaryingStringDataTypeContext -> Triple(ctx.typeName.text, ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt(), null)
+            is StringDataTypeContext -> Triple(
+                ctx.typeName.text,
+                ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt(),
+                null
+            )
+            is NationalStringDataTypeContext -> Triple(
+                ctx.typeName.text,
+                ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt(),
+                null
+            )
+            is NationalVaryingStringDataTypeContext -> Triple(
+                ctx.typeName.text,
+                ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt(),
+                null
+            )
             is DimensionDataTypeContext -> {
-                val length = ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt() ?: ctx.lengthTwoDimension()?.decimalLiteral(0)?.text?.toInt()
+                val length = ctx.lengthOneDimension()?.decimalLiteral()?.text?.toInt() ?: ctx.lengthTwoDimension()
+                    ?.decimalLiteral(0)?.text?.toInt()
                 ?: ctx.lengthTwoOptionalDimension()?.decimalLiteral(0)?.text?.toInt()
-                val precision = ctx.lengthTwoDimension()?.decimalLiteral(1)?.text?.toInt() ?: ctx.lengthTwoOptionalDimension()?.decimalLiteral()?.getOrNull(1)?.text?.toInt()
+                val precision =
+                    ctx.lengthTwoDimension()?.decimalLiteral(1)?.text?.toInt() ?: ctx.lengthTwoOptionalDimension()
+                        ?.decimalLiteral()?.getOrNull(1)?.text?.toInt()
                 Triple(ctx.typeName.text, length, precision)
             }
             is SimpleDataTypeContext -> Triple(ctx.typeName.text, null, null)
@@ -266,234 +302,273 @@ internal class MysqlSqlParseListener(private val tokens: TokenStream): MySqlPars
     }
 
     private fun select(ctx: SelectStatementContext): SelectTable {
-        var selectTableList: MutableList<SelectTable>?
         when (ctx) {
-            is SimpleSelectContext -> {
-                return querySpecification(ctx.querySpecification())
-            }
-            is ParenthesisSelectContext -> {
-                return queryExpression(ctx.queryExpression())
-            }
+            is SimpleSelectContext -> return querySpecification(ctx.querySpecification())
+            is ParenthesisSelectContext -> return queryExpression(ctx.queryExpression())
             is UnionSelectContext -> {
-                selectTableList = mutableListOf()
-                selectTableList.add(querySpecificationNointo(ctx.querySpecificationNointo()))
-                for (unionStatementContext in ctx.unionStatement()) {
-                    if (unionStatementContext.querySpecificationNointo() != null) {
-                        selectTableList.add(querySpecificationNointo(unionStatementContext.querySpecificationNointo()))
-                    } else if (unionStatementContext.queryExpressionNointo() != null) {
-                        selectTableList.add(queryExpressionNointo(unionStatementContext.queryExpressionNointo()))
+                return SetOperatorTable(ctx.getRawText()).apply {
+                    firstTable = querySpecificationNointo(ctx.querySpecificationNointo())
+                    for (stmt in ctx.unionStatement()) {
+                        if (stmt.querySpecificationNointo() != null) {
+                            val setTable = SetOperatorTable.SetTable(
+                                stmt.ALL()?.let { SetOperator.UNION_ALL } ?: SetOperator.UNION_DISTINCT,
+                                querySpecificationNointo(stmt.querySpecificationNointo())
+                            )
+                            this.addSetTable(setTable)
+                        } else if (stmt.queryExpressionNointo() != null) {
+                            val setTable = SetOperatorTable.SetTable(
+                                stmt.ALL()?.let { SetOperator.UNION_ALL } ?: SetOperator.UNION_DISTINCT,
+                                queryExpressionNointo(stmt.queryExpressionNointo())
+                            )
+                            this.addSetTable(setTable)
+                        }
                     }
-                }
-                if (ctx.querySpecification() != null) {
-                    selectTableList.add(querySpecification(ctx.querySpecification()))
-                } else if (ctx.queryExpression() != null) {
-                    selectTableList.add(queryExpression(ctx.queryExpression()))
+                    if (ctx.UNION() != null) {
+                        if (ctx.querySpecification() != null) {
+                            val setTable = SetOperatorTable.SetTable(
+                                ctx.ALL()?.let { SetOperator.UNION_ALL } ?: SetOperator.UNION_DISTINCT,
+                                querySpecification(ctx.querySpecification())
+                            )
+                            this.addSetTable(setTable)
+                        } else {
+                            val setTable = SetOperatorTable.SetTable(
+                                ctx.ALL()?.let { SetOperator.UNION_ALL } ?: SetOperator.UNION_DISTINCT,
+                                queryExpression(ctx.queryExpression())
+                            )
+                            this.addSetTable(setTable)
+                        }
+                    }
+                    if (ctx.orderByClause() != null) {
+                        this.orderBys = orderBys(ctx.orderByClause())
+                    }
                 }
             }
             is UnionParenthesisSelectContext -> {
-                selectTableList = mutableListOf()
-                selectTableList.add(queryExpressionNointo(ctx.queryExpressionNointo()))
-                for (unionParenthesis in ctx.unionParenthesis()) {
-                    if (unionParenthesis.queryExpressionNointo() != null) {
-                        selectTableList.add(queryExpressionNointo(unionParenthesis.queryExpressionNointo()))
+                return SetOperatorTable(ctx.getRawText()).apply {
+                    firstTable = queryExpressionNointo(ctx.queryExpressionNointo())
+                    for (stmt in ctx.unionParenthesis()) {
+                        val setTable = SetOperatorTable.SetTable(
+                            stmt.ALL()?.let { SetOperator.UNION_ALL } ?: SetOperator.UNION_DISTINCT,
+                            queryExpressionNointo(stmt.queryExpressionNointo())
+                        )
+                        this.addSetTable(setTable)
                     }
-                }
-                if (ctx.queryExpression() != null) {
-                    selectTableList.add(queryExpression(ctx.queryExpression()))
+                    if (ctx.UNION() != null) {
+                        val setTable = SetOperatorTable.SetTable(
+                            ctx.ALL()?.let { SetOperator.UNION_ALL } ?: SetOperator.UNION_DISTINCT,
+                            queryExpression(ctx.queryExpression())
+                        )
+                        this.addSetTable(setTable)
+                    }
+                    if (ctx.orderByClause() != null) {
+                        this.orderBys = orderBys(ctx.orderByClause())
+                    }
                 }
             }
             else -> {
                 throw WillNeverHappenException("not supposed to here")
             }
         }
-        val unionTable = SetOperatorTable().(selectTableList)
-        val fieldSize = selectTableList.map { it.fields }.filter { f -> f.none { x -> x is AsteriskField } }.map { it.size }.toSet()
-        if (fieldSize.size > 1) {
-            throw SqlParseException("union查询的字段个数不一致")
-        } else if (fieldSize.isEmpty()) {
-            unionTable.allAsteriskField = true
-            val maxFieldSize = selectTableList.map { it.fields.size }.maxOf { x -> x }
-            if (maxFieldSize > 1) {
-                throw IllegalStateException("暂不处理查询多个*字段的情况")
-            }
-            val unionField = UnionField("*", unionTable)
-            return unionTable
-        }
-
-        for (i in 0 until fieldSize.iterator().next()) {
-            val tempFields = LinkedList<SelectItem>()
-            for (selectTable in selectTableList) {
-                val field = selectTable.fields[i]
-                if (field is AsteriskField) {
-                    tempFields.add(field)
-                } else {
-                    tempFields.add(field)
-                }
-            }
-            unionTable.fields.toMutableList().add(UnionField("", unionTable))
-        }
-        return unionTable
     }
 
     private fun querySpecification(ctx: QuerySpecificationContext): SelectTable {
-        return generateSelectTable(ctx.fromClause(), ctx.selectElements())
-    }
-
-    private fun queryExpression(ctx: QueryExpressionContext): SelectTable {
-        var sub = ctx
-        while (sub.querySpecification() == null) {
-            sub = sub.queryExpression()
+        val selectTable = generateSelectTable(ctx.fromClause(), ctx.selectElements(), ctx.orderByClause())
+        if (ctx.selectSpec().any { it.DISTINCT() != null }) {
+            selectTable.isDistinct = true
         }
-        return querySpecification(sub.querySpecification())
-    }
-
-    private fun querySpecificationNointo(ctx: QuerySpecificationNointoContext): SelectTable {
-        return generateSelectTable(ctx.fromClause(), ctx.selectElements())
-    }
-
-    private fun queryExpressionNointo(ctx: QueryExpressionNointoContext): SelectTable {
-        var sub = ctx
-        while (sub.querySpecificationNointo() == null) {
-            sub = sub.queryExpressionNointo()
+        if (ctx.selectIntoExpression() != null) {
+            //TODO()
         }
-        return querySpecificationNointo(ctx.querySpecificationNointo())
-    }
-
-    private fun generateSelectTable(from: FromClauseContext, selects: SelectElementsContext): SelectTable {
-        val innerTables = from(from)
-        val selectTable = SelectTable(innerTables)
-        val selectFields = selectElements(selects, selectTable)
-        val where = where(from)
-        val groupBy = groupBy(from)
-        val having = having(from)
-        for (selectField in selectFields) {
-
-        }
-
         return selectTable
     }
 
-    private fun from(from: FromClauseContext): List<FromItem> {
+    private fun queryExpression(ctx: QueryExpressionContext): SelectTable {
+        return if (ctx.querySpecification() != null) {
+            querySpecification(ctx.querySpecification())
+        } else {
+            queryExpression(ctx.queryExpression())
+        }
+    }
+
+    private fun querySpecificationNointo(ctx: QuerySpecificationNointoContext): SelectTable {
+        return generateSelectTable(ctx.fromClause(), ctx.selectElements(), ctx.orderByClause()).apply {
+            this.isDistinct = ctx.selectSpec().any { it.DISTINCT() != null }
+        }
+    }
+
+    private fun queryExpressionNointo(ctx: QueryExpressionNointoContext): SelectTable {
+        return if (ctx.queryExpressionNointo() != null) {
+            queryExpressionNointo(ctx.queryExpressionNointo())
+        } else {
+            querySpecificationNointo(ctx.querySpecificationNointo())
+        }
+    }
+
+    private fun generateSelectTable(
+        from: FromClauseContext?,
+        selects: SelectElementsContext,
+        orderBys: OrderByClauseContext?
+    ): SelectTable {
+        return SelectTable((selects.parent as ParserRuleContext).getRawText()).apply {
+            addFields(selectElements(selects))
+            if (from != null) {
+                this.from = from(from)
+                where = where(from)
+                groupBy = groupBy(from)
+            }
+            if (orderBys != null) {
+                this.orderBys = orderBys(orderBys)
+            }
+        }
+    }
+
+    private fun from(from: FromClauseContext): FromItem {
         return tableSources(from.tableSources())
     }
 
-    private fun where(from: FromClauseContext): SelectExpr? {
-        if (from.WHERE() != null) {
-            return expression(from.whereExpr).map { Pair(RelationType.CONDITION, it.second) }
-        }
-        return null
+    private fun where(from: FromClauseContext): SelectExpr? = from.whereExpr?.let { expression(it) }
+
+    private fun groupBy(from: FromClauseContext): GroupByExpr {
+        return GroupByExpr(from.groupByItem()?.map { expression(it.expression()) } ?: emptyList(),
+            from.havingExpr?.let { expression(it) })
     }
 
-    private fun groupBy(from: FromClauseContext): List<Pair<RelationType, FullFieldName>> {
-        if (from.groupByItem() != null) {
-            val fields = mutableListOf<Pair<RelationType, FullFieldName>>()
-            for (groupByItemContext in from.groupByItem()) {
-                fields.addAll(expression(groupByItemContext.expression()))
+    private fun orderBys(orderBy: OrderByClauseContext): List<OrderByItem> {
+        return orderBy.orderByExpression()
+            ?.map { ord ->
+                ord.order?.let { OrderByItem(expression(ord.expression()), ord.DESC() != null) }
+                    ?: OrderByItem(expression(ord.expression()))
             }
-            return fields
-        }
-        return emptyList()
+            ?: emptyList()
     }
 
-    private fun having(from: FromClauseContext): List<Pair<RelationType, FullFieldName>> {
-        if (from.havingExpr != null) {
-            return expression(from.havingExpr).map { Pair(RelationType.CONDITION, it.second) }
+    private fun tableSources(tableSourcesContext: TableSourcesContext): FromItem {
+        fun joinPart(ctx: JoinPartContext): JoinTable.JoinPart {
+            when (ctx) {
+                is InnerJoinContext -> {
+                    val joinType = ctx.INNER()?.let { JoinType.INNER } ?: JoinType.CROSS
+                    return JoinTable.JoinPart(joinType,
+                        tableSourceItem(ctx.tableSourceItem()),
+                        ctx.expression()?.let { expression(it) }
+                    )
+                }
+                is StraightJoinContext -> {
+                    return JoinTable.JoinPart(
+                        JoinType.STRAIGHT,
+                        tableSourceItem(ctx.tableSourceItem()),
+                        ctx.expression()?.let { expression(it) }
+                    )
+                }
+                is OuterJoinContext -> {
+                    return JoinTable.JoinPart(
+                        ctx.LEFT()?.let { JoinType.LEFT } ?: JoinType.RIGHT,
+                        tableSourceItem(ctx.tableSourceItem()),
+                        ctx.expression()?.let { expression(it) }
+                    )
+                }
+                is NaturalJoinContext -> {
+                    return JoinTable.JoinPart(
+                        ctx.LEFT()?.let { JoinType.NATURAL_LEFT }
+                            ?: ctx.RIGHT()?.let { JoinType.NATURAL_RIGHT }
+                            ?: JoinType.NATURAL,
+                        tableSourceItem(ctx.tableSourceItem()),
+                        null
+                    )
+                }
+                else -> throw WillNeverHappenException()
+            }
         }
-        return emptyList()
-    }
 
-    private fun tableSources(tableSourcesContext: TableSourcesContext): List<FromItem> {
         val tableList = mutableListOf<FromItem>()
         for (tableSourceContext in tableSourcesContext.tableSource()) {
-            var joinPart: List<JoinPartContext> = emptyList()
             when (tableSourceContext) {
                 is TableSourceBaseContext -> {
-                    tableList.addAll(tableSourceItem(tableSourceContext.tableSourceItem()))
-                    joinPart = tableSourceContext.joinPart()
+                    val firstTable = tableSourceItem(tableSourceContext.tableSourceItem())
+                    if (tableSourceContext.joinPart()?.isNotEmpty() == true) {
+                        val joinParts = mutableListOf<JoinTable.JoinPart>()
+                        for (joinPartContext in tableSourceContext.joinPart()) {
+                            joinParts.add(joinPart(joinPartContext))
+                        }
+                        tableList.add(JoinTable(firstTable, joinParts))
+                    } else {
+                        tableList.add(firstTable)
+                    }
                 }
                 is TableSourceNestedContext -> {
-                    tableList.addAll(tableSourceItem(tableSourceContext.tableSourceItem()))
-                    joinPart = tableSourceContext.joinPart()
-                }
-            }
-            for (joinPartContext in joinPart) {
-                when (joinPartContext) {
-                    is InnerJoinContext -> {
-                        tableList.addAll(tableSourceItem(joinPartContext.tableSourceItem()))
-                    }
-                    is StraightJoinContext -> {
-                        tableList.addAll(tableSourceItem(joinPartContext.tableSourceItem()))
-                    }
-                    is OuterJoinContext -> {
-                        tableList.addAll(tableSourceItem(joinPartContext.tableSourceItem()))
-                    }
-                    is NaturalJoinContext -> {
-                        tableList.addAll(tableSourceItem(joinPartContext.tableSourceItem()))
+                    val firstTable = tableSourceItem(tableSourceContext.tableSourceItem())
+                    val joinParts = tableSourceContext.joinPart()?.map { joinPart(it) }?: emptyList()
+                    if (joinParts.isEmpty()) {
+                        tableList.add(firstTable)
+                    } else {
+                        tableList.add(JoinTable(firstTable, joinParts))
                     }
                 }
-
+                else -> throw WillNeverHappenException()
             }
         }
-        return tableList
+        return if (tableList.size == 1) {
+            tableList[0]
+        } else {
+            JoinTable(tableList[0], tableList.drop(1).map { JoinTable.JoinPart(JoinType.COMMA, it, null) })
+        }
     }
 
-    private fun tableSourceItem(tableSourceItem: TableSourceItemContext): List<FromItem> {
+    private fun tableSourceItem(tableSourceItem: TableSourceItemContext): FromItem {
         when (tableSourceItem) {
             is AtomTableItemContext -> {
                 val tableFullName = tableSourceItem.tableName().text
-                val table = PhysicalTable(parseTableName(tableFullName))
+                val table = PhysicalTable(tableFullName)
                 tableSourceItem.alias?.text?.let { table.alias = Alias(it) }
-
-                return Collections.singletonList(table)
+                return table
             }
             is SubqueryTableItemContext -> {
                 val table = select(tableSourceItem.selectStatement())
                 tableSourceItem.alias?.text?.let { table.alias = Alias(it) }
-                return Collections.singletonList(table)
+                return table
             }
-            is TableSourcesItemContext -> {
-                return tableSources(tableSourceItem.tableSources())
-            }
-            else -> {
-                throw WillNeverHappenException("will not come here")
-            }
+            is TableSourcesItemContext -> return tableSources(tableSourceItem.tableSources())
+            else -> throw WillNeverHappenException("will not come here")
+
         }
     }
 
-    private fun selectElements(selects: SelectElementsContext, selectTable: SelectTable): List<LogicalField> {
-        val fields = mutableListOf<LogicalField>()
+    private fun selectElements(selects: SelectElementsContext): List<SelectExpr> {
+        val fields = mutableListOf<SelectExpr>()
         if (selects.star != null) {
-            fields.add(AsteriskField(selectTable))
+            fields.add(AsteriskField("*").apply {
+                setPosition(selects.star)
+            })
         }
         for (selectElementContext in selects.selectElement()) {
             when (selectElementContext) {
                 is SelectStarElementContext -> {
-                    //todo
-                    fields.add(AsteriskField(selectTable))
+                    fields.add(AtomicField.of(selectElementContext.getRawText()).apply {
+                        setPosition(selectElementContext)
+                    })
                 }
                 is SelectColumnElementContext -> {
-                    val columnFullName = parseFieldName(selectElementContext.fullColumnName().text)
-                    val selectField = SelectField(columnFullName.field, selectTable)
-                    selectElementContext.uid()?.text?.let { selectField.alias = it }
-                    fields.add(selectField)
+                    fields.add(AtomicField.of(selectElementContext.fullColumnName().getRawText()).apply {
+                        if (selectElementContext.uid() != null) {
+                            alias = Alias(selectElementContext.uid().getRawText(), selectElementContext.AS() != null)
+                        }
+                        setPosition(selectElementContext.fullColumnName())
+                    })
                 }
                 is SelectFunctionElementContext -> {
-                    val expression = selectElementContext.functionCall().text
-                    val selectField = SelectField(expression, selectTable)
-                    selectElementContext.uid()?.text?.let { selectField.alias = it }
-
-                    fields.add(selectField)
-                    val innerFields = functionCall(selectElementContext.functionCall())
-                    //todo
+                    fields.add(functionCall(selectElementContext.functionCall()).apply {
+                        if (selectElementContext.uid() != null) {
+                            alias = Alias(selectElementContext.uid().getRawText(), selectElementContext.AS() != null)
+                        }
+                        setPosition(selectElementContext.functionCall())
+                    })
                 }
                 is SelectExpressionElementContext -> {
-                    val expression = selectElementContext.expression().text
-                    val selectField = SelectField(expression, selectTable)
-                    selectElementContext.uid()?.text?.let { selectField.alias = it }
-
-                    fields.add(selectField)
-                    val innerfields = expression(selectElementContext.expression())
-                    //todo
+                    fields.add(expression(selectElementContext.expression()).apply {
+                        if (selectElementContext.uid() != null) {
+                            alias = Alias(selectElementContext.uid().getRawText(), selectElementContext.AS() != null)
+                        }
+                        setPosition(selectElementContext.expression())
+                    })
                 }
                 else -> {
                     throw WillNeverHappenException("will not come here")
@@ -506,180 +581,370 @@ internal class MysqlSqlParseListener(private val tokens: TokenStream): MySqlPars
     private fun functionCall(functionCall: FunctionCallContext): SelectExpr {
         return when (functionCall) {
             is SpecificFunctionCallContext -> {
-                when (val specificFunction = functionCall.specificFunction()) {
-                    is DataTypeFunctionCallContext -> expression(specificFunction.expression())
-                    is ValuesFunctionCallContext -> listOf(Pair(RelationType.DIRECTCOPY, parseFieldName(specificFunction.fullColumnName().text)))
-                    is CaseFunctionCallContext -> {
-                        val result = mutableListOf<Pair<RelationType, FullFieldName>>()
-                        specificFunction.expression()?.let { result.addAll(expression(it)) }
-                        for (caseFuncAlternativeContext in specificFunction.caseFuncAlternative()) {
-                            result.addAll(functionArg(caseFuncAlternativeContext.condition))
-                            result.addAll(functionArg(caseFuncAlternativeContext.consequent))
+                if (functionCall.specificFunction() is CaseFunctionCallContext) {
+                    CaseField(functionCall.getRawText()).apply field@{
+                        with(functionCall.specificFunction() as CaseFunctionCallContext) {
+                            val caseExpr = expression()?.let { expression(it) }
+                            val whenThenList = caseFuncAlternative().map {
+                                CaseField.WhenThen(functionArg(it.condition), functionArg(it.consequent))
+                            }
+                            val elseExpr = elseArg?.let { functionArg(it) }
+                            this@field.feed(caseExpr, whenThenList, elseExpr)
                         }
-                        specificFunction.functionArg()?.let { result.addAll(functionArg(it)) }
-                        return result
                     }
-                    is CharFunctionCallContext -> functionArgs(specificFunction.functionArgs())
-                    is PositionFunctionCallContext -> {
-                        specificFunction.expression()?.flatMap { expression(it).asIterable() }?.toList().orEmpty()
+                } else {
+                    FunctionField(functionCall.getRawText()).apply field@{
+                        when (val function = functionCall.specificFunction()) {
+                            is SimpleFunctionCallContext -> {
+                                feed(
+                                    (function.CURRENT_DATE() ?: function.CURRENT_TIME() ?: function.CURRENT_TIMESTAMP()
+                                    ?: function.CURRENT_USER() ?: function.LOCALTIME()).text, emptyList()
+                                )
+                            }
+                            is DataTypeFunctionCallContext -> {
+                                feed(
+                                    (function.CONVERT() ?: function.CAST()).text,
+                                    expression(function.expression()),
+                                    function.convertedDataType()?.let { KeywordField(it.getRawText()) })
+                            }
+                            is ValuesFunctionCallContext -> {
+                                feed(function.VALUES().text, AtomicField.of(function.fullColumnName().getRawText()))
+                            }
+                            is CharFunctionCallContext -> {
+                                val args = mutableListOf<SelectExpr>().apply {
+                                    addAll(functionArgs(function.functionArgs()))
+                                    if (function.USING() != null) {
+                                        add(KeywordField(function.USING().text))
+                                        add(ConstantField(function.charsetName().getRawText()))
+                                    }
+                                }
+                                feed(function.CHAR().text, args.toList())
+                            }
+                            is PositionFunctionCallContext -> {
+                                feed(function.POSITION().text,
+                                    function.positionString?.let { ConstantField(it.text) }
+                                        ?: function.positionExpression?.let { expression(it) },
+                                    KeywordField(function.IN().text),
+                                    function.inString?.let { ConstantField(it.text) }
+                                        ?: function.inExpression?.let { expression(it) })
+                            }
+                            is SubstrFunctionCallContext -> {
+                                feed((function.SUBSTR() ?: function.SUBSTRING()).text,
+                                    function.sourceString?.let { ConstantField(it.text) }
+                                        ?: function.sourceExpression.let { expression(it) },
+                                    KeywordField(function.FROM().text),
+                                    function.fromDecimal?.let { ConstantField(it.text) }
+                                        ?: function.fromExpression?.let { expression(it) },
+                                    function.FOR()?.let { KeywordField(it.text) },
+                                    function.forDecimal?.let { ConstantField(it.text) }
+                                        ?: function.forExpression?.let { expression(it) }
+                                )
+                            }
+                            is TrimFunctionCallContext -> {
+                                feed(function.TRIM().text,
+                                    function.positioinForm?.let { KeywordField(it.text) },
+                                    function.sourceString?.let { ConstantField(it.text) }
+                                        ?: function.sourceExpression?.let { expression(it) },
+                                    KeywordField(function.FROM().text),
+                                    function.fromString?.let { ConstantField(it.text) }
+                                        ?: function.fromExpression?.let { expression(it) }
+                                )
+                            }
+                            is WeightFunctionCallContext -> {
+                                feed(function.WEIGHT_STRING().text,
+                                    function.stringLiteral()?.let { ConstantField(it.text) } ?: function.expression()
+                                        ?.let { expression(it) },
+                                    KeywordField(function.AS().text),
+                                    KeywordField(function.stringFormat.text),
+                                    function.decimalLiteral()?.let { ConstantField(it.text) },
+                                    function.levelsInWeightString()?.let { KeywordField(it.text) }  //内部较复杂，但是我不关心
+                                )
+                            }
+                            is ExtractFunctionCallContext -> {
+                                feed(function.EXTRACT().text,
+                                    KeywordField(function.intervalType().text),
+                                    KeywordField(function.FROM().text),
+                                    function.sourceString?.let { ConstantField(it.text) }
+                                        ?: function.sourceExpression?.let { expression(it) }
+                                )
+                            }
+                            is GetFormatFunctionCallContext -> {
+                                feed(
+                                    function.GET_FORMAT().text,
+                                    KeywordField(function.datetimeFormat.text),
+                                    ConstantField(function.stringLiteral().getRawText())
+                                )
+                            }
+                        }
                     }
-                    is SubstrFunctionCallContext -> {
-                        specificFunction.expression()?.flatMap { expression(it).asIterable() }?.toList().orEmpty()
-                    }
-                    is TrimFunctionCallContext -> {
-                        specificFunction.expression()?.flatMap { expression(it).asIterable() }?.toList().orEmpty()
-                    }
-                    is WeightFunctionCallContext -> specificFunction.expression()?.let { expression(it) }.orEmpty()
-                    is ExtractFunctionCallContext -> specificFunction.expression()?.let { expression(it) }.orEmpty()
-                    is GetFormatFunctionCallContext -> emptyList()
-                    is SimpleFunctionCallContext -> emptyList()
-                    else -> emptyList()
                 }
             }
             is AggregateFunctionCallContext -> {
-                when {
-                    functionCall.aggregateWindowedFunction().functionArg() != null -> {
-                        functionArg(functionCall.aggregateWindowedFunction().functionArg())
+                FunctionField(functionCall.getRawText()).apply field@{
+                    with(functionCall.aggregateWindowedFunction()) ctx@{
+                        val funcName: TerminalNode?
+                        when {
+                            (AVG() ?: MAX() ?: MIN() ?: SUM()
+                            ?: BIT_AND() ?: BIT_OR() ?: BIT_XOR()
+                            ?: STD() ?: STDDEV() ?: STDDEV_POP() ?: STDDEV_SAMP()
+                            ?: VAR_POP() ?: VAR_SAMP() ?: VARIANCE()
+                                    ).also { funcName = it } != null -> {
+                                this@field.feed(
+                                    funcName!!.text,
+                                    aggregator?.let { KeywordField(it.text) },
+                                    functionArg(this.functionArg())
+                                )
+                            }
+                            this.COUNT() != null -> {
+                                if (starArg != null) {
+                                    this@field.feed(COUNT().text, AsteriskField("*"))
+                                } else {
+                                    val args = mutableListOf<SelectExpr>().apply arg@{
+                                        this@ctx.aggregator?.also { this@arg.add(KeywordField(it.text)) }
+                                        this@ctx.functionArg()?.let { functionArg(this@ctx.functionArg()) }
+                                            ?.also { this@arg.add(it) }
+                                        this@arg.addAll(
+                                            this@ctx.functionArgs()?.let { functionArgs(this@ctx.functionArgs()) }
+                                                ?: emptyList()
+                                        )
+                                    }
+                                    this@field.feed(COUNT().text, args.toList())
+                                }
+                            }
+                            this.GROUP_CONCAT() != null -> {
+                                val args = mutableListOf<SelectExpr>().apply arg@{
+                                    this@ctx.aggregator?.also { this@arg.add(KeywordField(it.text)) }
+                                    this@arg.addAll(functionArgs(this@ctx.functionArgs()))
+                                    if (this@ctx.ORDER() != null) {
+                                        this@arg.add(
+                                            CompositeField(
+                                                "ORDER BY" + this@ctx.orderByExpression()
+                                                    .joinToString(",") { it.getRawText() })
+                                                .feed(KeywordField("ORDER BY"))
+                                                .feed(this@ctx.orderByExpression().map {
+                                                    it.order?.run { OrderByItem(expression(it.expression())) }
+                                                        ?: OrderByItem(expression(it.expression()), it.DESC() != null)
+                                                })
+                                        )
+                                    }
+                                    if (this@ctx.SEPARATOR() != null) {
+                                        this@arg.add(KeywordField(this@ctx.SEPARATOR().text))
+                                        this@arg.add(ConstantField(this@ctx.separator.text))
+                                    }
+                                }
+                                this@field.feed(this.GROUP_CONCAT().text, args.toList())
+                            }
+                            else -> throw WillNeverHappenException()
+                        }
+
                     }
-                    functionCall.aggregateWindowedFunction().functionArgs() != null -> {
-                        functionArgs(functionCall.aggregateWindowedFunction().functionArgs())
-                    }
-                    else -> emptyList()
                 }
             }
-            is ScalarFunctionCallContext -> functionCall.functionArgs()?.let { functionArgs(it) }.orEmpty()
-            is UdfFunctionCallContext -> functionCall.functionArgs()?.let { functionArgs(it) }.orEmpty()
-            else -> emptyList()
+            is ScalarFunctionCallContext -> {
+                FunctionField(functionCall.getRawText()).feed(
+                    functionCall.scalarFunctionName().getRawText(),
+                    functionCall.functionArgs()?.let { functionArgs(it) })
+            }
+            is UdfFunctionCallContext -> {
+                FunctionField(functionCall.getRawText()).feed(
+                    functionCall.fullId().getRawText(),
+                    functionCall.functionArgs()?.let { functionArgs(it) })
+            }
+            is PasswordFunctionCallContext -> {
+                FunctionField(functionCall.getRawText()).apply {
+                    with(functionCall.passwordFunctionClause()) {
+                        this@apply.feed(functionName.text, functionArg(functionArg()))
+                    }
+                }
+            }
+            else -> throw WillNeverHappenException()
+        }.apply {
+            setPosition(functionCall)
         }
     }
 
     private fun expression(expression: ExpressionContext): SelectExpr {
         return when (expression) {
-            is NotExpressionContext -> expression(expression.expression())
-            is LogicalExpressionContext ->
-                listOf(expression(expression.expression(0)), expression(expression.expression(1)))
-                    .flatMap { it.asIterable() }
-                    .toList()
-            is IsExpressionContext -> predicate(expression.predicate())
+            is NotExpressionContext -> {
+                UnaryOperatorField(expression.getRawText()).feed(
+                    expression(expression.expression()),
+                    LogicalOperator.NOT
+                )
+            }
+            is LogicalExpressionContext -> {
+                BinaryOperatorField(expression.getRawText())
+                    .feed(
+                        expression(expression.expression(0)),
+                        OP_MAP[expression.logicalOperator().text],
+                        expression(expression.expression(1))
+                    )
+            }
+            is IsExpressionContext -> {
+                BinaryOperatorField(expression.getRawText())
+                    .feed(
+                        predicate(expression.predicate()),
+                        expression.NOT()?.let { PredicateOperator.IS_NOT } ?: PredicateOperator.IS,
+                        ConstantField(expression.testValue.text)
+                    )
+            }
             is PredicateExpressionContext -> predicate(expression.predicate())
             else -> throw WillNeverHappenException("will not come here")
-
+        }.apply {
+            setPosition(expression)
         }
     }
 
-    private fun expressionAtom(expression: ExpressionAtomContext): SelectExpr {
-        return when (expression) {
-            is FullColumnNameExpressionAtomContext -> listOf(Pair(RelationType.DIRECTCOPY, parseFieldName(expression.fullColumnName().text)))
-            is FunctionCallExpressionAtomContext -> functionCall(expression.functionCall())
-            is CollateExpressionAtomContext -> expressionAtom(expression.expressionAtom())
-            is UnaryExpressionAtomContext -> expressionAtom(expression.expressionAtom())
-            is BinaryExpressionAtomContext -> expressionAtom(expression.expressionAtom())
-            is NestedExpressionAtomContext -> expression.expression().flatMap { expression(it).asIterable() }.toList()
-            is NestedRowExpressionAtomContext -> expression.expression().flatMap { expression(it).asIterable() }.toList()
-            is SubqueryExpessionAtomContext -> emptyList()
-            is IntervalExpressionAtomContext -> expression(expression.expression())
-            is BitExpressionAtomContext -> listOf(expression.left, expression.right).flatMap { expressionAtom(it).asIterable() }.toList()
-            is MathExpressionAtomContext -> listOf(expression.left, expression.right).flatMap { expressionAtom(it).asIterable() }.toList()
-            is JsonExpressionAtomContext -> listOf(expression.left, expression.right).flatMap { expressionAtom(it).asIterable() }.toList()
-            else -> emptyList()
+    private fun expressionAtom(ctx: ExpressionAtomContext): SelectExpr {
+        return when (ctx) {
+            is ConstantExpressionAtomContext -> ConstantField(ctx.getRawText())
+            is FullColumnNameExpressionAtomContext -> AtomicField.of(ctx.getRawText())
+            is FunctionCallExpressionAtomContext -> functionCall(ctx.functionCall())
+            is CollateExpressionAtomContext -> CompositeField(ctx.getRawText())
+                .feed(
+                    expressionAtom(ctx.expressionAtom()),
+                    KeywordField(ctx.COLLATE().text),
+                    ConstantField(ctx.collationName().getRawText())
+                )
+            is MysqlVariableExpressionAtomContext -> VariableField(ctx.getRawText())
+            is UnaryExpressionAtomContext -> UnaryOperatorField(ctx.getRawText()).feed(
+                expressionAtom(ctx.expressionAtom()),
+                OP_MAP[ctx.unaryOperator().text]
+            )
+            is BinaryExpressionAtomContext -> CompositeField(ctx.getRawText())
+                .feed(KeywordField(ctx.BINARY().text), expressionAtom(ctx.expressionAtom()))
+            is NestedExpressionAtomContext -> CompositeField(ctx.getRawText(), true)
+                .feed(ctx.expression().map { expression(it) })
+            is NestedRowExpressionAtomContext -> FunctionField(ctx.getRawText())
+                .feed(ctx.ROW().text, ctx.expression().map { expression(it) })
+            is ExistsExpressionAtomContext -> FunctionField(ctx.getRawText())
+                .feed(ctx.EXISTS().text, select(ctx.selectStatement()))
+            is SubqueryExpressionAtomContext -> CompositeField(ctx.getRawText(), true)
+                .feed(select(ctx.selectStatement()))
+            is IntervalExpressionAtomContext -> IntervalField(ctx.getRawText())
+                .feed(expression(ctx.expression()), IntervalQualifier.of(ctx.intervalType().getRawText()))
+            is BitExpressionAtomContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(expressionAtom(ctx.left), OP_MAP[ctx.bitOperator().text], expressionAtom(ctx.right))
+            is MathExpressionAtomContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(expressionAtom(ctx.left), OP_MAP[ctx.mathOperator().text], expressionAtom(ctx.right))
+            is JsonExpressionAtomContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(expressionAtom(ctx.left), JsonOperator.of(ctx.jsonOperator().text), expressionAtom(ctx.right))
+            else -> throw WillNeverHappenException()
+        }.apply {
+            setPosition(ctx)
         }
     }
 
-    private fun predicate(predicate: PredicateContext): SelectExpr {
-        return when (predicate) {
-            is InPredicateContext -> emptyList()
-            is IsNullPredicateContext -> emptyList()
-            is BinaryComparasionPredicateContext -> emptyList()
-            is SubqueryComparasionPredicateContext -> emptyList()
-            is BetweenPredicateContext -> emptyList()
-            is SoundsLikePredicateContext -> emptyList()
-            is LikePredicateContext -> emptyList()
-            is RegexpPredicateContext -> emptyList()
-            is ExpressionAtomPredicateContext -> expressionAtom(predicate.expressionAtom())
-            is JsonMemberOfPredicateContext -> emptyList()
-            else -> emptyList()
+    private fun predicate(ctx: PredicateContext): SelectExpr {
+        return when (ctx) {
+            is InPredicateContext -> MultiOperatorField(ctx.getRawText())
+                .feed(predicate(ctx.predicate()),
+                    ctx.NOT()?.let { PredicateOperator.NOT_IN } ?: PredicateOperator.IN,
+                    ctx.selectStatement()?.let { listOf(select(it)) } ?: ctx.expressions().expression()
+                        .map { expression(it) }
+                )
+            is IsNullPredicateContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(
+                    predicate(ctx.predicate()),
+                    ctx.nullNotnull().NOT()?.let { PredicateOperator.IS_NOT } ?: PredicateOperator.IS,
+                    ConstantField((ctx.nullNotnull().NULL_LITERAL() ?: ctx.nullNotnull().NULL_SPEC_LITERAL())?.text)
+                )
+            is BinaryComparasionPredicateContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(predicate(ctx.left), OP_MAP[ctx.comparisonOperator().text], predicate(ctx.right))
+            is SubqueryComparasionPredicateContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(
+                    predicate(ctx.predicate()),
+                    OP_MAP[ctx.comparisonOperator().text],
+                    UnaryOperatorField(ctx.quantifier.text + " (" + ctx.selectStatement().getRawText() + " )")
+                        .feed(select(ctx.selectStatement()), OP_MAP[ctx.quantifier.text])
+                )
+            is BetweenPredicateContext -> MultiOperatorField(ctx.getRawText())
+                .feed(
+                    predicate(ctx.predicate(0)),
+                    ctx.NOT()?.let { PredicateOperator.NOT_BETWEEN } ?: PredicateOperator.BETWEEN,
+                    listOf(predicate(ctx.predicate(1)), predicate(ctx.predicate(2)))
+                )
+            is SoundsLikePredicateContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(predicate(ctx.predicate(0)), PredicateOperator.SOUNDS_LIKE, predicate(ctx.predicate(1)))
+            is LikePredicateContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(predicate(ctx.predicate(0)),
+                    ctx.NOT()?.let { PredicateOperator.NOT_LIKE } ?: PredicateOperator.LIKE,
+                    ctx.ESCAPE()?.let {
+                        CompositeField(ctx.predicate(1).text + " " + ctx.ESCAPE().text + " " + ctx.STRING_LITERAL().text)
+                            .feed(
+                                predicate(ctx.predicate(1)),
+                                KeywordField(ctx.ESCAPE().text),
+                                ConstantField(ctx.STRING_LITERAL().text)
+                            )
+                    }
+                        ?: predicate(ctx.predicate(1))
+                )
+            is RegexpPredicateContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(predicate(ctx.predicate(0)),
+                    ctx.NOT()?.let { ctx.REGEXP()?.let { PredicateOperator.NOT_REGEXP } ?: PredicateOperator.NOT_RLIKE }
+                        ?: ctx.REGEXP()?.let { PredicateOperator.REGEXP } ?: PredicateOperator.RLIKE,
+                    predicate(ctx.predicate(1))
+                )
+            is ExpressionAtomPredicateContext -> expressionAtom(ctx.expressionAtom())
+            is JsonMemberOfPredicateContext -> BinaryOperatorField(ctx.getRawText())
+                .feed(predicate(ctx.predicate(0)), PredicateOperator.MEMBER_OF, predicate(ctx.predicate(1)))
+            else -> throw WillNeverHappenException()
+        }.apply {
+            setPosition(ctx)
         }
     }
 
     private fun functionArgs(args: FunctionArgsContext): List<SelectExpr> {
-        val result = LinkedList<SelectExpr>()
-        if (args.fullColumnName() != null) {
-            for (fullColumnNameContext in args.fullColumnName()) {
-                result.add(AtomicField(fullColumnNameContext.text))
-            }
-        }
-        if (args.functionCall() != null) {
-            for (functionCallContext in args.functionCall()) {
-                result.addAll(functionCall(functionCallContext))
-            }
-        }
-        if (args.expression() != null) {
-            for (expressionContext in args.expression()) {
-                result.addAll(expression(expressionContext))
-            }
-        }
-        return result
+        return args.functionArg().map { functionArg(it) }
     }
 
     private fun functionArg(arg: FunctionArgContext): SelectExpr {
         return when {
-            arg.fullColumnName() != null -> AtomicField(arg.text)
+            arg.constant() != null -> ConstantField(arg.getRawText())
+            arg.fullColumnName() != null -> AtomicField(arg.getRawText())
             arg.expression() != null -> expression(arg.expression())
             arg.functionCall() != null -> functionCall(arg.functionCall())
             else -> throw WillNeverHappenException()
+        }. apply {
+            setPosition(arg)
         }
     }
 
     companion object {
 
-        fun unwrapId(id: String): String {
-            if (id.startsWith('`') && id.endsWith('`')) {
-                return id.substring(1, id.length - 1)
-            }
-            return id
-        }
-
-        fun parseFieldName(fullId: String): ColumnName {
-            val ids = fullId.split('.')
-            return when (ids.size) {
-                1 -> ColumnName(null, null, null, unwrapId(ids[0]))
-                2 -> ColumnName(null, null, unwrapId(ids[0]), unwrapId(ids[1]))
-                3 -> ColumnName(null, unwrapId(ids[0]), unwrapId(ids[1]), unwrapId(ids[2]))
-                4 -> ColumnName(unwrapId(ids[0]), unwrapId(ids[1]), unwrapId(ids[2]), unwrapId(ids[3]))
-                else -> throw WillNeverHappenException("")
-            }
-        }
-
-        fun parseTableName(fullId: String): TableName {
-            val ids = fullId.split('.')
-            return when (ids.size) {
-                1 -> TableName(null, null, unwrapId(ids[0]))
-                2 -> TableName(null, unwrapId(ids[0]), unwrapId(ids[1]))
-                3 -> TableName(unwrapId(ids[0]), unwrapId(ids[1]), unwrapId(ids[2]))
-                else -> throw WillNeverHappenException("")
-            }
-        }
-
-        fun qualifyTable(fullFieldName: ColumnName, tables: Collection<FromItem>): FromItem {
-            if (fullFieldName.table == null) {
-                if (tables.size > 1) {
-                    return AmbiguousTable(tables)
-                } else if (tables.size == 1) {
-                    return tables.iterator().next()
-                } else {
-                    //todo 可能是变量
-                    throw SqlParseException("字段${fullFieldName}未找到对应的表")
-                }
-            }
-            for (table in tables) {
-                if (fullFieldName.table == table.alias) {
-                    return table
-                }
-            }
-            throw SqlParseException("字段${fullFieldName}未找到对应的表")
-        }
+        @JvmStatic
+        val OP_MAP: Map<String, Operator> = mapOf(
+            "&&" to LogicalOperator.AND,
+            "AND" to LogicalOperator.AND,
+            "||" to LogicalOperator.OR,
+            "OR" to LogicalOperator.OR,
+            "!" to LogicalOperator.NOT,
+            "~" to LogicalOperator.NOT,
+            "+" to CalculateOperator.PLUS,
+            "-" to CalculateOperator.MINUS,
+            "<<" to BitOperator.SHL,
+            ">>" to BitOperator.SHR,
+            "&" to BitOperator.AND,
+            "^" to BitOperator.XOR,
+            "|" to BitOperator.OR,
+            "*" to CalculateOperator.MUL,
+            "/" to CalculateOperator.DIVIDE,
+            "%" to CalculateOperator.MOD,
+            "DIV" to CalculateOperator.DIV,
+            "MOD" to CalculateOperator.MOD,
+            "--" to CalculateOperator.MINUSMINUS,
+            "=" to PredicateOperator.EQUAL,
+            ">" to PredicateOperator.GREATER,
+            "<" to PredicateOperator.LESS,
+            "<=" to PredicateOperator.LESS_EQUAL,
+            ">=" to PredicateOperator.GREATER_EQUAL,
+            "<>" to PredicateOperator.NOT_EQUAL,
+            "!=" to PredicateOperator.NOT_EQUAL,
+            "<=>" to PredicateOperator.EQUAL_NS,
+            "ALL" to PredicateOperator.ALL,
+            "ANY" to PredicateOperator.ANY,
+            "SOME" to PredicateOperator.SOME,
+        ).toMap(TreeMap<String, Operator>(String.CASE_INSENSITIVE_ORDER))
 
     }
 
-*/
 }

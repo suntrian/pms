@@ -25,7 +25,8 @@ public class SelectTable extends SelectExpr implements FromItem, AliasItem {
 
     @Override
     public DataType getDataType() {
-        return null;
+        if (fields.isEmpty()) return null;
+        return fields.get(0).getDataType();
     }
 
     public boolean isDistinct() {
@@ -106,7 +107,7 @@ public class SelectTable extends SelectExpr implements FromItem, AliasItem {
         if (where != null) {
             sqlBuilder.append(" WHERE ").append(where);
         }
-        if (groupBy != null) {
+        if (groupBy != null && !groupBy.getFields().isEmpty()) {
             sqlBuilder.append(" GROUP BY ").append(groupBy);
         }
         if (orderBys != null && !orderBys.isEmpty()) {

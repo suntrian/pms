@@ -28,11 +28,6 @@ public class AtomicField extends SelectExpr{
         return alias!=null&&!alias.isEmpty()? alias.getAlias() : columnName != null? columnName.getColumn() : expression;
     }
 
-    @Override
-    public DataType getDataType() {
-        return null;
-    }
-
     public ColumnName getColumnName() {
         return columnName;
     }

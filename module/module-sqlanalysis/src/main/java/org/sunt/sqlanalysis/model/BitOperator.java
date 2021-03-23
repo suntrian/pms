@@ -5,7 +5,9 @@ public enum BitOperator implements Operator{
     AND("&"),
     TILDE("~"),
     OR("|"),
-    XOR("^");
+    XOR("^"),
+    SHL("<<"),
+    SHR(">>");
 
     private final String symbol;
 
