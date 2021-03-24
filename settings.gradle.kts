@@ -1,5 +1,15 @@
 rootProject.name = "pms"
 
+/**
+ * @see <a href='https://docs.gradle.org/current/userguide/plugins.html#sec:plugin_version_management'>
+ */
+pluginManagement {
+    val kotlinVersion: String by settings
+    plugins {
+        id("org.jetbrains.kotlin.jvm") version kotlinVersion
+    }
+}
+
 include("dependency")
 include("module")
 include("module:module-commons")

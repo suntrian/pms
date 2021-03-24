@@ -30,7 +30,7 @@ subprojects {
 
     if (project.name != "dependency") {
         group = "org.sunt"
-        version = "1.0-SNAPSHOT"
+        version = properties["pmsVersion"]!!
         apply(plugin = "java")
 
 
