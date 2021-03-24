@@ -1,15 +1,11 @@
 package org.sunt.identity.dao;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.sunt.common.dao.AbstractDao;
 import org.sunt.identity.entity.User;
 
 @Repository
-public interface UserDao extends JpaRepository<User, Integer> {
+public class UserDao extends AbstractDao<User, Integer> {
 
-    @Query(value = "SELECT password FROM user_account WHERE account = :account LIMIT 1", nativeQuery = true)
-    String getPasswordByAccount(@Param("account") String account);
 
 }

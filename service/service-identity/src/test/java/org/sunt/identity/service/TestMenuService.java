@@ -1,27 +1,25 @@
 package org.sunt.identity.service;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.sunt.identity.TestIdentityApplication;
-import org.sunt.identity.dao.MenuDao;
 import org.sunt.identity.entity.Menu;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TestMenuService extends TestIdentityApplication {
 
     private final static AtomicInteger id = new AtomicInteger(0);
+
     @Autowired
     private MenuService menuService;
-    @Autowired
-    private MenuDao menuRepository;
 
-    @BeforeEach
-    public void setUp() {
+    @Test
+    @Order(1)
+    public void testInsertMenu() {
         Menu menu = new Menu();
         menu.setName("test");
         menu.setParentId(id.getAndIncrement());
@@ -29,14 +27,17 @@ public class TestMenuService extends TestIdentityApplication {
         menu.setPermission("abc:def");
         menu.setStatus((short) 0);
         menu.setIcon("");
-        menu.setCreateTime(LocalDateTime.now());
+        menu.setCreatedAt(LocalDateTime.now());
+        menu.setCreatedBy(1);
         menu.setRoute("/afaf");
         menu.setSort((short) 9);
         menu.setType((short) 1);
-        menuRepository.save(menu);
+        int inserted = menuService.insert(menu);
+        System.out.println("INSERTED:" + inserted);
     }
 
     @Test
+    @Order(2)
     public void testListMenus() {
         List<Menu> menus = menuService.listMenus();
         Assertions.assertEquals(1, menus.size());
@@ -45,11 +46,5 @@ public class TestMenuService extends TestIdentityApplication {
         }
     }
 
-    @Test
-    public void testListMenuByParentId() {
-        List<Menu> menus = menuService.listByParentId(1);
-        Assertions.assertEquals(1, menus.size());
-        System.out.println(menus.get(0));
-    }
 
 }

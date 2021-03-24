@@ -9,9 +9,10 @@ import org.sunt.identity.entity.User;
 public class UserService {
 
     @Autowired
-    private UserDao userRepository;
+    private UserDao userDao;
 
     public User create(User user) {
-        return userRepository.save(user);
+        userDao.insert(user);
+        return user;
     }
 }
