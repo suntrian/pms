@@ -26,8 +26,9 @@ public class MenuNode implements Serializable {
     private String component;
     private Short sort;
     private Short type;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
+    private LocalDateTime createdAt;
+    private Integer createdBy;
+    private LocalDateTime updatedAt;
     private Short status;
 
     public String getTypeName() {

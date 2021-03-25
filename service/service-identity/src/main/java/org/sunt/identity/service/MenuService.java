@@ -1,7 +1,6 @@
 package org.sunt.identity.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.sunt.identity.dao.MenuDao;
 import org.sunt.identity.entity.Menu;
@@ -11,23 +10,22 @@ import java.util.List;
 @Service
 public class MenuService {
 
-    private final MenuDao menuRepository;
+    private final MenuDao menuDao;
 
     @Autowired
-    public MenuService(MenuDao menuRepository) {
-        this.menuRepository = menuRepository;
+    public MenuService(MenuDao menuDao) {
+        this.menuDao = menuDao;
     }
 
     public List<Menu> listMenus() {
-        return menuRepository.findAll();
+        return menuDao.getAll();
     }
 
     public Menu get(Integer id) {
-        return menuRepository.getOne(id);
+        return menuDao.getById(id);
     }
 
-    public List<Menu> listByParentId(Integer parentId) {
-        return menuRepository.findAll(Example.of(new Menu().setParentId(parentId)));
+    public Integer insert(Menu menu) {
+        return menuDao.insert(menu);
     }
-
 }

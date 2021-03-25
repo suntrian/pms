@@ -47,10 +47,13 @@ public class Menu implements Serializable {
     private Short type;
 
     @Column
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 
     @Column
-    private LocalDateTime updateTime;
+    private Integer createdBy;
+
+    @Column
+    private LocalDateTime updatedAt;
 
     @Column
     private Short status;
