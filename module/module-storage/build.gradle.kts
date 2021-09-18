@@ -5,7 +5,7 @@ dependencies {
     compileOnly("org.apache.hadoop:hadoop-client:3.3.0") {
         isTransitive = true
     }
-    compileOnly(group = "commons-net", name = "commons-net", version = "3.7")
+    compileOnly(group = "commons-net", name = "commons-net", version = "3.8.0")
     compileOnly("com.jcraft:jsch:0.1.55")
 
 

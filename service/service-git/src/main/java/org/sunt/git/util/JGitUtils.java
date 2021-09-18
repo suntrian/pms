@@ -371,7 +371,7 @@ public class JGitUtils {
 
     /**
      * @throws GitAPIException
-     * @deprecated since origin
+     *
      */
     private void doBranch() throws GitAPIException {
         CreateBranchCommand createBranchCommand;
@@ -739,7 +739,7 @@ public class JGitUtils {
      * TODO: 暂不需要stash
      *
      * @throws GitAPIException
-     * @deprecated since original
+     *
      */
     public void doStash() throws GitAPIException {
         StashApplyCommand stashApplyCommand = git.stashApply();
@@ -853,7 +853,7 @@ public class JGitUtils {
 
     /**
      * @throws GitAPIException
-     * @deprecated since original
+     *
      */
     private void doRemote() throws GitAPIException {
         //TO DO
@@ -987,6 +987,7 @@ public class JGitUtils {
      * @throws IOException
      * @deprecated
      */
+    @Deprecated
     public List<String> getBranchesByCommit(Map<String, Ref> refs, RevCommit commit) throws IOException {
         List<String> branches = new ArrayList<>();
         RevWalk walk = new RevWalk(this.repo);
